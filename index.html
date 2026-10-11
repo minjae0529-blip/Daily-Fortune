@@ -28,7 +28,7 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
   <!-- Custom High-Contrast Comfortable Styles with Cache Buster -->
-  <link rel="stylesheet" href="css/style.css?v=20261011_5">
+  <link rel="stylesheet" href="css/style.css?v=20261011_6">
 </head>
 <body class="bg-ambient text-slate-900 flex flex-col min-h-screen selection:bg-amber-200 selection:text-amber-900">
 
@@ -390,7 +390,7 @@
               <span id="resStrengthBadge"></span>
             </div>
             <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 font-serif-kr mb-1">
-              <span id="resUserName"></span> 님의 사주 분석 보고서
+              <span id="resUserName"></span> <span id="resReportTitle">님의 사주 분석 보고서</span>
             </h2>
             <div class="text-xs text-slate-700 font-medium flex flex-wrap gap-x-3 gap-y-1">
               <span>양력: <strong id="resSolarDate" class="text-slate-900"></strong></span>
@@ -411,7 +411,7 @@
         </div>
 
         <!-- "내 사주가 좋은 이유 3가지" 아코디언 버튼 -->
-        <div class="mt-5 pt-4 border-t border-slate-200 flex items-center justify-between">
+        <div id="blessingBtnContainer" class="mt-5 pt-4 border-t border-slate-200 flex items-center justify-between">
           <button type="button" onclick="App.toggleBlessingCard()" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-100 via-purple-100 to-sky-100 border border-amber-300 text-amber-950 text-xs font-bold flex items-center justify-between hover:border-amber-500 transition group shadow-sm">
             <span class="flex items-center space-x-2">
               <i data-lucide="sparkles" class="w-4 h-4 text-amber-600 group-hover:rotate-12 transition-transform"></i>
@@ -427,8 +427,8 @@
         </div>
       </div>
 
-      <!-- Navigation Tabs (5대 핵심 탭: 사주 안에 연애운 포함!) -->
-      <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 no-print scrollbar-none text-xs">
+      <!-- Navigation Tabs (사주 모드 시 사주/오행/재물 노출, 오늘의 운세 모드 시 숨김) -->
+      <div id="resultNavTabs" class="flex items-center space-x-1.5 overflow-x-auto pb-1 no-print scrollbar-none text-xs">
         <button onclick="App.switchResultTab('daily')" id="tabBtn-daily" class="result-tab-btn tab-btn px-3.5 py-2 rounded-xl font-bold whitespace-nowrap active-tab bg-slate-900 text-white">
           🔮 오늘의 운세
         </button>
@@ -856,7 +856,7 @@
   <script src="js/engine/calendar.js"></script>
   <script src="js/engine/saju.js"></script>
   <script src="js/engine/fortune.js"></script>
-  <script src="js/app.js?v=20261011_5"></script>
+  <script src="js/app.js?v=20261011_6"></script>
 
 </body>
 </html>

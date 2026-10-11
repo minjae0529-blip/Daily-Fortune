@@ -430,6 +430,29 @@ const App = {
       });
     }
 
+    // 🔮 모드별 카테고리 완전 분리 (오늘의 운세 선택 시 다른 사주/오행/재물/타로 카테고리 완전 숨김!)
+    const reportTitle = document.getElementById("resReportTitle");
+    const blessingBtnContainer = document.getElementById("blessingBtnContainer");
+    const blessingSection = document.getElementById("blessingSection");
+    const resultNavTabs = document.getElementById("resultNavTabs");
+
+    if (this.currentMode === "daily") {
+      if (reportTitle) reportTitle.textContent = "님의 오늘의 운세 보고서";
+      if (blessingBtnContainer) blessingBtnContainer.classList.add("hidden");
+      if (blessingSection) blessingSection.classList.remove("expanded");
+      if (resultNavTabs) resultNavTabs.classList.add("hidden");
+    } else {
+      if (reportTitle) reportTitle.textContent = "님의 정통 사주명식 & 평생 대운 보고서";
+      if (blessingBtnContainer) blessingBtnContainer.classList.remove("hidden");
+      if (resultNavTabs) {
+        resultNavTabs.classList.remove("hidden");
+        const tabBtnDaily = document.getElementById("tabBtn-daily");
+        if (tabBtnDaily) tabBtnDaily.classList.add("hidden");
+        const tabBtnSaju = document.getElementById("tabBtn-saju");
+        if (tabBtnSaju) tabBtnSaju.classList.remove("hidden");
+      }
+    }
+
     // 2. 오늘의 운세
     document.getElementById("dailyThemeTitle").textContent = f.theme;
     document.getElementById("dailySummaryText").textContent = f.summary;

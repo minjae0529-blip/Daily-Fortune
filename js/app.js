@@ -3,6 +3,93 @@
  * Modern Minimal UI, Interactive Blessing Animations, Exact Element Counts & Diagnostics
  */
 
+const ZODIAC_MASCOTS = {
+  "자": { animal: "쥐", emoji: "🐭", name: "총명한 햄찌", greeting: "총명한 지혜가 퐁퐁 샘솟는 날이야!", quotes: [
+    "너의 기민한 감각을 믿어봐! 오늘은 감이 최고야 🧀",
+    "작은 디테일까지 놓치지 않는 너의 영리함이 빛날 거야 ✨",
+    "차근차근 실속을 챙기면 큰 부자가 될 수 있어 💰",
+    "오늘 너를 괴롭힐 수 있는 건 아무것도 없어! 파이팅 💖",
+    "톡 쳐줘서 고마워! 네 곁에서 행운을 솔솔 뿌려줄게 🌸"
+  ]},
+  "축": { animal: "소", emoji: "🐮", name: "든든한 우직이", greeting: "한 걸음씩 성실하게 나아가면 큰 결실이 와!", quotes: [
+    "너의 묵묵한 노력은 절대 배신하지 않아! 🍀",
+    "천천히 가도 괜찮아, 넌 반드시 완주할 거니까 🌾",
+    "오늘 차곡차곡 쌓은 노력이 곧 황금 열매를 맺을 거야 🍯",
+    "힘들 땐 내 든든한 등에 잠깐 기대도 돼 🐮",
+    "네가 가진 우직함은 세상에서 가장 단단한 무기야! 힘내자 💪"
+  ]},
+  "인": { animal: "호랑이", emoji: "🐯", name: "용맹한 아랑이", greeting: "용기와 카리스마를 맘껏 펼쳐봐! 어흥!", quotes: [
+    "주저하지 말고 당당하게 전진해! 넌 주인공이야 👑",
+    "오늘 너의 열정은 아무도 막을 수 없어! 불꽃 파워 🔥",
+    "어려운 일도 너의 기백 앞에서는 눈 녹듯 사라질 거야 ⚡",
+    "두려움은 던져버려! 내가 뒤에서 지켜줄게 어흥! 🐾",
+    "자신감을 가져! 넌 생각보다 훨씬 더 멋진 사람이야 💖"
+  ]},
+  "묘": { animal: "토끼", emoji: "🐰", name: "사랑스런 복토끼", greeting: "행운의 깡총 점프! 기분 좋은 소식이 찾아올 거야!", quotes: [
+    "사랑스러운 미소 하나로 사람들의 마음을 사로잡아봐 🌸",
+    "기분 좋은 행운이 깡총깡총 네 품으로 뛰어들 거야 🥕",
+    "오늘 너의 센스와 순발력은 만점이야! 톡톡 튀어봐 ✨",
+    "따스한 봄바람처럼 편안하고 행복한 하루 보내길 바라 🍀",
+    "나를 터치해줘서 고마워! 너에게 매일매일 행복을 줄게 🐰"
+  ]},
+  "진": { animal: "용", emoji: "🐲", name: "신비로운 청룡이", greeting: "잠자던 비범한 재능이 하늘로 비상할 타이밍이야!", quotes: [
+    "너의 큰 꿈과 비전은 반드시 현실이 될 거야! 🌈",
+    "남들과 다른 너의 비범함을 자랑스럽게 여겨봐 ⚡",
+    "오늘 너의 한 걸음은 기적을 만드는 씨앗이야 🌱",
+    "구름 위를 나는 용처럼 시야를 넓게 가져봐 ☁️",
+    "하늘의 기운이 온통 널 응원하고 있어! 비상해봐 🐲✨"
+  ]},
+  "사": { animal: "뱀", emoji: "🐍", name: "지혜로운 꼬마뱀", greeting: "날카로운 통찰력으로 기회를 단번에 낚아채!", quotes: [
+    "이면을 꿰뚫어 보는 너의 직관은 언제나 정확해 🔮",
+    "우아하고 침착하게 상황을 주도해 나가봐 💎",
+    "허황된 말보다 차분한 실속을 챙길 때 큰 이득이 와 🌿",
+    "스스로를 믿어봐, 넌 이미 해답을 알고 있잖아 🗝️",
+    "너의 은은한 매력에 다들 매료될 거야! 멋진 하루 보내 🐍"
+  ]},
+  "오": { animal: "말", emoji: "🐴", name: "자유로운 페가수스", greeting: "신나게 달려보자! 오늘은 막힘없이 술술 풀려!", quotes: [
+    "넓은 들판을 달리듯 시원하게 마음먹고 도전해봐 🐎",
+    "너의 밝고 건강한 에너지가 주변 사람들도 밝혀줘 ☀️",
+    "답답했던 매듭이 단숨에 풀리는 날이야! 달려가보자 💨",
+    "망설이지 마! 속도를 내면 기회가 너를 따라잡아 🌟",
+    "히히힝! 오늘 하루도 온 힘을 다해 너를 응원할게 🐴💖"
+  ]},
+  "미": { animal: "양", emoji: "🐑", name: "포근한 솜이", greeting: "따스한 온기와 힐링이 너를 포근히 감싸줄 거야!", quotes: [
+    "오늘 너 자신에게 따뜻한 칭찬 한마디 건네줘 ☁️",
+    "평화롭고 고요한 시간 속에서 진짜 지혜가 싹터 ☕",
+    "너의 다정함은 주변을 치유하는 특별한 마법이야 🌸",
+    "지친 마음은 내 푹신한 털에 기대어 쉬어가렴 🐑",
+    "모든 일이 부드럽고 순조롭게 풀릴 거야, 걱정 마 💖"
+  ]},
+  "신": { animal: "원숭이", emoji: "🐵", name: "재치만점 몽이", greeting: "아이디어가 팡팡! 센스 넘치게 다 해결할 수 있어!", quotes: [
+    "너의 유쾌한 재치로 어떤 난관도 가볍게 넘겨봐 💡",
+    "창의적인 영감이 번뜩이는 날이야! 메모해둬 🍌",
+    "사람들과 유쾌하게 웃을 때 큰 행운의 복이 굴러와 🎈",
+    "똑똑하고 민첩한 너는 뭐든 금방 배워서 해내잖아 👏",
+    "우끼끼! 너랑 함께라서 나도 너무 신나! 파이팅 🐵✨"
+  ]},
+  "유": { animal: "닭", emoji: "🐔", name: "새벽별 꼬꼬", greeting: "행운의 새벽 기상! 너의 매력이 가장 빛나는 때야!", quotes: [
+    "단정하고 세련된 너의 품격이 모두의 부러움을 사 👑",
+    "흐트러짐 없는 결단력으로 최고의 결실을 맺어봐 💎",
+    "남들이 보지 못한 작은 보석을 네가 찾아낼 거야 🔍",
+    "약속과 신의를 지키는 너의 태도가 큰 기회를 불러와 📜",
+    "꼬끼오! 눈부신 아침 햇살처럼 찬란한 하루가 될 거야 🐔☀️"
+  ]},
+  "술": { animal: "개", emoji: "🐶", name: "충직한 댕댕이", greeting: "믿음직한 너의 곁에 최고의 인연과 동료가 찾아와!", quotes: [
+    "너의 한결같은 진심은 누구에게나 감동을 줘 🐾",
+    "의리와 신뢰로 맺은 관계가 평생의 든든한 자산이야 🤝",
+    "혼자가 아니야, 언제나 널 믿고 응원하는 내가 있잖아 🐶",
+    "오늘 꼬리를 살랑이며 반가운 행운의 손님이 찾아올 거야 🎁",
+    "멍멍! 넌 세상에서 제일 착하고 멋진 사람이야 💖"
+  ]},
+  "해": { animal: "돼지", emoji: "🐷", name: "복덩이 꿀꿀이", greeting: "재물복과 먹을 복이 가득! 편안하고 넉넉한 하루야!", quotes: [
+    "오늘 맛있는 음식 먹고 행복 충전 100% 해보자 🍯",
+    "너의 너그러운 마음씨가 큰 복덕을 자석처럼 끌어당겨 💰",
+    "여유를 가져봐, 억지로 애쓰지 않아도 저절로 풀려 🍀",
+    "네가 가는 곳마다 풍요와 웃음꽃이 피어날 거야 🌸",
+    "꿀꿀! 복주머니를 활짝 열어둘게, 복 듬뿍 받아가 🐷💖"
+  ]}
+};
+
 const App = {
   currentMode: "daily", // 'daily', 'saju', 'love'
   activeTab: "daily",
@@ -11,8 +98,9 @@ const App = {
   partnerSaju: null,
   compatResult: null,
   currentTarotCard: null,
+  currentMascot: null,
+  mascotQuoteIdx: 0,
   isBlessingOpen: false,
-
   init() {
     this.populateDateSelects();
     this.initRealtimeBanner();
@@ -101,17 +189,14 @@ const App = {
     const submitBtnText = document.getElementById("submitBtnText");
 
     if (mode === "daily") {
-      advFields.classList.remove("expanded");
-      partnerFields.classList.remove("expanded");
-      submitBtnText.textContent = "오늘의 운세 바로보기";
+      if (partnerFields) partnerFields.classList.remove("expanded");
+      if (submitBtnText) submitBtnText.textContent = "🔮 내 수호동물 & 오늘의 운세 보기";
     } else if (mode === "saju") {
-      advFields.classList.add("expanded");
-      partnerFields.classList.remove("expanded");
-      submitBtnText.textContent = "정통 사주팔자 만세력 분석하기";
+      if (partnerFields) partnerFields.classList.remove("expanded");
+      if (submitBtnText) submitBtnText.textContent = "📜 정통 사주팔자 만세력 분석하기";
     } else if (mode === "love") {
-      advFields.classList.add("expanded");
-      partnerFields.classList.add("expanded");
-      submitBtnText.textContent = "연애운 & 인연 궁합 분석하기";
+      if (partnerFields) partnerFields.classList.add("expanded");
+      if (submitBtnText) submitBtnText.textContent = "💖 연애운 & 인연 궁합 분석하기";
     }
 
     if (window.lucide) window.lucide.createIcons();
@@ -289,12 +374,29 @@ const App = {
     const s = this.userSaju;
     const f = this.dailyFortune;
 
+    // 0. 귀여운 십이지신 수호동물 마스코트 파트너 렌더링
+    const dayJiChar = s.pillars.day.ji.char;
+    const yearJiChar = s.pillars.year.ji.char;
+    const mascot = ZODIAC_MASCOTS[dayJiChar] || ZODIAC_MASCOTS[yearJiChar] || ZODIAC_MASCOTS["자"];
+    this.currentMascot = mascot;
+    this.mascotQuoteIdx = 0;
+
+    const mascotEmoji = document.getElementById("mascotEmoji");
+    const mascotNameTag = document.getElementById("mascotNameTag");
+    const mascotQuote = document.getElementById("mascotQuote");
+    if (mascotEmoji) mascotEmoji.textContent = mascot.emoji;
+    if (mascotNameTag) mascotNameTag.textContent = `수호동물 ${mascot.name} ${mascot.emoji}`;
+    if (mascotQuote) {
+      mascotQuote.textContent = `"${s.userInfo.name}님, ${mascot.greeting} 오늘 하루도 내가 든든하게 지켜줄게! 💖"`;
+    }
+
     // 1. 프로필 요약 카드
     document.getElementById("resUserName").textContent = s.userInfo.name;
     document.getElementById("resSolarDate").textContent = s.userInfo.solarDateString;
     document.getElementById("resLunarDate").textContent = s.userInfo.lunarDate ? `${s.userInfo.lunarDate.year}년 ${s.userInfo.lunarDate.month}월 ${s.userInfo.lunarDate.day}일` : "-";
     document.getElementById("resGender").textContent = s.userInfo.genderKr;
     document.getElementById("resHourDesc").textContent = s.userInfo.isUnknownHour ? "시간 모름" : `${s.userInfo.birthHour}시 ${s.userInfo.birthMinute}분`;
+
 
     document.getElementById("resIljuAnimalSymbol").textContent = s.iljuDetail.symbol;
     document.getElementById("resStrengthBadge").textContent = s.strengthStatus;
@@ -570,12 +672,12 @@ const App = {
     this.activeTab = tabName;
     const tabBtns = document.querySelectorAll(".result-tab-btn");
     tabBtns.forEach(btn => {
-      btn.className = "result-tab-btn px-3.5 py-2 rounded-lg font-medium whitespace-nowrap modern-chip text-slate-400 hover:text-white";
+      btn.className = "result-tab-btn tab-btn px-3.5 py-2 rounded-xl font-medium whitespace-nowrap modern-chip text-slate-300 hover:text-white";
     });
 
     const activeBtn = document.getElementById(`tabBtn-${tabName}`);
     if (activeBtn) {
-      activeBtn.className = "result-tab-btn px-3.5 py-2 rounded-lg font-medium whitespace-nowrap bg-white/10 text-amber-300 border border-amber-500/30";
+      activeBtn.className = "result-tab-btn tab-btn px-3.5 py-2 rounded-xl font-medium whitespace-nowrap active-tab text-amber-300 border border-amber-500/30";
     }
 
     const panes = document.querySelectorAll(".tab-pane");
@@ -588,6 +690,87 @@ const App = {
 
     if (window.lucide) window.lucide.createIcons();
   },
+
+  // NEW: 마스코트 상호작용 (탭/클릭 시 응원 말풍선 및 하트/별 폭죽)
+  interactMascot() {
+    if (!this.currentMascot) return;
+    const quotes = this.currentMascot.quotes || [];
+    this.mascotQuoteIdx = ((this.mascotQuoteIdx || 0) + 1) % quotes.length;
+    const quoteEl = document.getElementById("mascotQuote");
+    if (quoteEl) {
+      quoteEl.textContent = `"${quotes[this.mascotQuoteIdx]}"`;
+    }
+
+    const emojiEl = document.getElementById("mascotEmoji");
+    if (emojiEl) {
+      emojiEl.style.transform = "scale(1.25) rotate(12deg)";
+      setTimeout(() => { emojiEl.style.transform = ""; }, 250);
+    }
+
+    if (window.confetti) {
+      window.confetti({
+        particleCount: 20,
+        spread: 50,
+        origin: { y: 0.35 },
+        colors: ["#fbbf24", "#f43f5e", "#a855f7", "#38bdf8", "#34d399"]
+      });
+    }
+  },
+
+  // NEW: 비밀 포춘쿠키 톡! 깨뜨리기
+  crackFortuneCookie() {
+    const whole = document.getElementById("cookieWhole");
+    const cracked = document.getElementById("cookieCracked");
+    const promptText = document.getElementById("cookiePromptText");
+    const ribbon = document.getElementById("cookieRibbon");
+    if (!whole || !cracked || !ribbon) return;
+
+    whole.classList.add("hidden");
+    cracked.classList.remove("hidden");
+    if (promptText) promptText.classList.add("hidden");
+    ribbon.classList.remove("hidden");
+
+    const dateTag = document.getElementById("cookieDateTag");
+    if (dateTag && this.dailyFortune) {
+      dateTag.textContent = this.dailyFortune.dateString;
+    }
+
+    const fortuneQuotes = [
+      { msg: "망설이던 일에 첫걸음을 내딛으세요. 작은 용기가 커다란 기적을 부릅니다.", key: "밝은 미소와 긍정적인 첫인사" },
+      { msg: "뜻밖의 귀인이 당신의 든든한 지원군으로 다가옵니다. 마음의 문을 열어두세요.", key: "열린 대화와 따뜻한 경청" },
+      { msg: "잠시 쉼표를 찍고 숨을 고르세요. 여유로운 마음에서 가장 번뜩이는 영감이 피어납니다.", key: "따뜻한 차 한 잔과 10분의 산책" },
+      { msg: "당신이 오랫동안 정성 들인 씨앗이 드디어 싹을 틔웁니다. 결실의 기쁨을 누리세요.", key: "끝까지 흔들리지 않는 뚝심" },
+      { msg: "과거의 아쉬움은 훌훌 털어내세요. 바로 오늘부터 당신의 눈부신 황금기가 시작됩니다.", key: "산뜻한 주변 정리와 새 옷차림" },
+      { msg: "물질적인 이득보다 소중한 사람들과의 신뢰를 선택하세요. 몇 배의 복으로 되돌아옵니다.", key: "진심 어린 감사 메시지" }
+    ];
+
+    const randomPick = fortuneQuotes[Math.floor(Math.random() * fortuneQuotes.length)];
+    const msgEl = document.getElementById("cookieMessage");
+    const keyEl = document.getElementById("cookieKeyItem");
+    if (msgEl) msgEl.textContent = `"${randomPick.msg}"`;
+    if (keyEl) keyEl.textContent = randomPick.key;
+
+    if (window.confetti) {
+      window.confetti({
+        particleCount: 35,
+        spread: 60,
+        origin: { y: 0.6 },
+        colors: ["#fbbf24", "#f59e0b", "#fde047"]
+      });
+    }
+  },
+
+  resetCookie() {
+    const whole = document.getElementById("cookieWhole");
+    const cracked = document.getElementById("cookieCracked");
+    const promptText = document.getElementById("cookiePromptText");
+    const ribbon = document.getElementById("cookieRibbon");
+    if (whole) whole.classList.remove("hidden");
+    if (cracked) cracked.classList.add("hidden");
+    if (promptText) promptText.classList.remove("hidden");
+    if (ribbon) ribbon.classList.add("hidden");
+  },
+
 
   // 타로
   initTarotCard() {

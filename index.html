@@ -58,13 +58,16 @@
     <!-- SECTION 1: Input Form View -->
     <section id="inputSection" class="transition-all duration-300">
       
-      <!-- Clean Minimal Hero -->
-      <div class="text-center max-w-xl mx-auto mb-8 pt-2">
+      <!-- Clean Friendly Hero -->
+      <div class="text-center max-w-xl mx-auto mb-7 pt-2">
+        <div class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs font-medium mb-3">
+          <span>✨ 십이지신 수호동물 & KASI 정통 만세력</span>
+        </div>
         <h1 class="text-2xl sm:text-3xl font-bold tracking-tight mb-2 text-white font-serif-kr">
-          나의 타고난 사주와 오늘을 읽다
+          나를 지켜주는 수호신과 오늘의 운세
         </h1>
         <p class="text-xs sm:text-sm text-slate-400 leading-relaxed">
-          한국천문연구원(KASI) 표준 역법 공식에 따라 입춘과 24절기, 60갑자 일진을 오차 없이 계산합니다.
+          한국천문연구원(KASI) 정본 역법으로 오차 없이 사주를 풀고, 귀여운 수호 캐릭터가 매일의 행운을 전합니다.
         </p>
       </div>
 
@@ -73,16 +76,17 @@
         
         <!-- Mode Tabs (Segmented Button Style) -->
         <div class="p-1 bg-black/40 rounded-xl border border-white/5 grid grid-cols-3 gap-1">
-          <button type="button" onclick="App.setMode('daily')" id="modeBtnDaily" class="py-2 rounded-lg text-xs font-medium transition text-center text-amber-300 bg-white/5">
-            오늘의 운세
+          <button type="button" onclick="App.setMode('daily')" id="modeBtnDaily" class="py-2.5 rounded-lg text-xs font-semibold transition text-center text-amber-300 bg-white/10 flex items-center justify-center space-x-1">
+            <span>🔮 오늘의 운세</span>
           </button>
-          <button type="button" onclick="App.setMode('saju')" id="modeBtnSaju" class="py-2 rounded-lg text-xs font-medium transition text-center text-slate-400 hover:text-white">
-            정통 사주팔자
+          <button type="button" onclick="App.setMode('saju')" id="modeBtnSaju" class="py-2.5 rounded-lg text-xs font-semibold transition text-center text-slate-400 hover:text-white flex items-center justify-center space-x-1">
+            <span>📜 정통 사주</span>
           </button>
-          <button type="button" onclick="App.setMode('love')" id="modeBtnLove" class="py-2 rounded-lg text-xs font-medium transition text-center text-slate-400 hover:text-white">
-            연애 & 궁합
+          <button type="button" onclick="App.setMode('love')" id="modeBtnLove" class="py-2.5 rounded-lg text-xs font-semibold transition text-center text-slate-400 hover:text-white flex items-center justify-center space-x-1">
+            <span>💖 연애 & 궁합</span>
           </button>
         </div>
+
 
         <form id="sajuForm" onsubmit="App.handleSubmit(event)" class="space-y-4">
 
@@ -237,11 +241,13 @@
           </div>
 
           <!-- Submit Button -->
-          <button type="submit" class="w-full py-3.5 rounded-xl font-medium text-sm text-slate-900 bg-amber-400 hover:bg-amber-300 transition-all duration-200 flex items-center justify-center space-x-1.5 shadow-sm">
-            <i data-lucide="sparkles" class="w-4 h-4"></i>
-            <span id="submitBtnText" class="font-semibold">오늘의 운세 바로보기</span>
+          <button type="submit" class="w-full py-4 rounded-2xl font-bold text-sm text-slate-900 bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg hover:shadow-amber-400/20 active:scale-[0.98]">
+            <span class="text-base animate-bounce">✨</span>
+            <span id="submitBtnText" class="font-bold">내 수호동물 & 운세 만나보기</span>
+            <i data-lucide="arrow-right" class="w-4 h-4 text-slate-900"></i>
           </button>
         </form>
+
       </div>
     </section>
 
@@ -267,6 +273,33 @@
             <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
             <span>공유</span>
           </button>
+        </div>
+      </div>
+
+      <!-- NEW: 귀여운 십이지신 수호동물 파트너 카드 (인터랙티브 애니메이션) -->
+      <div id="mascotCard" class="mascot-card p-5 relative overflow-hidden flex flex-col sm:flex-row items-center gap-4 cursor-pointer select-none" onclick="App.interactMascot()">
+        <!-- Mascot Avatar with Floating Bounce & Glow -->
+        <div class="relative shrink-0 flex flex-col items-center">
+          <div class="mascot-avatar-container w-20 h-20 sm:w-24 sm:h-24 rounded-3xl flex items-center justify-center relative shadow-lg">
+            <span id="mascotEmoji" class="text-5xl sm:text-6xl animate-mascot-bounce filter drop-shadow-md">🐲</span>
+            <span class="absolute -top-1 -right-1 text-sm animate-pulse">✨</span>
+          </div>
+          <span class="mt-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-slate-900 shadow-sm whitespace-nowrap animate-bounce">
+            톡! 눌러봐 👆
+          </span>
+        </div>
+
+        <!-- Speech Bubble with Animation -->
+        <div class="flex-grow text-center sm:text-left space-y-2 w-full">
+          <div class="flex items-center justify-center sm:justify-start space-x-2">
+            <span id="mascotNameTag" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+              수호동물 청룡이 🐲
+            </span>
+            <span class="text-[11px] text-slate-400">당신만을 지켜주는 평생의 수호신</span>
+          </div>
+          <div class="speech-bubble relative p-3.5 rounded-2xl text-xs sm:text-sm text-slate-100 font-medium leading-relaxed">
+            <p id="mascotQuote">"반가워! 오늘 당신의 기운은 아주 맑음이야! 나를 톡 누르면 특별한 응원 메시지를 줄게 💖"</p>
+          </div>
         </div>
       </div>
 
@@ -317,27 +350,31 @@
         </div>
       </div>
 
-      <!-- Navigation Tabs (Modern Minimal Chips) -->
+      <!-- Navigation Tabs (Modern Minimal & Cute Chips) -->
       <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 no-print scrollbar-none text-xs">
-        <button onclick="App.switchResultTab('daily')" id="tabBtn-daily" class="result-tab-btn px-3.5 py-2 rounded-lg font-medium whitespace-nowrap bg-white/10 text-amber-300 border border-amber-500/30">
-          오늘의 운세
+        <button onclick="App.switchResultTab('daily')" id="tabBtn-daily" class="result-tab-btn tab-btn px-3.5 py-2 rounded-xl font-medium whitespace-nowrap active-tab text-amber-300 border border-amber-500/30">
+          🔮 오늘의 운세
         </button>
-        <button onclick="App.switchResultTab('saju')" id="tabBtn-saju" class="result-tab-btn px-3.5 py-2 rounded-lg font-medium whitespace-nowrap modern-chip text-slate-400 hover:text-white">
-          정통 사주명식
+        <button onclick="App.switchResultTab('saju')" id="tabBtn-saju" class="result-tab-btn tab-btn px-3.5 py-2 rounded-xl font-medium whitespace-nowrap modern-chip text-slate-300 hover:text-white">
+          📜 정통 사주
         </button>
-        <button onclick="App.switchResultTab('element')" id="tabBtn-element" class="result-tab-btn px-3.5 py-2 rounded-lg font-medium whitespace-nowrap modern-chip text-slate-400 hover:text-white">
-          오행 밸런스 & 없는 오행
+        <button onclick="App.switchResultTab('element')" id="tabBtn-element" class="result-tab-btn tab-btn px-3.5 py-2 rounded-xl font-medium whitespace-nowrap modern-chip text-slate-300 hover:text-white">
+          🌱 오행 밸런스
         </button>
-        <button onclick="App.switchResultTab('love')" id="tabBtn-love" class="result-tab-btn px-3.5 py-2 rounded-lg font-medium whitespace-nowrap modern-chip text-slate-400 hover:text-white">
-          연애 & 궁합
+        <button onclick="App.switchResultTab('love')" id="tabBtn-love" class="result-tab-btn tab-btn px-3.5 py-2 rounded-xl font-medium whitespace-nowrap modern-chip text-slate-300 hover:text-white">
+          💖 연애 & 궁합
         </button>
-        <button onclick="App.switchResultTab('wealth')" id="tabBtn-wealth" class="result-tab-btn px-3.5 py-2 rounded-lg font-medium whitespace-nowrap modern-chip text-slate-400 hover:text-white">
-          재물 & 커리어
+        <button onclick="App.switchResultTab('wealth')" id="tabBtn-wealth" class="result-tab-btn tab-btn px-3.5 py-2 rounded-xl font-medium whitespace-nowrap modern-chip text-slate-300 hover:text-white">
+          💰 재물 & 커리어
         </button>
-        <button onclick="App.switchResultTab('tarot')" id="tabBtn-tarot" class="result-tab-btn px-3.5 py-2 rounded-lg font-medium whitespace-nowrap modern-chip text-slate-400 hover:text-white">
-          오늘의 타로
+        <button onclick="App.switchResultTab('tarot')" id="tabBtn-tarot" class="result-tab-btn tab-btn px-3.5 py-2 rounded-xl font-medium whitespace-nowrap modern-chip text-slate-300 hover:text-white">
+          🃏 오늘의 타로
+        </button>
+        <button onclick="App.switchResultTab('cookie')" id="tabBtn-cookie" class="result-tab-btn tab-btn px-3.5 py-2 rounded-xl font-medium whitespace-nowrap modern-chip text-slate-300 hover:text-white">
+          🥠 포춘쿠키
         </button>
       </div>
+
 
       <!-- TAB 1: 오늘의 운세 -->
       <div id="tabContent-daily" class="tab-pane space-y-4">
@@ -521,54 +558,75 @@
             <span class="text-[11px] text-slate-400">원국 8자 기준</span>
           </div>
 
-          <!-- Progress Bars with Exact Counts -->
-          <div class="space-y-3 text-xs">
+          <!-- Progress Bars with Exact Counts & Cute Jelly Gauges -->
+          <div class="space-y-3.5 text-xs">
             <div>
-              <div class="flex justify-between mb-1">
-                <span class="text-emerald-400 font-medium">목(木)</span>
-                <span id="woodCountLabel" class="text-slate-300"></span>
+              <div class="flex justify-between items-center mb-1.5">
+                <span class="text-emerald-400 font-semibold flex items-center space-x-1.5">
+                  <span class="text-sm">🌱</span>
+                  <span>목(木)</span>
+                  <span class="text-[10px] text-slate-500 font-normal">성장·추진력</span>
+                </span>
+                <span id="woodCountLabel" class="text-slate-200 font-medium"></span>
               </div>
-              <div class="h-2 bg-slate-800 rounded-full overflow-hidden">
-                <div id="barWood" class="h-full bg-emerald-500 rounded-full" style="width: 0%"></div>
+              <div class="h-3 bg-slate-900/80 rounded-full overflow-hidden p-0.5 border border-white/5">
+                <div id="barWood" class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full jelly-bar" style="width: 0%"></div>
               </div>
             </div>
             <div>
-              <div class="flex justify-between mb-1">
-                <span class="text-rose-400 font-medium">화(火)</span>
-                <span id="fireCountLabel" class="text-slate-300"></span>
+              <div class="flex justify-between items-center mb-1.5">
+                <span class="text-rose-400 font-semibold flex items-center space-x-1.5">
+                  <span class="text-sm">🔥</span>
+                  <span>화(火)</span>
+                  <span class="text-[10px] text-slate-500 font-normal">열정·표현력</span>
+                </span>
+                <span id="fireCountLabel" class="text-slate-200 font-medium"></span>
               </div>
-              <div class="h-2 bg-slate-800 rounded-full overflow-hidden">
-                <div id="barFire" class="h-full bg-rose-500 rounded-full" style="width: 0%"></div>
-              </div>
-            </div>
-            <div>
-              <div class="flex justify-between mb-1">
-                <span class="text-amber-400 font-medium">토(土)</span>
-                <span id="earthCountLabel" class="text-slate-300"></span>
-              </div>
-              <div class="h-2 bg-slate-800 rounded-full overflow-hidden">
-                <div id="barEarth" class="h-full bg-amber-500 rounded-full" style="width: 0%"></div>
+              <div class="h-3 bg-slate-900/80 rounded-full overflow-hidden p-0.5 border border-white/5">
+                <div id="barFire" class="h-full bg-gradient-to-r from-rose-500 to-pink-400 rounded-full jelly-bar" style="width: 0%"></div>
               </div>
             </div>
             <div>
-              <div class="flex justify-between mb-1">
-                <span class="text-slate-300 font-medium">금(金)</span>
-                <span id="metalCountLabel" class="text-slate-300"></span>
+              <div class="flex justify-between items-center mb-1.5">
+                <span class="text-amber-400 font-semibold flex items-center space-x-1.5">
+                  <span class="text-sm">⛰️</span>
+                  <span>토(土)</span>
+                  <span class="text-[10px] text-slate-500 font-normal">신뢰·안정감</span>
+                </span>
+                <span id="earthCountLabel" class="text-slate-200 font-medium"></span>
               </div>
-              <div class="h-2 bg-slate-800 rounded-full overflow-hidden">
-                <div id="barMetal" class="h-full bg-slate-300 rounded-full" style="width: 0%"></div>
+              <div class="h-3 bg-slate-900/80 rounded-full overflow-hidden p-0.5 border border-white/5">
+                <div id="barEarth" class="h-full bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full jelly-bar" style="width: 0%"></div>
               </div>
             </div>
             <div>
-              <div class="flex justify-between mb-1">
-                <span class="text-sky-400 font-medium">수(水)</span>
-                <span id="waterCountLabel" class="text-slate-300"></span>
+              <div class="flex justify-between items-center mb-1.5">
+                <span class="text-slate-300 font-semibold flex items-center space-x-1.5">
+                  <span class="text-sm">⚔️</span>
+                  <span>금(金)</span>
+                  <span class="text-[10px] text-slate-500 font-normal">결단·마무리</span>
+                </span>
+                <span id="metalCountLabel" class="text-slate-200 font-medium"></span>
               </div>
-              <div class="h-2 bg-slate-800 rounded-full overflow-hidden">
-                <div id="barWater" class="h-full bg-sky-500 rounded-full" style="width: 0%"></div>
+              <div class="h-3 bg-slate-900/80 rounded-full overflow-hidden p-0.5 border border-white/5">
+                <div id="barMetal" class="h-full bg-gradient-to-r from-slate-300 to-slate-100 rounded-full jelly-bar" style="width: 0%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between items-center mb-1.5">
+                <span class="text-sky-400 font-semibold flex items-center space-x-1.5">
+                  <span class="text-sm">💧</span>
+                  <span>수(水)</span>
+                  <span class="text-[10px] text-slate-500 font-normal">지혜·유연함</span>
+                </span>
+                <span id="waterCountLabel" class="text-slate-200 font-medium"></span>
+              </div>
+              <div class="h-3 bg-slate-900/80 rounded-full overflow-hidden p-0.5 border border-white/5">
+                <div id="barWater" class="h-full bg-gradient-to-r from-sky-500 to-cyan-400 rounded-full jelly-bar" style="width: 0%"></div>
               </div>
             </div>
           </div>
+
 
           <!-- Strength and Yongsin -->
           <div class="p-3.5 rounded-xl bg-slate-900/40 border border-white/5 space-y-2 text-xs">
@@ -688,11 +746,61 @@
               <span>다른 카드 뽑기</span>
             </button>
           </div>
+      </div>
+
+      <!-- TAB 7: 오늘의 비밀 포춘쿠키 (귀여운 인터랙티브 미니게임) -->
+      <div id="tabContent-cookie" class="tab-pane hidden space-y-4">
+        <div class="modern-card p-6 text-center space-y-4 relative overflow-hidden">
+          <div class="space-y-1">
+            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/20 inline-block">
+              오늘의 럭키 모먼트 ✨
+            </span>
+            <h3 class="text-base sm:text-lg font-bold text-white font-serif-kr">비밀 포춘쿠키를 톡! 깨보세요</h3>
+            <p class="text-xs text-slate-400">쿠키를 터치하면 바삭 깨지며 오늘 당신만을 위한 황금빛 행운의 조언이 나타납니다.</p>
+          </div>
+
+          <!-- Fortune Cookie Interactive Box -->
+          <div class="py-6 flex flex-col items-center justify-center">
+            <div id="cookieInteractive" class="cookie-container relative cursor-pointer select-none" onclick="App.crackFortuneCookie()">
+              <!-- Uncracked Cookie -->
+              <div id="cookieWhole" class="cookie-whole text-7xl sm:text-8xl select-none filter drop-shadow-xl animate-cookie-wobble hover:scale-110 transition-transform">
+                🥠
+              </div>
+              
+              <!-- Cracked Pieces (Hidden until cracked) -->
+              <div id="cookieCracked" class="cookie-cracked hidden flex items-center justify-center space-x-6">
+                <span class="text-6xl sm:text-7xl animate-cookie-left select-none">🥠</span>
+                <span class="text-6xl sm:text-7xl animate-cookie-right select-none transform scale-x-[-1]">🥠</span>
+              </div>
+
+              <div id="cookiePromptText" class="mt-4 text-xs font-semibold text-amber-300 animate-pulse">
+                👉 쿠키를 톡! 눌러보세요
+              </div>
+            </div>
+
+            <!-- Golden Slip Ribbon with animation -->
+            <div id="cookieRibbon" class="cookie-ribbon hidden max-w-md w-full mt-5 p-4 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-300 to-amber-200 text-slate-900 shadow-2xl border border-amber-200/80 transform transition-all duration-500 animate-slide-up">
+              <div class="flex items-center justify-between text-[11px] font-bold text-amber-900 border-b border-amber-900/20 pb-1.5 mb-2">
+                <span>🌟 오늘의 황금빛 축복 메시지</span>
+                <span id="cookieDateTag"></span>
+              </div>
+              <p id="cookieMessage" class="text-xs sm:text-sm font-bold text-slate-900 leading-relaxed font-serif-kr mb-3">
+                "망설이던 일에 첫걸음을 내딛으세요. 작은 용기가 기적을 부릅니다."
+              </p>
+              <div class="flex items-center justify-between text-[11px] text-amber-950/80 pt-1.5 border-t border-amber-900/15">
+                <span>행운의 열쇠: <strong id="cookieKeyItem" class="text-amber-950 font-bold">미소와 감사의 한마디</strong></span>
+                <button type="button" onclick="App.resetCookie()" class="px-2.5 py-1 rounded-lg bg-black/10 hover:bg-black/20 text-slate-900 text-[10px] font-bold transition">
+                  다시 뽑기 🔄
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
     </section>
   </main>
+
 
   <!-- Footer -->
   <footer class="border-t border-white/5 py-6 text-center text-[11px] text-slate-500">

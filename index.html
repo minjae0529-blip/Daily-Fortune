@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>천명(天命) - 오늘의 운세 & 정통 사주 만세력</title>
-  <meta name="description" content="한국천문연구원 역법 데이터와 정통 명리학(자평진전, 삼명통회) 기반의 고정밀 오늘의 운세, 사주 만세력, 연애운, 궁합, 타로 풀이 서비스">
-  
+  <title>천명(天命) - 정통 사주 만세력 & 오늘의 운세</title>
+  <meta name="description" content="한국천문연구원(KASI) 역법 기반 24절기·60갑자 정통 만세력과 개인 맞춤 오늘의 운세">
+
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -13,122 +13,97 @@
       theme: {
         extend: {
           colors: {
-            brand: {
-              gold: '#d4af37',
-              dark: '#0b0f19',
-              card: '#111827',
-              accent: '#8b5cf6'
-            }
+            deep: '#090d16',
+            card: '#111726',
+            subtle: '#161e31'
           }
         }
       }
     }
   </script>
-  
+
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
-  
-  <!-- Canvas Confetti for Celebration -->
+
+  <!-- Canvas Confetti -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
-  <!-- Custom Styles -->
+  <!-- Custom Modern Minimal Styles -->
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="bg-ambient text-slate-100 flex flex-col min-h-screen selection:bg-amber-500/30 selection:text-amber-200">
+<body class="bg-ambient text-slate-100 flex flex-col min-h-screen selection:bg-amber-500/20 selection:text-amber-300">
 
-  <!-- Header / Navigation -->
-  <header class="border-b border-white/10 sticky top-0 z-50 bg-[#0b0f19]/80 backdrop-blur-md">
-    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-      <div class="flex items-center space-x-3 cursor-pointer" onclick="App.resetToHome()">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-purple-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
-          <i data-lucide="sparkles" class="w-5 h-5 text-white"></i>
-        </div>
-        <div>
-          <span class="font-serif-kr text-xl font-bold tracking-tight text-gold-gradient">천명(天命)</span>
-          <span class="hidden sm:inline-block text-xs text-slate-400 ml-2 border-l border-white/20 pl-2">정통 사주 & 오늘의 운세</span>
-        </div>
+  <!-- Header -->
+  <header class="border-b border-white/5 sticky top-0 z-50 bg-[#090d16]/90 backdrop-blur-md">
+    <div class="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
+      <div class="flex items-center space-x-2.5 cursor-pointer" onclick="App.resetToHome()">
+        <span class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center font-serif-kr font-bold text-sm">
+          命
+        </span>
+        <span class="font-serif-kr text-base font-bold tracking-tight text-white">천명(天命)</span>
+        <span class="text-[11px] text-slate-500 hidden sm:inline-block ml-1">정통 사주 · 오늘의 운세</span>
       </div>
 
       <!-- Realtime Iljin Banner -->
-      <div id="todayBanner" class="hidden md:flex items-center space-x-2 text-xs text-slate-300 glass-pill px-3 py-1.5 rounded-full">
-        <i data-lucide="calendar" class="w-3.5 h-3.5 text-amber-400"></i>
-        <span id="bannerDate">오늘 날짜 계산 중...</span>
-        <span class="text-amber-400 font-semibold" id="bannerIljin"></span>
-      </div>
-
-      <div class="flex items-center space-x-3">
-        <button onclick="App.shareLink()" class="p-2 rounded-lg glass-pill text-slate-300 hover:text-white transition" title="공유하기">
-          <i data-lucide="share-2" class="w-4 h-4"></i>
-        </button>
+      <div id="todayBanner" class="text-xs text-slate-400 flex items-center space-x-2">
+        <span id="bannerDate"></span>
+        <span class="text-amber-400 font-medium" id="bannerIljin"></span>
       </div>
     </div>
   </header>
 
-  <!-- Main Container -->
-  <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-8">
-    
+  <!-- Main Content -->
+  <main class="flex-grow max-w-4xl w-full mx-auto px-4 py-8">
+
     <!-- SECTION 1: Input Form View -->
-    <section id="inputSection" class="transition-all duration-500">
+    <section id="inputSection" class="transition-all duration-300">
       
-      <!-- Hero Title -->
-      <div class="text-center max-w-2xl mx-auto mb-10 pt-4">
-        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full glass-pill text-amber-300 text-xs mb-4">
-          <i data-lucide="award" class="w-3.5 h-3.5"></i>
-          <span>한국천문연구원(KASI) 역법 공식 기반 정통 만세력 엔진</span>
-        </div>
-        <h1 class="font-serif-kr text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-4 leading-tight">
-          당신의 타고난 <span class="text-gold-gradient">사주팔자</span>와<br>오늘의 <span class="text-gold-gradient">운명 흐름</span>을 읽다
+      <!-- Clean Minimal Hero -->
+      <div class="text-center max-w-xl mx-auto mb-8 pt-2">
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight mb-2 text-white font-serif-kr">
+          나의 타고난 사주와 오늘을 읽다
         </h1>
-        <p class="text-slate-400 text-sm sm:text-base leading-relaxed">
-          생년월일시 속에 숨겨진 음양오행의 조화와 기운을 정밀 분석하여, 매일의 선택과 삶의 갈림길에서 현명한 나침반이 되어드립니다.
+        <p class="text-xs sm:text-sm text-slate-400 leading-relaxed">
+          한국천문연구원(KASI) 표준 역법 공식에 따라 입춘과 24절기, 60갑자 일진을 오차 없이 계산합니다.
         </p>
       </div>
 
       <!-- Main Input Card -->
-      <div class="max-w-2xl mx-auto glass-card rounded-2xl p-6 sm:p-8 border border-white/10 shadow-2xl relative">
-        <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-purple-600 text-[11px] font-semibold text-white uppercase tracking-wider shadow-md">
-          운명 분석 신청서
+      <div class="max-w-xl mx-auto modern-card p-6 sm:p-7 space-y-5">
+        
+        <!-- Mode Tabs (Segmented Button Style) -->
+        <div class="p-1 bg-black/40 rounded-xl border border-white/5 grid grid-cols-3 gap-1">
+          <button type="button" onclick="App.setMode('daily')" id="modeBtnDaily" class="py-2 rounded-lg text-xs font-medium transition text-center text-amber-300 bg-white/5">
+            오늘의 운세
+          </button>
+          <button type="button" onclick="App.setMode('saju')" id="modeBtnSaju" class="py-2 rounded-lg text-xs font-medium transition text-center text-slate-400 hover:text-white">
+            정통 사주팔자
+          </button>
+          <button type="button" onclick="App.setMode('love')" id="modeBtnLove" class="py-2 rounded-lg text-xs font-medium transition text-center text-slate-400 hover:text-white">
+            연애 & 궁합
+          </button>
         </div>
 
-        <!-- Mode Selector Tabs -->
-        <div class="mb-6 mt-2">
-          <label class="block text-xs font-semibold text-slate-400 mb-2">어떤 운세를 보시겠습니까?</label>
-          <div class="grid grid-cols-3 gap-2 p-1 bg-black/40 rounded-xl border border-white/5">
-            <button type="button" onclick="App.setMode('daily')" id="modeBtnDaily" class="mode-tab py-2.5 px-3 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center justify-center space-x-1.5 bg-amber-500/20 text-amber-300 border border-amber-500/40">
-              <i data-lucide="sun" class="w-4 h-4"></i>
-              <span>오늘의 운세</span>
-            </button>
-            <button type="button" onclick="App.setMode('saju')" id="modeBtnSaju" class="mode-tab py-2.5 px-3 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center justify-center space-x-1.5 text-slate-400 hover:text-white">
-              <i data-lucide="scroll" class="w-4 h-4"></i>
-              <span>정통 사주팔자</span>
-            </button>
-            <button type="button" onclick="App.setMode('love')" id="modeBtnLove" class="mode-tab py-2.5 px-3 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center justify-center space-x-1.5 text-slate-400 hover:text-white">
-              <i data-lucide="heart" class="w-4 h-4"></i>
-              <span>연애 & 궁합</span>
-            </button>
-          </div>
-        </div>
+        <form id="sajuForm" onsubmit="App.handleSubmit(event)" class="space-y-4">
 
-        <form id="sajuForm" onsubmit="App.handleSubmit(event)" class="space-y-5">
-
-          <!-- Basic Info: Name & Gender -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Name & Gender -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label for="userName" class="block text-xs font-medium text-slate-300 mb-1.5">이름 (닉네임)</label>
-              <input type="text" id="userName" required placeholder="홍길동" value="" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition">
+              <label for="userName" class="block text-xs text-slate-400 mb-1">이름 또는 닉네임</label>
+              <input type="text" id="userName" required placeholder="홍길동" class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400/60 transition">
             </div>
             <div>
-              <label class="block text-xs font-medium text-slate-300 mb-1.5">성별</label>
+              <label class="block text-xs text-slate-400 mb-1">성별</label>
               <div class="grid grid-cols-2 gap-2">
                 <label class="cursor-pointer">
                   <input type="radio" name="gender" value="male" checked class="peer sr-only">
-                  <div class="py-2.5 text-center text-xs font-semibold rounded-xl border border-white/10 bg-black/30 peer-checked:bg-blue-600/20 peer-checked:border-blue-500 peer-checked:text-blue-300 transition">
+                  <div class="py-2.5 text-center text-xs font-medium rounded-xl border border-white/10 bg-slate-900/40 peer-checked:bg-slate-800 peer-checked:border-slate-500 peer-checked:text-white transition">
                     남성 (男)
                   </div>
                 </label>
                 <label class="cursor-pointer">
                   <input type="radio" name="gender" value="female" class="peer sr-only">
-                  <div class="py-2.5 text-center text-xs font-semibold rounded-xl border border-white/10 bg-black/30 peer-checked:bg-rose-600/20 peer-checked:border-rose-500 peer-checked:text-rose-300 transition">
+                  <div class="py-2.5 text-center text-xs font-medium rounded-xl border border-white/10 bg-slate-900/40 peer-checked:bg-slate-800 peer-checked:border-slate-500 peer-checked:text-white transition">
                     여성 (女)
                   </div>
                 </label>
@@ -136,691 +111,572 @@
             </div>
           </div>
 
-          <!-- Calendar Type (Solar / Lunar) -->
+          <!-- Calendar Type -->
           <div>
-            <label class="block text-xs font-medium text-slate-300 mb-1.5">양력 / 음력 구분</label>
+            <label class="block text-xs text-slate-400 mb-1">양력 / 음력</label>
             <div class="grid grid-cols-3 gap-2">
               <label class="cursor-pointer">
-                <input type="radio" name="calendarType" value="solar" checked class="peer sr-only" onchange="App.handleCalendarTypeChange()">
-                <div class="py-2 text-center text-xs font-medium rounded-xl border border-white/10 bg-black/30 peer-checked:bg-amber-500/20 peer-checked:border-amber-500 peer-checked:text-amber-300 transition">
+                <input type="radio" name="calendarType" value="solar" checked class="peer sr-only">
+                <div class="py-2 text-center text-xs rounded-xl border border-white/10 bg-slate-900/40 peer-checked:bg-amber-500/10 peer-checked:border-amber-500/40 peer-checked:text-amber-300 transition">
                   양력 (Solar)
                 </div>
               </label>
               <label class="cursor-pointer">
-                <input type="radio" name="calendarType" value="lunar" class="peer sr-only" onchange="App.handleCalendarTypeChange()">
-                <div class="py-2 text-center text-xs font-medium rounded-xl border border-white/10 bg-black/30 peer-checked:bg-amber-500/20 peer-checked:border-amber-500 peer-checked:text-amber-300 transition">
+                <input type="radio" name="calendarType" value="lunar" class="peer sr-only">
+                <div class="py-2 text-center text-xs rounded-xl border border-white/10 bg-slate-900/40 peer-checked:bg-amber-500/10 peer-checked:border-amber-500/40 peer-checked:text-amber-300 transition">
                   음력 평달
                 </div>
               </label>
               <label class="cursor-pointer">
-                <input type="radio" name="calendarType" value="lunar_leap" class="peer sr-only" onchange="App.handleCalendarTypeChange()">
-                <div class="py-2 text-center text-xs font-medium rounded-xl border border-white/10 bg-black/30 peer-checked:bg-amber-500/20 peer-checked:border-amber-500 peer-checked:text-amber-300 transition">
+                <input type="radio" name="calendarType" value="lunar_leap" class="peer sr-only">
+                <div class="py-2 text-center text-xs rounded-xl border border-white/10 bg-slate-900/40 peer-checked:bg-amber-500/10 peer-checked:border-amber-500/40 peer-checked:text-amber-300 transition">
                   음력 윤달
                 </div>
               </label>
             </div>
           </div>
 
-          <!-- Birth Date Selectors -->
+          <!-- Birth Date -->
           <div>
-            <label class="block text-xs font-medium text-slate-300 mb-1.5">생년월일</label>
+            <label class="block text-xs text-slate-400 mb-1">생년월일</label>
             <div class="grid grid-cols-3 gap-2">
-              <select id="birthYear" required class="bg-black/40 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400 transition"></select>
-              <select id="birthMonth" required class="bg-black/40 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400 transition"></select>
-              <select id="birthDay" required class="bg-black/40 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400 transition"></select>
+              <select id="birthYear" required class="bg-slate-900/60 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-400/60 transition"></select>
+              <select id="birthMonth" required class="bg-slate-900/60 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-400/60 transition"></select>
+              <select id="birthDay" required class="bg-slate-900/60 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-400/60 transition"></select>
             </div>
           </div>
 
-          <!-- Birth Time (항상 노출 & 모름 체크박스 제공) -->
-          <div class="p-3.5 rounded-xl bg-black/30 border border-white/10 space-y-2.5">
+          <!-- Birth Time (항상 노출 & 모름 토글 지원) -->
+          <div class="p-3.5 rounded-xl bg-slate-900/40 border border-white/5 space-y-2.5">
             <div class="flex items-center justify-between">
-              <label class="text-xs font-medium text-slate-300 flex items-center space-x-1.5">
+              <label class="text-xs text-slate-300 font-medium flex items-center space-x-1.5">
                 <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-400"></i>
                 <span>태어난 시간 (시/분)</span>
               </label>
               <label class="inline-flex items-center space-x-1.5 cursor-pointer text-xs text-amber-300">
                 <input type="checkbox" id="unknownHour" onchange="App.toggleUnknownHour(this.checked)" class="rounded bg-black/40 border-amber-400/40 text-amber-500 focus:ring-0">
-                <span class="font-semibold">태어난 시간 모름</span>
+                <span>태어난 시간 모름</span>
               </label>
             </div>
 
-            <!-- Time Inputs & 12 Ganji Quick Picker -->
-            <div id="hourInputContainer" class="space-y-2 transition-opacity">
+            <!-- Time Inputs -->
+            <div id="hourInputContainer" class="space-y-2 transition-all">
               <div class="grid grid-cols-2 gap-2">
-                <select id="birthHour" class="bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-400 transition"></select>
-                <select id="birthMinute" class="bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-400 transition"></select>
+                <select id="birthHour" class="bg-slate-900/60 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-400/60 transition"></select>
+                <select id="birthMinute" class="bg-slate-900/60 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-400/60 transition"></select>
               </div>
-              
+
               <!-- 12 Ganji Quick Buttons -->
-              <div id="ganjiBtnGroup" class="flex items-center space-x-1 overflow-x-auto py-1 scrollbar-none text-[11px]">
+              <div class="flex items-center space-x-1 overflow-x-auto py-1 scrollbar-none text-[11px]">
                 <span class="text-slate-500 text-[10px] shrink-0 mr-1">시진:</span>
-                <button type="button" onclick="App.setGanjiTime(0)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">자(23~01)</button>
-                <button type="button" onclick="App.setGanjiTime(2)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">축(01~03)</button>
-                <button type="button" onclick="App.setGanjiTime(4)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">인(03~05)</button>
-                <button type="button" onclick="App.setGanjiTime(6)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">묘(05~07)</button>
-                <button type="button" onclick="App.setGanjiTime(8)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">진(07~09)</button>
-                <button type="button" onclick="App.setGanjiTime(10)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">사(09~11)</button>
-                <button type="button" onclick="App.setGanjiTime(12)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">오(11~13)</button>
-                <button type="button" onclick="App.setGanjiTime(14)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">미(13~15)</button>
-                <button type="button" onclick="App.setGanjiTime(16)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">신(15~17)</button>
-                <button type="button" onclick="App.setGanjiTime(18)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">유(17~19)</button>
-                <button type="button" onclick="App.setGanjiTime(20)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">술(19~21)</button>
-                <button type="button" onclick="App.setGanjiTime(22)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">해(21~23)</button>
+                <button type="button" onclick="App.setGanjiTime(0)" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">자(23~01)</button>
+                <button type="button" onclick="App.setGanjiTime(2)" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">축(01~03)</button>
+                <button type="button" onclick="App.setGanjiTime(4)" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">인(03~05)</button>
+                <button type="button" onclick="App.setGanjiTime(6)" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">묘(05~07)</button>
+                <button type="button" onclick="App.setGanjiTime(8)" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">진(07~09)</button>
+                <button type="button" onclick="App.setGanjiTime(10)" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">사(09~11)</button>
+                <button type="button" onclick="App.setGanjiTime(12)" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">오(11~13)</button>
+                <button type="button" onclick="App.setGanjiTime(14)" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">미(13~15)</button>
+                <button type="button" onclick="App.setGanjiTime(16)" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">신(15~17)</button>
+                <button type="button" onclick="App.setGanjiTime(18)" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">유(17~19)</button>
+                <button type="button" onclick="App.setGanjiTime(20)" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">술(19~21)</button>
+                <button type="button" onclick="App.setGanjiTime(22)" class="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">해(21~23)</button>
               </div>
             </div>
           </div>
 
-          <!-- Dynamic Expansion: Saju & Professional Time Options -->
+          <!-- Saju Professional Time Options -->
           <div id="advancedSajuFields" class="expandable-section space-y-3">
-            <div class="pt-2 border-t border-white/10">
-              <!-- True Solar Time Adjust (30min) -->
-              <div class="flex items-center justify-between p-3 rounded-xl bg-black/40 border border-white/10 text-xs">
-                <div class="flex items-center space-x-2">
-                  <i data-lucide="compass" class="w-4 h-4 text-sky-400"></i>
-                  <div>
-                    <span class="font-medium text-slate-200">한국 표준시 30분 보정 적용</span>
-                    <p class="text-[10px] text-slate-400">동경 135도 vs 서울 127.5도 시차(-30분) 정밀 반영</p>
-                  </div>
+            <div class="pt-1">
+              <div class="flex items-center justify-between p-3 rounded-xl bg-slate-900/40 border border-white/5 text-xs">
+                <div>
+                  <span class="text-slate-200 font-medium">한국 표준시 30분 보정</span>
+                  <p class="text-[10px] text-slate-400">동경 135도 vs 서울 127.5도 시차(-30분) 정밀 반영</p>
                 </div>
-                <input type="checkbox" id="adjust30Min" checked class="rounded bg-black/40 border-white/20 text-amber-500 focus:ring-0">
+                <input type="checkbox" id="adjust30Min" checked class="rounded bg-black/40 border-white/20 text-amber-500">
               </div>
             </div>
           </div>
 
-          <!-- Dynamic Expansion: Partner Love & Match Info -->
-          <div id="partnerSection" class="expandable-section space-y-4">
-            <div class="p-4 rounded-xl bg-purple-950/20 border border-purple-500/20 space-y-4">
+          <!-- Partner Options (Love mode) -->
+          <div id="partnerSection" class="expandable-section space-y-3">
+            <div class="p-3.5 rounded-xl bg-slate-900/60 border border-purple-500/20 space-y-3">
               <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-2 text-purple-300 font-semibold text-xs">
-                  <i data-lucide="heart" class="w-4 h-4 text-pink-400"></i>
-                  <span>상대방 정보 (궁합 정밀 분석)</span>
-                </div>
+                <span class="text-xs font-semibold text-purple-300">상대방 정보 (궁합 분석)</span>
                 <label class="inline-flex items-center space-x-1.5 cursor-pointer text-xs text-purple-300">
-                  <input type="checkbox" id="enablePartner" onchange="App.togglePartnerActive(this.checked)" class="rounded bg-black/40 border-purple-500/30 text-purple-500">
+                  <input type="checkbox" id="enablePartner" onchange="App.togglePartnerActive(this.checked)" class="rounded bg-black/40 border-purple-400/40 text-purple-500">
                   <span>궁합 함께 보기</span>
                 </label>
               </div>
-
-              <div id="partnerInputFields" class="space-y-3 opacity-40 pointer-events-none transition-all">
-                <div class="grid grid-cols-2 gap-3">
-                  <input type="text" id="partnerName" placeholder="상대방 이름" class="bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none">
-                  <select id="partnerGender" class="bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
+              <div id="partnerInputFields" class="space-y-2.5 opacity-30 pointer-events-none transition-all">
+                <div class="grid grid-cols-2 gap-2">
+                  <input type="text" id="partnerName" placeholder="상대방 이름" class="bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white">
+                  <select id="partnerGender" class="bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white">
                     <option value="female">여성 (女)</option>
                     <option value="male">남성 (男)</option>
                   </select>
                 </div>
                 <div class="grid grid-cols-3 gap-2">
-                  <select id="partnerYear" class="bg-black/40 border border-white/10 rounded-xl px-2 py-2 text-xs text-white"></select>
-                  <select id="partnerMonth" class="bg-black/40 border border-white/10 rounded-xl px-2 py-2 text-xs text-white"></select>
-                  <select id="partnerDay" class="bg-black/40 border border-white/10 rounded-xl px-2 py-2 text-xs text-white"></select>
+                  <select id="partnerYear" class="bg-slate-900 border border-white/10 rounded-xl px-2 py-2 text-xs text-white"></select>
+                  <select id="partnerMonth" class="bg-slate-900 border border-white/10 rounded-xl px-2 py-2 text-xs text-white"></select>
+                  <select id="partnerDay" class="bg-slate-900 border border-white/10 rounded-xl px-2 py-2 text-xs text-white"></select>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Submit Button -->
-          <button type="submit" id="submitBtn" class="w-full py-3.5 px-6 rounded-xl font-serif-kr font-bold text-base text-black bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 shadow-lg shadow-amber-500/25 transition-all duration-300 flex items-center justify-center space-x-2 cursor-pointer transform hover:-translate-y-0.5">
-            <i data-lucide="sparkles" class="w-5 h-5 text-black"></i>
-            <span id="submitBtnText">오늘의 운세 바로보기</span>
+          <button type="submit" class="w-full py-3.5 rounded-xl font-medium text-sm text-slate-900 bg-amber-400 hover:bg-amber-300 transition-all duration-200 flex items-center justify-center space-x-1.5 shadow-sm">
+            <i data-lucide="sparkles" class="w-4 h-4"></i>
+            <span id="submitBtnText" class="font-semibold">오늘의 운세 바로보기</span>
           </button>
         </form>
-      </div>
-
-      <!-- Feature highlights -->
-      <div class="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-4 mt-12 text-center">
-        <div class="p-4 rounded-xl glass-card">
-          <i data-lucide="check-circle" class="w-6 h-6 text-amber-400 mx-auto mb-2"></i>
-          <h4 class="text-sm font-semibold mb-1">검증된 KASI 천문 역법</h4>
-          <p class="text-xs text-slate-400">1900~2050년 24절기와 60갑자 일진을 분 단위로 오차 없이 정밀 환산합니다.</p>
-        </div>
-        <div class="p-4 rounded-xl glass-card">
-          <i data-lucide="shield" class="w-6 h-6 text-purple-400 mx-auto mb-2"></i>
-          <h4 class="text-sm font-semibold mb-1">정통 명리학 60일주론 전수</h4>
-          <p class="text-xs text-slate-400">자평진전, 삼명통회에 입각한 십신, 지장간, 8대 핵심 신살을 심층 분석합니다.</p>
-        </div>
-        <div class="p-4 rounded-xl glass-card">
-          <i data-lucide="zap" class="w-6 h-6 text-sky-400 mx-auto mb-2"></i>
-          <h4 class="text-sm font-semibold mb-1">실시간 즉시 분석 & 무료 공유</h4>
-          <p class="text-xs text-slate-400">별도의 회원가입 없이 0.1초 만에 풀이 결과를 확인하고 소장할 수 있습니다.</p>
-        </div>
       </div>
     </section>
 
     <!-- SECTION 2: Results Dashboard View -->
-    <section id="resultSection" class="hidden transition-all duration-500">
+    <section id="resultSection" class="hidden transition-all duration-300 space-y-6">
       
-      <!-- Top Action & Navigation Bar -->
-      <div class="flex flex-wrap items-center justify-between gap-3 mb-6 no-print">
-        <button onclick="App.resetToHome()" class="px-3.5 py-2 rounded-xl glass-pill hover:bg-white/10 text-xs font-semibold text-slate-300 flex items-center space-x-1.5 transition">
-          <i data-lucide="arrow-left" class="w-4 h-4"></i>
-          <span>다시 입력하기</span>
+      <!-- Top Actions -->
+      <div class="flex items-center justify-between no-print text-xs">
+        <button onclick="App.resetToHome()" class="px-3 py-1.5 rounded-lg modern-chip text-slate-300 hover:text-white flex items-center space-x-1">
+          <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+          <span>다시 입력</span>
         </button>
         <div class="flex items-center space-x-2">
-          <button onclick="App.copyResultText()" class="px-3 py-2 rounded-xl glass-pill hover:bg-white/10 text-xs text-slate-300 flex items-center space-x-1.5 transition">
-            <i data-lucide="copy" class="w-4 h-4 text-amber-400"></i>
-            <span>텍스트 복사</span>
+          <button onclick="App.copyResultText()" class="px-3 py-1.5 rounded-lg modern-chip text-slate-300 hover:text-white flex items-center space-x-1">
+            <i data-lucide="copy" class="w-3.5 h-3.5 text-amber-400"></i>
+            <span>복사</span>
           </button>
-          <button onclick="window.print()" class="px-3 py-2 rounded-xl glass-pill hover:bg-white/10 text-xs text-slate-300 flex items-center space-x-1.5 transition">
-            <i data-lucide="printer" class="w-4 h-4 text-sky-400"></i>
-            <span>인쇄 / PDF</span>
+          <button onclick="window.print()" class="px-3 py-1.5 rounded-lg modern-chip text-slate-300 hover:text-white flex items-center space-x-1">
+            <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+            <span>인쇄</span>
           </button>
-          <button onclick="App.shareLink()" class="px-3 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-xs font-semibold flex items-center space-x-1.5 transition">
-            <i data-lucide="share-2" class="w-4 h-4"></i>
-            <span>공유하기</span>
+          <button onclick="App.shareLink()" class="px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 flex items-center space-x-1">
+            <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
+            <span>공유</span>
           </button>
         </div>
       </div>
 
       <!-- User Profile Header Card -->
-      <div class="glass-card-gold rounded-2xl p-6 sm:p-8 mb-6 relative overflow-hidden">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+      <div class="modern-card p-6 relative overflow-hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs mb-3 border border-amber-500/30">
-              <span id="resIljuAnimalSymbol">푸른 쥐</span>
+            <div class="inline-flex items-center space-x-1.5 text-xs text-amber-400 mb-2 font-medium">
+              <span id="resIljuAnimalSymbol"></span>
               <span>·</span>
-              <span id="resStrengthBadge">신강 사주</span>
+              <span id="resStrengthBadge"></span>
             </div>
-            <h2 class="font-serif-kr text-2xl sm:text-3xl font-bold mb-2">
-              <span id="resUserName" class="text-white">홍길동</span> 님의 운명 명식 보고서
+            <h2 class="text-xl sm:text-2xl font-bold text-white font-serif-kr mb-1">
+              <span id="resUserName"></span> 님의 사주 분석 보고서
             </h2>
-            <p class="text-xs sm:text-sm text-slate-300 flex flex-wrap items-center gap-x-3 gap-y-1">
-              <span>양력: <strong id="resSolarDate"></strong></span>
-              <span>음력: <strong id="resLunarDate"></strong></span>
-              <span>성별: <strong id="resGender"></strong></span>
-              <span>태어난 시: <strong id="resHourDesc"></strong></span>
-            </p>
+            <div class="text-xs text-slate-400 flex flex-wrap gap-x-3 gap-y-1">
+              <span>양력: <strong id="resSolarDate" class="text-slate-300"></strong></span>
+              <span>음력: <strong id="resLunarDate" class="text-slate-300"></strong></span>
+              <span>성별: <strong id="resGender" class="text-slate-300"></strong></span>
+              <span>태어난 시: <strong id="resHourDesc" class="text-slate-300"></strong></span>
+            </div>
           </div>
 
-          <!-- Total Fortune Score Circular Gauge -->
-          <div class="flex items-center space-x-4 bg-black/40 px-5 py-3.5 rounded-2xl border border-white/10 shrink-0">
-            <div class="relative w-16 h-16 flex items-center justify-center">
-              <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                <path class="text-slate-800" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                <path id="scoreCirclePath" class="text-amber-400 transition-all duration-1000 ease-out" stroke-dasharray="0, 100" stroke-width="3" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-              </svg>
-              <div class="absolute inset-0 flex items-center justify-center">
-                <span id="resTotalScore" class="text-xl font-bold text-amber-300">88</span>
-              </div>
-            </div>
+          <!-- Total Score Badge -->
+          <div class="flex items-center space-x-3 bg-slate-900/60 px-4 py-2.5 rounded-xl border border-white/5 shrink-0 self-start sm:self-auto">
             <div>
-              <div class="text-[11px] text-slate-400">오늘의 총운 점수</div>
-              <div id="resScoreGrade" class="text-sm font-bold text-gold-gradient">대길(大吉)</div>
-              <div class="text-[10px] text-slate-400">100점 만점 기준</div>
+              <div class="text-[10px] text-slate-400">오늘의 운세 지수</div>
+              <div id="resScoreGrade" class="text-sm font-bold text-amber-300">대길(大吉)</div>
             </div>
+            <span id="resTotalScore" class="text-2xl font-bold text-white">88</span>
           </div>
         </div>
-      </div>
 
-      <!-- Dashboard Category Tabs -->
-      <div class="flex items-center space-x-2 overflow-x-auto pb-3 mb-6 no-print scrollbar-none">
-        <button onclick="App.switchResultTab('daily')" id="tabBtn-daily" class="result-tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center space-x-2">
-          <i data-lucide="sun" class="w-4 h-4"></i>
-          <span>오늘의 운세</span>
-        </button>
-        <button onclick="App.switchResultTab('saju')" id="tabBtn-saju" class="result-tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap glass-card text-slate-300 hover:text-white flex items-center space-x-2">
-          <i data-lucide="grid" class="w-4 h-4"></i>
-          <span>정통 사주명식</span>
-        </button>
-        <button onclick="App.switchResultTab('element')" id="tabBtn-element" class="result-tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap glass-card text-slate-300 hover:text-white flex items-center space-x-2">
-          <i data-lucide="pie-chart" class="w-4 h-4"></i>
-          <span>오행 밸런스</span>
-        </button>
-        <button onclick="App.switchResultTab('love')" id="tabBtn-love" class="result-tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap glass-card text-slate-300 hover:text-white flex items-center space-x-2">
-          <i data-lucide="heart" class="w-4 h-4"></i>
-          <span>연애 & 궁합</span>
-        </button>
-        <button onclick="App.switchResultTab('wealth')" id="tabBtn-wealth" class="result-tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap glass-card text-slate-300 hover:text-white flex items-center space-x-2">
-          <i data-lucide="coins" class="w-4 h-4"></i>
-          <span>재물 & 커리어</span>
-        </button>
-        <button onclick="App.switchResultTab('tarot')" id="tabBtn-tarot" class="result-tab-btn px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap glass-card text-slate-300 hover:text-white flex items-center space-x-2">
-          <i data-lucide="sparkles" class="w-4 h-4"></i>
-          <span>오늘의 타로</span>
-        </button>
-      </div>
-
-      <!-- TAB CONTENT 1: 오늘의 운세 (Daily Fortune) -->
-      <div id="tabContent-daily" class="tab-pane space-y-6">
-        
-        <!-- Daily Headline Card -->
-        <div class="glass-card rounded-2xl p-6 border-l-4 border-amber-400">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-xs font-semibold text-amber-400 flex items-center space-x-1.5">
-              <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
-              <span id="dailyDateTitle">2024년 10월 11일 오늘의 운세</span>
+        <!-- NEW: "내 사주가 좋은 이유 3가지" 인터랙티브 애니메이션 열기 버튼 -->
+        <div class="mt-5 pt-4 border-t border-white/5 flex items-center justify-between">
+          <button type="button" onclick="App.toggleBlessingCard()" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-sky-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold flex items-center justify-between hover:border-amber-400/60 transition group">
+            <span class="flex items-center space-x-2">
+              <i data-lucide="sparkles" class="w-4 h-4 text-amber-400 group-hover:rotate-12 transition-transform"></i>
+              <span>내 사주가 특별히 좋은 이유 3가지 (타고난 복록 심층 해설)</span>
             </span>
-            <span id="dailyTenGodBadge" class="text-[11px] px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">식신일</span>
-          </div>
-          <h3 id="dailyThemeTitle" class="font-serif-kr text-xl font-bold mb-3 text-white">풍요로운 창의력과 미식의 기쁨이 넘치는 날</h3>
-          <p id="dailySummaryText" class="text-sm text-slate-300 leading-relaxed mb-4"></p>
-          
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-white/10 text-xs">
-            <div class="flex items-start space-x-2 text-emerald-300">
-              <i data-lucide="check" class="w-4 h-4 shrink-0 mt-0.5"></i>
-              <span><strong>오늘 추천:</strong> <span id="dailyActionText"></span></span>
-            </div>
-            <div class="flex items-start space-x-2 text-rose-300">
-              <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0 mt-0.5"></i>
-              <span><strong>주의할 점:</strong> <span id="dailyAvoidText"></span></span>
-            </div>
-          </div>
+            <i id="blessingChevron" data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-300"></i>
+          </button>
         </div>
 
-        <!-- 4 Major Fortune Indexes -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div class="glass-card rounded-2xl p-4 text-center">
-            <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-2">
-              <i data-lucide="coins" class="w-4 h-4"></i>
-            </div>
-            <div class="text-xs text-slate-400 mb-1">재물 / 금전운</div>
-            <div id="idxMoneyScore" class="text-xl font-bold text-amber-300">85%</div>
-            <div class="w-full bg-slate-800 rounded-full h-1.5 mt-2 overflow-hidden">
-              <div id="barMoney" class="bg-amber-400 h-full rounded-full" style="width: 85%"></div>
-            </div>
-          </div>
-          <div class="glass-card rounded-2xl p-4 text-center">
-            <div class="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center mx-auto mb-2">
-              <i data-lucide="heart" class="w-4 h-4"></i>
-            </div>
-            <div class="text-xs text-slate-400 mb-1">애정 / 인연운</div>
-            <div id="idxLoveScore" class="text-xl font-bold text-rose-300">92%</div>
-            <div class="w-full bg-slate-800 rounded-full h-1.5 mt-2 overflow-hidden">
-              <div id="barLove" class="bg-rose-400 h-full rounded-full" style="width: 92%"></div>
-            </div>
-          </div>
-          <div class="glass-card rounded-2xl p-4 text-center">
-            <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-2">
-              <i data-lucide="activity" class="w-4 h-4"></i>
-            </div>
-            <div class="text-xs text-slate-400 mb-1">건강 / 바이오</div>
-            <div id="idxHealthScore" class="text-xl font-bold text-emerald-300">80%</div>
-            <div class="w-full bg-slate-800 rounded-full h-1.5 mt-2 overflow-hidden">
-              <div id="barHealth" class="bg-emerald-400 h-full rounded-full" style="width: 80%"></div>
-            </div>
-          </div>
-          <div class="glass-card rounded-2xl p-4 text-center">
-            <div class="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center mx-auto mb-2">
-              <i data-lucide="briefcase" class="w-4 h-4"></i>
-            </div>
-            <div class="text-xs text-slate-400 mb-1">직업 / 성공운</div>
-            <div id="idxCareerScore" class="text-xl font-bold text-sky-300">88%</div>
-            <div class="w-full bg-slate-800 rounded-full h-1.5 mt-2 overflow-hidden">
-              <div id="barCareer" class="bg-sky-400 h-full rounded-full" style="width: 88%"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Lucky Items Box -->
-        <div class="glass-card rounded-2xl p-6">
-          <h4 class="font-serif-kr text-base font-bold text-amber-300 mb-4 flex items-center space-x-2">
-            <i data-lucide="sparkles" class="w-4 h-4"></i>
-            <span>오늘의 행운을 부르는 시크릿 아이템</span>
-          </h4>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-            <div class="p-3 rounded-xl bg-black/40 border border-white/5">
-              <span class="text-slate-400 block mb-1">행운의 컬러</span>
-              <span id="luckyColor" class="font-semibold text-white">초록색, 민트</span>
-            </div>
-            <div class="p-3 rounded-xl bg-black/40 border border-white/5">
-              <span class="text-slate-400 block mb-1">행운의 숫자</span>
-              <span id="luckyNumbers" class="font-semibold text-white">3, 8</span>
-            </div>
-            <div class="p-3 rounded-xl bg-black/40 border border-white/5">
-              <span class="text-slate-400 block mb-1">행운의 방위</span>
-              <span id="luckyDirection" class="font-semibold text-white">동쪽 (East)</span>
-            </div>
-            <div class="p-3 rounded-xl bg-black/40 border border-white/5">
-              <span class="text-slate-400 block mb-1">행운의 음식</span>
-              <span id="luckyFood" class="font-semibold text-white">신선한 채소</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Hourly Fortune Flow -->
-        <div class="glass-card rounded-2xl p-6">
-          <h4 class="font-serif-kr text-base font-bold text-slate-200 mb-4 flex items-center space-x-2">
-            <i data-lucide="clock" class="w-4 h-4 text-sky-400"></i>
-            <span>시간대별 운세 리듬</span>
-          </h4>
-          <div id="hourlyContainer" class="grid grid-cols-1 sm:grid-cols-4 gap-3"></div>
+        <!-- NEW: "내 사주가 좋은 이유 3가지" 아코디언 카드 영역 (애니메이션) -->
+        <div id="blessingSection" class="expandable-section pt-3">
+          <div id="blessingContainer" class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2"></div>
         </div>
       </div>
 
-      <!-- TAB CONTENT 2: 정통 사주명식 & 만세력 (Traditional Saju) -->
-      <div id="tabContent-saju" class="tab-pane hidden space-y-6">
+      <!-- Navigation Tabs (Modern Minimal Chips) -->
+      <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 no-print scrollbar-none text-xs">
+        <button onclick="App.switchResultTab('daily')" id="tabBtn-daily" class="result-tab-btn px-3.5 py-2 rounded-lg font-medium whitespace-nowrap bg-white/10 text-amber-300 border border-amber-500/30">
+          오늘의 운세
+        </button>
+        <button onclick="App.switchResultTab('saju')" id="tabBtn-saju" class="result-tab-btn px-3.5 py-2 rounded-lg font-medium whitespace-nowrap modern-chip text-slate-400 hover:text-white">
+          정통 사주명식
+        </button>
+        <button onclick="App.switchResultTab('element')" id="tabBtn-element" class="result-tab-btn px-3.5 py-2 rounded-lg font-medium whitespace-nowrap modern-chip text-slate-400 hover:text-white">
+          오행 밸런스 & 없는 오행
+        </button>
+        <button onclick="App.switchResultTab('love')" id="tabBtn-love" class="result-tab-btn px-3.5 py-2 rounded-lg font-medium whitespace-nowrap modern-chip text-slate-400 hover:text-white">
+          연애 & 궁합
+        </button>
+        <button onclick="App.switchResultTab('wealth')" id="tabBtn-wealth" class="result-tab-btn px-3.5 py-2 rounded-lg font-medium whitespace-nowrap modern-chip text-slate-400 hover:text-white">
+          재물 & 커리어
+        </button>
+        <button onclick="App.switchResultTab('tarot')" id="tabBtn-tarot" class="result-tab-btn px-3.5 py-2 rounded-lg font-medium whitespace-nowrap modern-chip text-slate-400 hover:text-white">
+          오늘의 타로
+        </button>
+      </div>
+
+      <!-- TAB 1: 오늘의 운세 -->
+      <div id="tabContent-daily" class="tab-pane space-y-4">
         
-        <!-- Four Pillars 8 Characters Grid (사주 4주 8자) -->
-        <div class="glass-card rounded-2xl p-6">
+        <!-- Summary Card -->
+        <div class="modern-card p-5 space-y-3">
+          <div class="flex items-center justify-between text-xs">
+            <span id="dailyDateTitle" class="text-slate-400 font-medium"></span>
+            <span id="dailyTenGodBadge" class="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20 text-[11px]"></span>
+          </div>
+          <h3 id="dailyThemeTitle" class="text-lg font-bold text-white font-serif-kr"></h3>
+          <p id="dailySummaryText" class="text-xs sm:text-sm text-slate-300 leading-relaxed"></p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-3 border-t border-white/5 text-xs">
+            <div class="text-emerald-400">
+              <strong>추천:</strong> <span id="dailyActionText" class="text-slate-300"></span>
+            </div>
+            <div class="text-rose-400">
+              <strong>주의:</strong> <span id="dailyAvoidText" class="text-slate-300"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4 Minor Indexes -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+          <div class="modern-card p-3">
+            <div class="text-[11px] text-slate-400 mb-0.5">재물운</div>
+            <div id="idxMoneyScore" class="text-lg font-bold text-amber-300"></div>
+          </div>
+          <div class="modern-card p-3">
+            <div class="text-[11px] text-slate-400 mb-0.5">애정운</div>
+            <div id="idxLoveScore" class="text-lg font-bold text-rose-300"></div>
+          </div>
+          <div class="modern-card p-3">
+            <div class="text-[11px] text-slate-400 mb-0.5">건강운</div>
+            <div id="idxHealthScore" class="text-lg font-bold text-emerald-300"></div>
+          </div>
+          <div class="modern-card p-3">
+            <div class="text-[11px] text-slate-400 mb-0.5">직업운</div>
+            <div id="idxCareerScore" class="text-lg font-bold text-sky-300"></div>
+          </div>
+        </div>
+
+        <!-- Lucky Items -->
+        <div class="modern-card p-5 space-y-3">
+          <h4 class="text-xs font-semibold text-slate-300">오늘의 행운 요소</h4>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+            <div class="p-2.5 rounded-xl bg-slate-900/40 border border-white/5">
+              <span class="text-slate-500 block text-[10px]">컬러</span>
+              <span id="luckyColor" class="font-medium text-white"></span>
+            </div>
+            <div class="p-2.5 rounded-xl bg-slate-900/40 border border-white/5">
+              <span class="text-slate-500 block text-[10px]">숫자</span>
+              <span id="luckyNumbers" class="font-medium text-white"></span>
+            </div>
+            <div class="p-2.5 rounded-xl bg-slate-900/40 border border-white/5">
+              <span class="text-slate-500 block text-[10px]">방위</span>
+              <span id="luckyDirection" class="font-medium text-white"></span>
+            </div>
+            <div class="p-2.5 rounded-xl bg-slate-900/40 border border-white/5">
+              <span class="text-slate-500 block text-[10px]">음식</span>
+              <span id="luckyFood" class="font-medium text-white"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hourly Rhythm -->
+        <div class="modern-card p-5 space-y-3">
+          <h4 class="text-xs font-semibold text-slate-300">시간대별 운세 흐름</h4>
+          <div id="hourlyContainer" class="grid grid-cols-1 sm:grid-cols-4 gap-2"></div>
+        </div>
+      </div>
+
+      <!-- TAB 2: 정통 사주명식 -->
+      <div id="tabContent-saju" class="tab-pane hidden space-y-4">
+        
+        <!-- 4 Pillars Table -->
+        <div class="modern-card p-5">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="font-serif-kr text-lg font-bold text-white flex items-center space-x-2">
-              <i data-lucide="scroll" class="w-5 h-5 text-amber-400"></i>
-              <span>사주팔자 만세력 명식 (四柱八字)</span>
-            </h3>
-            <span class="text-xs text-slate-400">시주(時) · 일주(日) · 월주(月) · 년주(年)</span>
+            <h3 class="text-sm font-bold text-white font-serif-kr">사주 4주 8자 (四柱八字)</h3>
+            <span class="text-[11px] text-slate-400">시주(時) · 일주(日) · 월주(月) · 년주(年)</span>
           </div>
 
-          <!-- 4 Pillars Table -->
-          <div class="grid grid-cols-4 gap-2 sm:gap-4 text-center">
+          <div class="grid grid-cols-4 gap-2 text-center">
             <!-- 시주 -->
-            <div id="pillarHourCard" class="p-3 sm:p-4 rounded-xl bg-black/40 border border-white/10">
-              <div class="text-[11px] text-slate-400 mb-1">시주 (時柱)</div>
-              <div id="hourTenGodGan" class="text-[10px] text-amber-300 font-medium mb-1">-</div>
-              <div id="hourGanBadge" class="w-12 h-12 sm:w-16 sm:h-16 mx-auto rounded-xl flex flex-col items-center justify-center font-serif-kr text-xl sm:text-2xl font-bold border my-1 element-wood">
-                <span>甲</span>
-                <span class="text-[10px] font-sans font-normal opacity-75">갑</span>
+            <div id="pillarHourCard" class="p-3 rounded-xl bg-slate-900/40 border border-white/5">
+              <div class="text-[10px] text-slate-400 mb-0.5">시주 (時)</div>
+              <div id="hourTenGodGan" class="text-[10px] text-amber-300 mb-1">-</div>
+              <div id="hourGanBadge" class="w-11 h-11 sm:w-14 sm:h-14 mx-auto rounded-xl flex flex-col items-center justify-center font-serif-kr text-lg sm:text-xl font-bold my-1">
+                <span>-</span>
               </div>
-              <div id="hourJiBadge" class="w-12 h-12 sm:w-16 sm:h-16 mx-auto rounded-xl flex flex-col items-center justify-center font-serif-kr text-xl sm:text-2xl font-bold border my-1 element-water">
-                <span>子</span>
-                <span class="text-[10px] font-sans font-normal opacity-75">자</span>
+              <div id="hourJiBadge" class="w-11 h-11 sm:w-14 sm:h-14 mx-auto rounded-xl flex flex-col items-center justify-center font-serif-kr text-lg sm:text-xl font-bold my-1">
+                <span>-</span>
               </div>
               <div id="hourTenGodJi" class="text-[10px] text-slate-400 mt-1">-</div>
-              <div id="hourJijanggan" class="text-[9px] text-slate-500 mt-1">지장간: 癸</div>
+              <div id="hourJijanggan" class="text-[9px] text-slate-500 mt-1"></div>
             </div>
 
-            <!-- 일주 (본원) -->
-            <div class="p-3 sm:p-4 rounded-xl bg-amber-500/10 border-2 border-amber-500/50 shadow-lg shadow-amber-500/10 relative">
-              <div class="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-amber-500 text-[9px] font-bold text-black uppercase">
-                나(본원)
+            <!-- 일주 -->
+            <div class="p-3 rounded-xl bg-amber-500/5 border border-amber-500/40 relative">
+              <span class="absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 py-0.2 rounded bg-amber-400 text-black text-[9px] font-bold">본원</span>
+              <div class="text-[10px] text-amber-400 mb-0.5">일주 (日)</div>
+              <div class="text-[10px] text-amber-300 mb-1">본원(나)</div>
+              <div id="dayGanBadge" class="w-11 h-11 sm:w-14 sm:h-14 mx-auto rounded-xl flex flex-col items-center justify-center font-serif-kr text-lg sm:text-xl font-bold my-1">
+                <span>-</span>
               </div>
-              <div class="text-[11px] text-amber-300 font-semibold mb-1">일주 (日柱)</div>
-              <div class="text-[10px] text-amber-300 font-medium mb-1">본원(나)</div>
-              <div id="dayGanBadge" class="w-12 h-12 sm:w-16 sm:h-16 mx-auto rounded-xl flex flex-col items-center justify-center font-serif-kr text-xl sm:text-2xl font-bold border my-1 element-wood">
-                <span>甲</span>
-                <span class="text-[10px] font-sans font-normal opacity-75">갑</span>
+              <div id="dayJiBadge" class="w-11 h-11 sm:w-14 sm:h-14 mx-auto rounded-xl flex flex-col items-center justify-center font-serif-kr text-lg sm:text-xl font-bold my-1">
+                <span>-</span>
               </div>
-              <div id="dayJiBadge" class="w-12 h-12 sm:w-16 sm:h-16 mx-auto rounded-xl flex flex-col items-center justify-center font-serif-kr text-xl sm:text-2xl font-bold border my-1 element-water">
-                <span>子</span>
-                <span class="text-[10px] font-sans font-normal opacity-75">자</span>
-              </div>
-              <div id="dayTenGodJi" class="text-[10px] text-slate-400 mt-1">정인</div>
-              <div id="dayJijanggan" class="text-[9px] text-slate-500 mt-1">지장간: 癸</div>
+              <div id="dayTenGodJi" class="text-[10px] text-slate-400 mt-1">-</div>
+              <div id="dayJijanggan" class="text-[9px] text-slate-500 mt-1"></div>
             </div>
 
             <!-- 월주 -->
-            <div class="p-3 sm:p-4 rounded-xl bg-black/40 border border-white/10">
-              <div class="text-[11px] text-slate-400 mb-1">월주 (月柱)</div>
-              <div id="monthTenGodGan" class="text-[10px] text-amber-300 font-medium mb-1">편관</div>
-              <div id="monthGanBadge" class="w-12 h-12 sm:w-16 sm:h-16 mx-auto rounded-xl flex flex-col items-center justify-center font-serif-kr text-xl sm:text-2xl font-bold border my-1 element-fire">
-                <span>丙</span>
-                <span class="text-[10px] font-sans font-normal opacity-75">병</span>
+            <div class="p-3 rounded-xl bg-slate-900/40 border border-white/5">
+              <div class="text-[10px] text-slate-400 mb-0.5">월주 (月)</div>
+              <div id="monthTenGodGan" class="text-[10px] text-amber-300 mb-1">-</div>
+              <div id="monthGanBadge" class="w-11 h-11 sm:w-14 sm:h-14 mx-auto rounded-xl flex flex-col items-center justify-center font-serif-kr text-lg sm:text-xl font-bold my-1">
+                <span>-</span>
               </div>
-              <div id="monthJiBadge" class="w-12 h-12 sm:w-16 sm:h-16 mx-auto rounded-xl flex flex-col items-center justify-center font-serif-kr text-xl sm:text-2xl font-bold border my-1 element-wood">
-                <span>寅</span>
-                <span class="text-[10px] font-sans font-normal opacity-75">인</span>
+              <div id="monthJiBadge" class="w-11 h-11 sm:w-14 sm:h-14 mx-auto rounded-xl flex flex-col items-center justify-center font-serif-kr text-lg sm:text-xl font-bold my-1">
+                <span>-</span>
               </div>
-              <div id="monthTenGodJi" class="text-[10px] text-slate-400 mt-1">비견</div>
-              <div id="monthJijanggan" class="text-[9px] text-slate-500 mt-1">지장간: 甲</div>
+              <div id="monthTenGodJi" class="text-[10px] text-slate-400 mt-1">-</div>
+              <div id="monthJijanggan" class="text-[9px] text-slate-500 mt-1"></div>
             </div>
 
             <!-- 년주 -->
-            <div class="p-3 sm:p-4 rounded-xl bg-black/40 border border-white/10">
-              <div class="text-[11px] text-slate-400 mb-1">년주 (年柱)</div>
-              <div id="yearTenGodGan" class="text-[10px] text-amber-300 font-medium mb-1">정재</div>
-              <div id="yearGanBadge" class="w-12 h-12 sm:w-16 sm:h-16 mx-auto rounded-xl flex flex-col items-center justify-center font-serif-kr text-xl sm:text-2xl font-bold border my-1 element-wood">
-                <span>甲</span>
-                <span class="text-[10px] font-sans font-normal opacity-75">갑</span>
+            <div class="p-3 rounded-xl bg-slate-900/40 border border-white/5">
+              <div class="text-[10px] text-slate-400 mb-0.5">년주 (年)</div>
+              <div id="yearTenGodGan" class="text-[10px] text-amber-300 mb-1">-</div>
+              <div id="yearGanBadge" class="w-11 h-11 sm:w-14 sm:h-14 mx-auto rounded-xl flex flex-col items-center justify-center font-serif-kr text-lg sm:text-xl font-bold my-1">
+                <span>-</span>
               </div>
-              <div id="yearJiBadge" class="w-12 h-12 sm:w-16 sm:h-16 mx-auto rounded-xl flex flex-col items-center justify-center font-serif-kr text-xl sm:text-2xl font-bold border my-1 element-earth">
-                <span>辰</span>
-                <span class="text-[10px] font-sans font-normal opacity-75">진</span>
+              <div id="yearJiBadge" class="w-11 h-11 sm:w-14 sm:h-14 mx-auto rounded-xl flex flex-col items-center justify-center font-serif-kr text-lg sm:text-xl font-bold my-1">
+                <span>-</span>
               </div>
-              <div id="yearTenGodJi" class="text-[10px] text-slate-400 mt-1">편재</div>
-              <div id="yearJijanggan" class="text-[9px] text-slate-500 mt-1">지장간: 戊</div>
+              <div id="yearTenGodJi" class="text-[10px] text-slate-400 mt-1">-</div>
+              <div id="yearJijanggan" class="text-[9px] text-slate-500 mt-1"></div>
             </div>
           </div>
         </div>
 
-        <!-- 60 Gapja Ilju Deep Interpretation (일주론 심층 분석) -->
-        <div class="glass-card rounded-2xl p-6">
-          <div class="flex items-center space-x-3 mb-4">
-            <span class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
-              <i data-lucide="user" class="w-5 h-5"></i>
-            </span>
-            <div>
-              <div class="text-xs text-amber-400 font-medium" id="iljuTag">60갑자 일주론 심층 분석</div>
-              <h4 id="iljuTitle" class="font-serif-kr text-xl font-bold text-white">갑자(甲子) 일주 : 푸른 쥐</h4>
-            </div>
-          </div>
+        <!-- Ilju Deep Analysis -->
+        <div class="modern-card p-5 space-y-3">
+          <div class="text-xs text-amber-400 font-semibold" id="iljuTag">일주론 분석</div>
+          <h4 id="iljuTitle" class="text-base font-bold text-white font-serif-kr"></h4>
+          <p id="iljuDesc" class="text-xs sm:text-sm text-slate-300 leading-relaxed"></p>
 
-          <div class="space-y-4 text-sm leading-relaxed text-slate-300">
-            <p id="iljuDesc"></p>
-            <div class="p-4 rounded-xl bg-black/40 border border-white/5 space-y-2 text-xs">
-              <p><strong>🌟 타고난 강점:</strong> <span id="iljuStrength"></span></p>
-              <p><strong>⚠️ 주의할 점:</strong> <span id="iljuCaution"></span></p>
-              <p><strong>❤️ 연애 기질:</strong> <span id="iljuLove"></span></p>
-              <p><strong>💰 재물 그릇:</strong> <span id="iljuWealth"></span></p>
-            </div>
+          <div class="p-3 rounded-xl bg-slate-900/40 border border-white/5 space-y-1.5 text-xs">
+            <p><strong>강점:</strong> <span id="iljuStrength" class="text-slate-300"></span></p>
+            <p><strong>주의:</strong> <span id="iljuCaution" class="text-slate-300"></span></p>
+            <p><strong>연애:</strong> <span id="iljuLove" class="text-slate-300"></span></p>
+            <p><strong>재물:</strong> <span id="iljuWealth" class="text-slate-300"></span></p>
           </div>
         </div>
 
-        <!-- Sinsal Detected (핵심 신살) -->
-        <div class="glass-card rounded-2xl p-6">
-          <h4 class="font-serif-kr text-base font-bold text-slate-200 mb-4 flex items-center space-x-2">
-            <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
-            <span>내 사주에 깃든 주요 신살(神煞) 분석</span>
-          </h4>
-          <div id="sinsalContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+        <!-- Sinsal -->
+        <div class="modern-card p-5 space-y-3">
+          <h4 class="text-xs font-semibold text-slate-300">내 사주의 핵심 신살(神煞)</h4>
+          <div id="sinsalContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5"></div>
         </div>
 
-        <!-- Daeun Flow (대운 흐름) -->
-        <div class="glass-card rounded-2xl p-6">
-          <div class="flex items-center justify-between mb-4">
-            <h4 class="font-serif-kr text-base font-bold text-slate-200 flex items-center space-x-2">
-              <i data-lucide="trending-up" class="w-4 h-4 text-purple-400"></i>
-              <span>10년 주기 인생 대운(大運) 흐름</span>
-            </h4>
-            <span id="daeunMeta" class="text-xs text-slate-400">대운수: 3세 (순행)</span>
+        <!-- Daeun Flow -->
+        <div class="modern-card p-5 space-y-3">
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-300 font-semibold">10년 대운 흐름</span>
+            <span id="daeunMeta" class="text-slate-400"></span>
           </div>
-          <div id="daeunContainer" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2 text-center"></div>
+          <div id="daeunContainer" class="grid grid-cols-4 sm:grid-cols-8 gap-2 text-center"></div>
         </div>
       </div>
 
-      <!-- TAB CONTENT 3: 오행 밸런스 & 신강신약 (Element Balance) -->
-      <div id="tabContent-element" class="tab-pane hidden space-y-6">
-        <div class="glass-card rounded-2xl p-6">
-          <h3 class="font-serif-kr text-lg font-bold text-white mb-4 flex items-center space-x-2">
-            <i data-lucide="pie-chart" class="w-5 h-5 text-emerald-400"></i>
-            <span>오행(五行) 에너지 분포도 & 신강/신약 진단</span>
-          </h3>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center mb-6">
-            <!-- 5 Elements Progress Bars -->
-            <div class="space-y-3">
-              <div>
-                <div class="flex justify-between text-xs mb-1">
-                  <span class="text-emerald-400 font-semibold">목(木) - 성장과 시작</span>
-                  <span id="pctWood">25%</span>
-                </div>
-                <div class="h-2 bg-slate-800 rounded-full overflow-hidden">
-                  <div id="barWood" class="h-full bg-emerald-500 rounded-full" style="width: 25%"></div>
-                </div>
-              </div>
-              <div>
-                <div class="flex justify-between text-xs mb-1">
-                  <span class="text-rose-400 font-semibold">화(火) - 열정과 확산</span>
-                  <span id="pctFire">20%</span>
-                </div>
-                <div class="h-2 bg-slate-800 rounded-full overflow-hidden">
-                  <div id="barFire" class="h-full bg-rose-500 rounded-full" style="width: 20%"></div>
-                </div>
-              </div>
-              <div>
-                <div class="flex justify-between text-xs mb-1">
-                  <span class="text-amber-400 font-semibold">토(土) - 중용과 포용</span>
-                  <span id="pctEarth">30%</span>
-                </div>
-                <div class="h-2 bg-slate-800 rounded-full overflow-hidden">
-                  <div id="barEarth" class="h-full bg-amber-500 rounded-full" style="width: 30%"></div>
-                </div>
-              </div>
-              <div>
-                <div class="flex justify-between text-xs mb-1">
-                  <span class="text-slate-200 font-semibold">금(金) - 결단과 수렴</span>
-                  <span id="pctMetal">10%</span>
-                </div>
-                <div class="h-2 bg-slate-800 rounded-full overflow-hidden">
-                  <div id="barMetal" class="h-full bg-slate-300 rounded-full" style="width: 10%"></div>
-                </div>
-              </div>
-              <div>
-                <div class="flex justify-between text-xs mb-1">
-                  <span class="text-sky-400 font-semibold">수(水) - 지혜와 유연함</span>
-                  <span id="pctWater">15%</span>
-                </div>
-                <div class="h-2 bg-slate-800 rounded-full overflow-hidden">
-                  <div id="barWater" class="h-full bg-sky-500 rounded-full" style="width: 15%"></div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Strength & Yongsin Card -->
-            <div class="p-5 rounded-xl bg-black/40 border border-white/10 space-y-3">
-              <div class="flex items-center justify-between">
-                <span class="text-xs text-slate-400">사주의 강약 판별</span>
-                <span id="diagStrengthText" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">신강 사주</span>
-              </div>
-              <p id="diagPowerSummary" class="text-xs text-slate-300 leading-relaxed"></p>
-              
-              <div class="pt-3 border-t border-white/10">
-                <div class="text-xs text-amber-400 font-semibold mb-1 flex items-center space-x-1.5">
-                  <i data-lucide="key" class="w-3.5 h-3.5"></i>
-                  <span>인생의 행운 열쇠: 용신(用神)</span>
-                </div>
-                <p id="diagYongsinDesc" class="text-xs text-slate-300 leading-relaxed"></p>
-              </div>
-            </div>
-          </div>
-
-          <!-- 사주에 있는 오행 vs 없는 오행(0% 결핍) 정밀 진단 -->
-          <div class="pt-6 border-t border-white/10 space-y-3">
-            <h4 class="font-serif-kr text-sm font-bold text-amber-300 flex items-center space-x-2">
-              <i data-lucide="alert-circle" class="w-4 h-4 text-amber-400"></i>
-              <span>내 사주에 있는 기운 & 없는 오행(0% 결핍) 개운 처방</span>
-            </h4>
-            <div id="missingElementsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB CONTENT 4: 연애 & 궁합 (Love & Match) -->
-      <div id="tabContent-love" class="tab-pane hidden space-y-6">
+      <!-- TAB 3: 오행 밸런스 & 없는 오행 정밀 진단 -->
+      <div id="tabContent-element" class="tab-pane hidden space-y-4">
         
-        <!-- Individual Love DNA -->
-        <div class="glass-card rounded-2xl p-6">
-          <h3 class="font-serif-kr text-lg font-bold text-white mb-3 flex items-center space-x-2">
-            <i data-lucide="heart" class="w-5 h-5 text-pink-400"></i>
-            <span>나의 타고난 연애 DNA & 이상형 분석</span>
-          </h3>
-          <p id="loveDnaDesc" class="text-sm text-slate-300 leading-relaxed mb-4"></p>
+        <!-- Element Distribution (Count & Percentage) -->
+        <div class="modern-card p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-white font-serif-kr">오행(五行) 원국 글자 수 및 분포 비율</h3>
+            <span class="text-[11px] text-slate-400">원국 8자 기준</span>
+          </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-            <div class="p-4 rounded-xl bg-pink-950/20 border border-pink-500/20 space-y-2">
-              <span class="text-pink-300 font-semibold block">💖 천생연분 오행 궁합</span>
+          <!-- Progress Bars with Exact Counts -->
+          <div class="space-y-3 text-xs">
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-emerald-400 font-medium">목(木)</span>
+                <span id="woodCountLabel" class="text-slate-300"></span>
+              </div>
+              <div class="h-2 bg-slate-800 rounded-full overflow-hidden">
+                <div id="barWood" class="h-full bg-emerald-500 rounded-full" style="width: 0%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-rose-400 font-medium">화(火)</span>
+                <span id="fireCountLabel" class="text-slate-300"></span>
+              </div>
+              <div class="h-2 bg-slate-800 rounded-full overflow-hidden">
+                <div id="barFire" class="h-full bg-rose-500 rounded-full" style="width: 0%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-amber-400 font-medium">토(土)</span>
+                <span id="earthCountLabel" class="text-slate-300"></span>
+              </div>
+              <div class="h-2 bg-slate-800 rounded-full overflow-hidden">
+                <div id="barEarth" class="h-full bg-amber-500 rounded-full" style="width: 0%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-slate-300 font-medium">금(金)</span>
+                <span id="metalCountLabel" class="text-slate-300"></span>
+              </div>
+              <div class="h-2 bg-slate-800 rounded-full overflow-hidden">
+                <div id="barMetal" class="h-full bg-slate-300 rounded-full" style="width: 0%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-sky-400 font-medium">수(水)</span>
+                <span id="waterCountLabel" class="text-slate-300"></span>
+              </div>
+              <div class="h-2 bg-slate-800 rounded-full overflow-hidden">
+                <div id="barWater" class="h-full bg-sky-500 rounded-full" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Strength and Yongsin -->
+          <div class="p-3.5 rounded-xl bg-slate-900/40 border border-white/5 space-y-2 text-xs">
+            <div class="flex items-center justify-between">
+              <span class="text-slate-400">사주 체질</span>
+              <span id="diagStrengthText" class="font-bold text-amber-300"></span>
+            </div>
+            <p id="diagPowerSummary" class="text-slate-300 leading-relaxed"></p>
+            <div class="pt-2 border-t border-white/5">
+              <span class="text-amber-400 font-medium block mb-0.5">인생의 용신(用神)</span>
+              <p id="diagYongsinDesc" class="text-slate-300 leading-relaxed"></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- NEW: 사주에 없는 오행(0개 결핍) 및 없는 십신 정밀 해설 -->
+        <div class="modern-card p-5 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-semibold text-slate-300">원국에 없는 오행 & 십신 심층 진단</h4>
+            <span class="text-[10px] text-slate-500">결핍의 반전 축복</span>
+          </div>
+          <div id="missingElementsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5"></div>
+          <div id="missingTenGodsContainer" class="grid grid-cols-1 gap-2 pt-2"></div>
+        </div>
+      </div>
+
+      <!-- TAB 4: 연애 & 궁합 -->
+      <div id="tabContent-love" class="tab-pane hidden space-y-4">
+        <div class="modern-card p-5 space-y-3">
+          <h3 class="text-sm font-bold text-white font-serif-kr">나의 연애 기질과 인연</h3>
+          <p id="loveDnaDesc" class="text-xs sm:text-sm text-slate-300 leading-relaxed"></p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 text-xs">
+            <div class="p-3 rounded-xl bg-slate-900/40 border border-white/5">
+              <span class="text-pink-300 font-medium block mb-1">인연 궁합 오행</span>
               <p id="loveMatchBest" class="text-slate-300"></p>
             </div>
-            <div class="p-4 rounded-xl bg-black/40 border border-white/10 space-y-2">
-              <span class="text-amber-300 font-semibold block">✨ 나만의 치명적인 매력 포인트</span>
+            <div class="p-3 rounded-xl bg-slate-900/40 border border-white/5">
+              <span class="text-amber-300 font-medium block mb-1">나의 매력 포인트</span>
               <p id="loveCharmPoint" class="text-slate-300"></p>
             </div>
           </div>
         </div>
 
-        <!-- 2-Person Compatibility Card (if partner provided) -->
-        <div id="partnerResultCard" class="glass-card rounded-2xl p-6 border border-purple-500/30">
-          <div class="flex items-center justify-between mb-4">
-            <h4 class="font-serif-kr text-base font-bold text-purple-300 flex items-center space-x-2">
-              <i data-lucide="heart-handshake" class="w-5 h-5 text-pink-400"></i>
-              <span>두 사람의 정밀 사주 궁합 리포트</span>
-            </h4>
-            <div class="text-right">
-              <span id="compatScoreBadge" class="text-2xl font-bold text-gold-gradient">92점</span>
-              <div class="text-[10px] text-slate-400">종합 궁합 지수</div>
-            </div>
+        <!-- Partner Compatibility Card -->
+        <div id="partnerResultCard" class="modern-card p-5 space-y-3 border border-purple-500/20">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-purple-300">두 사람의 궁합 분석</span>
+            <span id="compatScoreBadge" class="text-xl font-bold text-amber-300"></span>
           </div>
-
-          <div class="p-4 rounded-xl bg-purple-950/30 border border-purple-500/20 mb-4">
-            <h5 id="compatTheme" class="font-serif-kr text-sm font-bold text-purple-200 mb-1">하늘이 맺어준 천생연분</h5>
-            <div id="compatMerits" class="text-xs text-slate-300 space-y-1 mt-2"></div>
-          </div>
-
-          <div class="p-4 rounded-xl bg-black/40 border border-white/10">
-            <span class="text-xs font-semibold text-amber-300 block mb-1">💑 오래도록 사랑을 지키는 비결</span>
+          <h5 id="compatTheme" class="text-sm font-bold text-white font-serif-kr"></h5>
+          <div id="compatMerits" class="text-xs text-slate-300 space-y-1"></div>
+          <div class="pt-2 border-t border-white/5">
+            <span class="text-xs text-slate-400 block mb-1">조언:</span>
             <div id="compatAdvices" class="text-xs text-slate-300 space-y-1"></div>
           </div>
         </div>
       </div>
 
-      <!-- TAB CONTENT 5: 재물 & 커리어 (Wealth & Career) -->
-      <div id="tabContent-wealth" class="tab-pane hidden space-y-6">
-        <div class="glass-card rounded-2xl p-6">
-          <h3 class="font-serif-kr text-lg font-bold text-white mb-3 flex items-center space-x-2">
-            <i data-lucide="coins" class="w-5 h-5 text-amber-400"></i>
-            <span>타고난 재물 그릇 & 성공 비즈니스 전략</span>
-          </h3>
-          <p id="wealthDnaDesc" class="text-sm text-slate-300 leading-relaxed mb-4"></p>
-
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-            <div class="p-4 rounded-xl bg-black/40 border border-white/10">
-              <span class="text-amber-400 font-semibold block mb-1">💰 자산 증식 스타일</span>
-              <p id="wealthStyleDesc" class="text-slate-300 leading-relaxed"></p>
+      <!-- TAB 5: 재물 & 커리어 -->
+      <div id="tabContent-wealth" class="tab-pane hidden space-y-4">
+        <div class="modern-card p-5 space-y-3">
+          <h3 class="text-sm font-bold text-white font-serif-kr">재물과 성공 전략</h3>
+          <p id="wealthDnaDesc" class="text-xs sm:text-sm text-slate-300 leading-relaxed"></p>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 text-xs">
+            <div class="p-3 rounded-xl bg-slate-900/40 border border-white/5">
+              <span class="text-amber-400 font-medium block mb-1">자산 증식 스타일</span>
+              <p id="wealthStyleDesc" class="text-slate-300"></p>
             </div>
-            <div class="p-4 rounded-xl bg-black/40 border border-white/10">
-              <span class="text-sky-400 font-semibold block mb-1">🚀 최적의 적성 & 직업군</span>
-              <p id="careerFieldsDesc" class="text-slate-300 leading-relaxed"></p>
+            <div class="p-3 rounded-xl bg-slate-900/40 border border-white/5">
+              <span class="text-sky-400 font-medium block mb-1">적성 직업군</span>
+              <p id="careerFieldsDesc" class="text-slate-300"></p>
             </div>
-            <div class="p-4 rounded-xl bg-black/40 border border-white/10">
-              <span class="text-emerald-400 font-semibold block mb-1">🌟 재물운 극대화 타이밍</span>
-              <p id="wealthTimingDesc" class="text-slate-300 leading-relaxed"></p>
+            <div class="p-3 rounded-xl bg-slate-900/40 border border-white/5">
+              <span class="text-emerald-400 font-medium block mb-1">황금 타이밍</span>
+              <p id="wealthTimingDesc" class="text-slate-300"></p>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- TAB CONTENT 6: 오늘의 타로 (Daily Tarot) -->
-      <div id="tabContent-tarot" class="tab-pane hidden space-y-6">
-        <div class="glass-card rounded-2xl p-6 text-center">
-          <h3 class="font-serif-kr text-xl font-bold text-white mb-2">오늘의 신비로운 조언 : 타로 한 장 뽑기</h3>
-          <p class="text-xs sm:text-sm text-slate-400 max-w-md mx-auto mb-6">
-            마음을 편안하게 가다듬고 오늘 당신에게 가장 필요한 조언을 생각하며 아래 카드를 가볍게 터치해 보세요.
+      <!-- TAB 6: 오늘의 타로 -->
+      <div id="tabContent-tarot" class="tab-pane hidden space-y-4">
+        <div class="modern-card p-5 text-center space-y-4">
+          <h3 class="text-base font-bold text-white font-serif-kr">오늘의 타로 한 장</h3>
+          <p class="text-xs text-slate-400 max-w-sm mx-auto">
+            카드를 터치하면 뒤집어지며 오늘의 직관적 조언을 전합니다.
           </p>
 
-          <!-- 3D Tarot Card Container -->
-          <div class="max-w-xs mx-auto h-96 tarot-perspective cursor-pointer mb-6" onclick="App.flipTarotCard()">
+          <!-- 3D Card -->
+          <div class="max-w-xs mx-auto h-80 tarot-perspective cursor-pointer" onclick="App.flipTarotCard()">
             <div id="tarotCardInner" class="tarot-card-inner">
-              
-              <!-- Card Front (Before Flip) -->
-              <div class="tarot-card-front bg-gradient-to-br from-indigo-950 via-slate-900 to-purple-950 border-2 border-amber-400/40 shadow-2xl flex flex-col items-center justify-center p-6 animate-gold-pulse">
-                <div class="w-16 h-16 rounded-full bg-amber-500/20 border border-amber-400/50 flex items-center justify-center mb-4">
-                  <i data-lucide="sparkles" class="w-8 h-8 text-amber-300"></i>
-                </div>
-                <div class="font-serif-kr text-lg font-bold text-gold-gradient mb-1">천명 타로 덱</div>
-                <p class="text-[11px] text-slate-400">카드를 터치하면 뒤집어집니다</p>
+              <div class="tarot-card-front bg-slate-900 border border-amber-500/30 flex flex-col items-center justify-center p-6 shadow-xl">
+                <i data-lucide="sparkles" class="w-8 h-8 text-amber-400 mb-2"></i>
+                <span class="text-xs font-semibold text-amber-300">카드를 탭하세요</span>
               </div>
-
-              <!-- Card Back (Revealed Interpretation) -->
-              <div id="tarotCardBack" class="tarot-card-back bg-slate-900 border-2 border-amber-400/50 p-6 flex flex-col justify-between shadow-2xl text-left overflow-y-auto">
+              <div id="tarotCardBack" class="tarot-card-back bg-slate-900 border border-amber-500/40 p-5 flex flex-col justify-between text-left overflow-y-auto shadow-xl">
                 <div>
-                  <div class="flex items-center justify-between mb-2">
-                    <span id="tarotCardKrName" class="font-serif-kr text-base font-bold text-amber-300">19. 태양 (The Sun)</span>
-                    <span id="tarotCardElem" class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">태양</span>
+                  <div class="flex items-center justify-between mb-1">
+                    <span id="tarotCardKrName" class="text-sm font-bold text-amber-300 font-serif-kr"></span>
+                    <span id="tarotCardElem" class="text-[10px] px-2 py-0.5 rounded bg-white/5 text-slate-300"></span>
                   </div>
-                  <div id="tarotCardTheme" class="text-xs font-semibold text-white mb-3">최고의 성공, 밝은 활력, 명확한 축복</div>
-                  <p id="tarotCardSummary" class="text-xs text-slate-300 leading-relaxed mb-3"></p>
+                  <div id="tarotCardTheme" class="text-xs font-semibold text-white mb-2"></div>
+                  <p id="tarotCardSummary" class="text-xs text-slate-300 mb-2"></p>
                 </div>
-
-                <div class="space-y-2 pt-2 border-t border-white/10 text-[11px]">
-                  <p><strong>🌟 오늘의 조언:</strong> <span id="tarotGeneralAdv"></span></p>
-                  <p><strong>❤️ 애정 조언:</strong> <span id="tarotLoveAdv"></span></p>
-                  <p><strong>💰 금전 조언:</strong> <span id="tarotMoneyAdv"></span></p>
+                <div class="space-y-1 pt-2 border-t border-white/5 text-[11px]">
+                  <p><strong>조언:</strong> <span id="tarotGeneralAdv" class="text-slate-300"></span></p>
+                  <p><strong>애정:</strong> <span id="tarotLoveAdv" class="text-slate-300"></span></p>
+                  <p><strong>금전:</strong> <span id="tarotMoneyAdv" class="text-slate-300"></span></p>
                 </div>
               </div>
             </div>
           </div>
 
-          <button type="button" onclick="App.shuffleTarotCard()" class="px-4 py-2 rounded-xl glass-pill hover:bg-white/10 text-xs font-semibold text-slate-300 inline-flex items-center space-x-1.5 transition">
-            <i data-lucide="shuffle" class="w-4 h-4"></i>
-            <span>다른 카드 다시 뽑기</span>
-          </button>
+          <div>
+            <button type="button" onclick="App.shuffleTarotCard()" class="px-3.5 py-1.5 rounded-lg modern-chip text-xs text-slate-300 hover:text-white inline-flex items-center space-x-1">
+              <i data-lucide="shuffle" class="w-3.5 h-3.5"></i>
+              <span>다른 카드 뽑기</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -828,15 +684,12 @@
   </main>
 
   <!-- Footer -->
-  <footer class="border-t border-white/10 py-8 bg-[#0b0f19] text-center text-xs text-slate-500">
-    <div class="max-w-6xl mx-auto px-4 space-y-2">
-      <p class="font-serif-kr text-slate-400 text-sm">천명(天命) · 전통 명리학 & 현대적 라이프 운세</p>
-      <p>본 서비스는 한국천문연구원(KASI) 역법 데이터와 명리학 원전(자평진전, 삼명통회, 적천수)의 기준을 충실히 반영하여 구현되었습니다.</p>
-      <p class="text-[11px] text-slate-600">Copyright © 2024 Cheonmyeong. All rights reserved.</p>
-    </div>
+  <footer class="border-t border-white/5 py-6 text-center text-[11px] text-slate-500">
+    <p>한국천문연구원(KASI) 역법 데이터 및 정통 명리학 원전 준수</p>
+    <p class="mt-0.5">© 2024 Cheonmyeong. All rights reserved.</p>
   </footer>
 
-  <!-- Engines & Application Scripts -->
+  <!-- Scripts -->
   <script src="js/data/gapja60.js"></script>
   <script src="js/data/sinsal.js"></script>
   <script src="js/data/tarot.js"></script>

@@ -250,14 +250,34 @@ function calculateSaju(params) {
     } : null
   };
 
-  // 5. 오행(목, 화, 토, 금, 수) 에너지 비율 분석
-  // 월지(계절) 30%, 일지 15%, 일간 15%, 년지 10%, 시지 10%, 년간 10%, 월간 10% (시간 없을 시 재분배)
-  const elementWeights = { "목": 0, "화": 0, "토": 0, "금": 0, "수": 0 };
-  const hasHour = !!pillars.hour;
+  // 5. [개선] 4주 원국 순수 글자 개수(Count) 정밀 계산
+  const rawPillarElements = [
+    yearGan.element, yearJi.element,
+    monthGan.element, monthJi.element,
+    dayGan.element, dayJi.element
+  ];
+  if (hasHour) {
+    rawPillarElements.push(hourGan.element, hourJi.element);
+  }
+  const totalCharCount = rawPillarElements.length;
 
+  // 글자 수 기반 실제 오행 카운트 (0개~8개)
+  const elementCounts = { "목": 0, "화": 0, "토": 0, "금": 0, "수": 0 };
+  rawPillarElements.forEach(el => {
+    elementCounts[el] = (elementCounts[el] || 0) + 1;
+  });
+
+  // 오행 백분율 (원국에 글자가 0개면 무조건 0%로 정확히 산출)
+  const elementPercentages = { "목": 0, "화": 0, "토": 0, "금": 0, "수": 0 };
+  ["목", "화", "토", "금", "수"].forEach(el => {
+    elementPercentages[el] = Math.round((elementCounts[el] / totalCharCount) * 100);
+  });
+
+  // 명리학적 세력 가중치 (득령 30% 등 월지 중심 분석)
+  const elementWeights = { "목": 0, "화": 0, "토": 0, "금": 0, "수": 0 };
   const w = hasHour ? {
     yearGan: 10, yearJi: 10,
-    monthGan: 10, monthJi: 30, // 득령(월령) 최고 가중치
+    monthGan: 10, monthJi: 30, // 득령(월령) 가중치
     dayGan: 15, dayJi: 15,
     hourGan: 5, hourJi: 5
   } : {
@@ -284,20 +304,92 @@ function calculateSaju(params) {
   const isSinGang = myPower >= 48;
   const strengthStatus = isSinGang ? (myPower > 65 ? "극신강(極身强)" : "신강(身强)") : (myPower < 32 ? "극신약(極身弱)" : "신약(身弱)");
 
-  // 용신(用神) 추천: 신강이면 식상/재성/관성 중 가장 필요한 오행, 신약이면 인성/비겁
+  // 용신(用神) 정밀 선정 (사주에 존재하는 기운과 조후/억부 균형 반영)
   let yongsin = "";
   let yongsinDesc = "";
   if (isSinGang) {
-    // 억부용신: 기운을 설기하거나 다듬어주는 식상, 재성
     const childEl = PRODUCES[myElement];
     const wealthEl = OVERCOMES[myElement];
-    yongsin = elementWeights[childEl] < elementWeights[wealthEl] ? childEl : wealthEl;
-    yongsinDesc = `에너지가 넘치는 ${strengthStatus} 사주이므로, 기운을 생산적으로 표출하고 다듬어주는 [${yongsin}] 기운이 최고의 행운을 엽니다.`;
+    yongsin = elementCounts[childEl] > 0 ? childEl : (elementCounts[wealthEl] > 0 ? wealthEl : childEl);
+    yongsinDesc = `에너지가 넘치는 ${strengthStatus} 사주이므로, 기운을 막힘없이 세상으로 표출하고 다듬어주는 [${yongsin}] 기운이 최고의 행운을 엽니다.`;
   } else {
-    // 인성 또는 비겁으로 보충
     yongsin = parentElement;
-    yongsinDesc = `주체성과 기운을 든든하게 북돋워 주는 [${yongsin}] 기운(인성)과 비겁이 나를 지탱해 주는 핵심 수호신입니다.`;
+    yongsinDesc = `나를 든든하게 지탱해 주고 주체성을 북돋워 주는 [${yongsin}] 기운(인성)과 비겁이 삶의 든든한 버팀목이 됩니다.`;
   }
+
+  // 6. 사주 원국에 존재하는 십신 및 없는 십신(무재, 무관, 무인성 등) 정밀 분석
+  const allTenGods = [
+    pillars.year.tenGodGan, pillars.year.tenGodJi,
+    pillars.month.tenGodGan, pillars.month.tenGodJi,
+    pillars.day.tenGodJi
+  ];
+  if (hasHour) {
+    allTenGods.push(pillars.hour.tenGodGan, pillars.hour.tenGodJi);
+  }
+
+  const tenGodAnalysis = {
+    hasBigeop: allTenGods.some(tg => tg.includes("비견") || tg.includes("겁재")),
+    hasSiksang: allTenGods.some(tg => tg.includes("식신") || tg.includes("상관")),
+    hasJaeseong: allTenGods.some(tg => tg.includes("편재") || tg.includes("정재")),
+    hasGwanseong: allTenGods.some(tg => tg.includes("편관") || tg.includes("정관")),
+    hasInseong: allTenGods.some(tg => tg.includes("편인") || tg.includes("정인"))
+  };
+
+  const missingTenGods = [];
+  if (!tenGodAnalysis.hasJaeseong) {
+    missingTenGods.push({
+      type: "무재(無財) 사주",
+      title: "재성(재물운)이 원국에 없는 사주",
+      meaning: "재물이 없다는 뜻이 결코 아니며, 돈 계산에 얽매이지 않고 명예나 전문 기술, 브랜드 가치에 집중할 때 오히려 상상 이상의 거대한 부를 이루는 스타일입니다."
+    });
+  }
+  if (!tenGodAnalysis.hasGwanseong) {
+    missingTenGods.push({
+      type: "무관(無官) 사주",
+      title: "관성(조직·직장운)이 원국에 없는 사주",
+      meaning: "갑갑한 수직적 위계 조직보다, 자율성이 보장되는 전문직·프리랜서·창업에서 독보적인 자유와 성공을 구가합니다."
+    });
+  }
+  if (!tenGodAnalysis.hasInseong) {
+    missingTenGods.push({
+      type: "무인성(無印) 사주",
+      title: "인성(문서·공부운)이 원국에 없는 사주",
+      meaning: "생각만 하느라 타이밍을 놓치지 않고, 기회가 오면 동물적인 감각과 압도적인 실행력으로 남들보다 먼저 결과를 만듭니다."
+    });
+  }
+  if (!tenGodAnalysis.hasSiksang) {
+    missingTenGods.push({
+      type: "무식상(無食) 사주",
+      title: "식상(표현·재능운)이 원국에 없는 사주",
+      meaning: "말만 앞서지 않고 묵묵히 결과로 실력을 증명하며, 불필요한 감정 낭비 없이 실속 있고 단단하게 내실을 챙깁니다."
+    });
+  }
+
+  // 7. 내 사주가 특별히 좋은 이유 3가지 (Blessing Points)
+  const blessingPoints = [
+    {
+      step: "01",
+      badge: "타고난 핵심 강점",
+      title: `본원 [${dayGan.char}${dayJi.char}] 일주의 독보적인 힘`,
+      desc: isSinGang 
+        ? `흔들리지 않는 자존감과 추진력을 지닌 ${strengthStatus} 사주로, 인생의 어떤 역경 앞에서도 스스로 돌파구를 열어젖히는 강력한 힘이 있습니다.`
+        : `유연한 적응력과 탁월한 상황 판단력을 지닌 사주로, 주변의 흐름과 인덕을 지혜롭게 활용하여 안정적인 성공을 거둡니다.`
+    },
+    {
+      step: "02",
+      badge: "나를 돕는 기운",
+      title: `사주의 균형을 잡아주는 [${yongsin}] 기운의 축복`,
+      desc: yongsinDesc
+    },
+    {
+      step: "03",
+      badge: "결핍의 반전 매력",
+      title: missingTenGods.length > 0 ? missingTenGods[0].type + "의 특화된 잠재력" : "오행구족의 평탄하고 원만한 복록",
+      desc: missingTenGods.length > 0 
+        ? missingTenGods[0].meaning 
+        : "사주에 5행이 골고루 갖추어져 있어 편중되지 않고, 삶의 굴곡을 최소화하며 안정적인 복록과 장수를 누리는 길한 명식입니다."
+    }
+  ];
 
   // 6. 신살 분석
   const sinsal = window.SinsalEngine.analyzeSinsal(pillars);
@@ -343,7 +435,7 @@ function calculateSaju(params) {
     });
   }
 
-    // 사주 원국에 없는 오행(0%) 및 과다 오행(35% 이상) 판별
+    // 사주 원국에 없는 오행(0개) 및 과다 오행(3개 이상 또는 35% 이상) 판별
     const missingElements = [];
     const excessElements = [];
     const elementMeanings = {
@@ -355,11 +447,11 @@ function calculateSaju(params) {
     };
 
     ["목", "화", "토", "금", "수"].forEach(elKey => {
-      const weight = elementWeights[elKey];
-      if (weight === 0) {
-        missingElements.push({ element: elKey, ...elementMeanings[elKey] });
-      } else if (weight >= 35) {
-        excessElements.push({ element: elKey, weight, ...elementMeanings[elKey] });
+      const count = elementCounts[elKey];
+      if (count === 0) {
+        missingElements.push({ element: elKey, count: 0, ...elementMeanings[elKey] });
+      } else if (count >= 3 || elementPercentages[elKey] >= 35) {
+        excessElements.push({ element: elKey, count, percentage: elementPercentages[elKey], ...elementMeanings[elKey] });
       }
     });
 
@@ -381,9 +473,13 @@ function calculateSaju(params) {
       pillars,
       iljuKey,
       iljuDetail,
-      elements: elementWeights,
+      elementCounts,
+      elementPercentages,
+      elements: elementPercentages, // UI 바 차트와 호환
       missingElements,
       excessElements,
+      missingTenGods,
+      blessingPoints,
       strengthStatus,
       isSinGang,
       myPower,

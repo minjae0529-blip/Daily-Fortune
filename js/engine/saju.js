@@ -250,7 +250,10 @@ function calculateSaju(params) {
     } : null
   };
 
+  const hasHour = Boolean(hourGan && hourJi);
+
   // 5. [개선] 4주 원국 순수 글자 개수(Count) 정밀 계산
+
   const rawPillarElements = [
     yearGan.element, yearJi.element,
     monthGan.element, monthJi.element,

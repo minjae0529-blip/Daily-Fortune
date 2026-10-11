@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>천명(天命) - 오늘의 운세 · 사주 · 타로</title>
-  <meta name="description" content="한국천문연구원(KASI) 역법 기반 24절기·60갑자 정통 만세력, 개인 맞춤 오늘의 운세, 78장 타로 리딩">
+  <meta name="description" content="한국천문연구원(KASI) 역법 기반 24절기·60갑자 정통 만세력, 개인 맞춤 오늘의 운세, 3장 스프레드 타로 리딩">
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -28,7 +28,7 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
   <!-- Custom High-Contrast Comfortable Styles with Cache Buster -->
-  <link rel="stylesheet" href="css/style.css?v=20261011_7">
+  <link rel="stylesheet" href="css/style.css?v=20261011_8">
 </head>
 <body class="bg-ambient text-slate-900 flex flex-col min-h-screen selection:bg-amber-200 selection:text-amber-900">
 
@@ -66,7 +66,7 @@
           어떤 운세가 궁금하신가요?
         </h1>
         <p id="heroSubtitle" class="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
-          오늘 하루의 일진, 평생 사주팔자 만세력, 직접 카드를 뽑는 타로 중 원하는 서비스를 선택하세요.
+          오늘 하루의 일진, 평생 사주팔자 만세력, 직접 3장을 골라보는 타로 중 원하는 서비스를 선택하세요.
         </p>
       </div>
 
@@ -148,7 +148,7 @@
             </div>
           </div>
 
-          <!-- Birth Time (항상 노출 & 모름 토글 지원) -->
+          <!-- Birth Time -->
           <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-300 space-y-2.5">
             <div class="flex items-center justify-between">
               <label class="text-xs font-bold text-slate-800 flex items-center space-x-1.5">
@@ -247,79 +247,158 @@
 
       </div>
 
-      <!-- VIEW B: 타로 전용 뷰 (직접 카드를 골라서 뽑는 대화형 인터랙션) -->
-      <div id="tarotStandAloneCard" class="hidden max-w-xl mx-auto modern-card p-6 sm:p-7 space-y-5 bg-white text-center">
+      <!-- VIEW B: 타로 전용 뷰 (실제 타로처럼 3장을 직접 골라 리딩하는 대화형 시스템) -->
+      <div id="tarotStandAloneCard" class="hidden max-w-2xl mx-auto modern-card p-6 sm:p-7 space-y-6 bg-white text-center">
         <div class="space-y-1">
           <span class="px-3 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-900 border border-indigo-300 inline-block">
-            🃏 78장 타로 리딩
+            🃏 3-Card 타로 스프레드
           </span>
-          <h2 class="text-xl font-bold text-slate-900 font-serif-kr">마음속 고민을 비추는 타로 한 장</h2>
-          <p class="text-xs text-slate-700 font-medium">원하는 질문 주제를 선택하고, 펼쳐진 카드 중 마음에 드는 1장을 직접 골라보세요.</p>
+          <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 font-serif-kr">마음속 고민을 비추는 3장의 타로</h2>
+          <p class="text-xs sm:text-sm text-slate-700 font-medium">질문 주제를 선택하고, 펼쳐진 카드 중 3장을 차례대로 직접 골라보세요.</p>
         </div>
 
         <!-- Tarot Category Pills -->
         <div class="flex flex-wrap items-center justify-center gap-1.5 text-xs">
-          <button type="button" onclick="App.setTarotCategory('today')" id="tarotCat-today" class="px-3.5 py-1.5 rounded-full font-bold bg-indigo-600 text-white shadow-sm transition">
-            🌟 오늘의 총운
-          </button>
-          <button type="button" onclick="App.setTarotCategory('love')" id="tarotCat-love" class="px-3.5 py-1.5 rounded-full font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300 transition">
+          <button type="button" onclick="App.setTarotCategory('love')" id="tarotCat-love" class="px-3.5 py-1.5 rounded-full font-bold bg-indigo-600 text-white shadow-sm transition">
             💖 연애 & 사랑
           </button>
+          <button type="button" onclick="App.setTarotCategory('career')" id="tarotCat-career" class="px-3.5 py-1.5 rounded-full font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300 transition">
+            💼 진로 & 이직
+          </button>
           <button type="button" onclick="App.setTarotCategory('money')" id="tarotCat-money" class="px-3.5 py-1.5 rounded-full font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300 transition">
-            💰 금전 & 커리어
+            💰 금전 & 사업
           </button>
           <button type="button" onclick="App.setTarotCategory('mind')" id="tarotCat-mind" class="px-3.5 py-1.5 rounded-full font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300 transition">
-            🕊️ 마음 치유
+            🕊️ 마음 치유 & 조언
           </button>
         </div>
 
-        <!-- 🎴 STEP 1: 사용자가 직접 고르는 5장의 카드 스프레드 덱 -->
-        <div id="tarotSpreadSection" class="space-y-3 py-2">
-          <p class="text-xs font-bold text-indigo-700 animate-pulse">
-            👇 마음을 집중하고, 마음에 닿는 카드 1장을 터치해 보세요
-          </p>
-          <div class="tarot-spread-deck flex items-center justify-center gap-2 sm:gap-3 py-3 select-none">
-            <div class="tarot-spread-card" onclick="App.pickTarotCard(0, event)" style="transform: rotate(-6deg);" title="첫 번째 카드"></div>
-            <div class="tarot-spread-card" onclick="App.pickTarotCard(1, event)" style="transform: rotate(-3deg);" title="두 번째 카드"></div>
-            <div class="tarot-spread-card" onclick="App.pickTarotCard(2, event)" style="transform: rotate(0deg);" title="세 번째 카드"></div>
-            <div class="tarot-spread-card" onclick="App.pickTarotCard(3, event)" style="transform: rotate(3deg);" title="네 번째 카드"></div>
-            <div class="tarot-spread-card" onclick="App.pickTarotCard(4, event)" style="transform: rotate(6deg);" title="다섯 번째 카드"></div>
+        <!-- 🎴 STEP 1: 3장 선택 슬롯 및 12장 카드 펼침 덱 -->
+        <div id="tarotSpreadSection" class="space-y-4 pt-2">
+          
+          <!-- Selected 3 Slots -->
+          <div class="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200">
+            <div class="flex items-center justify-between mb-2 px-1">
+              <span class="text-xs font-bold text-indigo-950">내가 선택한 카드 (과거 · 현재 · 미래)</span>
+              <span id="tarotPickCountBadge" class="text-xs font-black text-indigo-700 bg-white px-2 py-0.5 rounded-full border border-indigo-300">
+                0 / 3장 선택됨
+              </span>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-2">
+              <div id="slotPreview-0" class="p-2 rounded-xl bg-white border border-dashed border-indigo-300 text-center text-xs font-bold text-slate-400 py-3">
+                1. 과거 / 원인
+              </div>
+              <div id="slotPreview-1" class="p-2 rounded-xl bg-white border border-dashed border-indigo-300 text-center text-xs font-bold text-slate-400 py-3">
+                2. 현재 / 조언
+              </div>
+              <div id="slotPreview-2" class="p-2 rounded-xl bg-white border border-dashed border-indigo-300 text-center text-xs font-bold text-slate-400 py-3">
+                3. 미래 / 결말
+              </div>
+            </div>
+          </div>
+
+          <!-- 12 Pickable Cards Deck -->
+          <div class="space-y-2">
+            <p id="tarotPickPromptText" class="text-xs font-bold text-indigo-700 animate-pulse">
+              👇 마음을 가다듬고, 끌리는 카드를 3장 차례대로 터치하세요
+            </p>
+            <div id="tarotDeckGrid" class="tarot-pickable-deck">
+              <!-- 12 cards generated by JS -->
+            </div>
+          </div>
+
+          <!-- Reveal Action Button -->
+          <div id="tarotRevealActionBox" class="hidden pt-2">
+            <button type="button" onclick="App.reveal3CardReading()" class="w-full py-3.5 rounded-2xl font-black text-sm text-white bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 hover:from-indigo-700 hover:to-purple-800 transition shadow-lg flex items-center justify-center space-x-2">
+              <i data-lucide="sparkles" class="w-4 h-4 text-amber-300 animate-spin"></i>
+              <span>3장의 카드 뒤집기 & 타로 해석 확인하기 🔮</span>
+            </button>
           </div>
         </div>
 
-        <!-- 🎴 STEP 2: 선택된 카드의 3D 플립 및 상세 해설 영역 (선택 시 등장) -->
-        <div id="tarotRevealedBox" class="hidden space-y-4 pt-2">
-          <div class="tarot-perspective cursor-pointer select-none" onclick="App.flipRevealedTarot(event)">
-            <div id="tarotCardInner" class="tarot-card-inner">
-              <!-- Front (Face down mystery) -->
-              <div class="tarot-card-front flex flex-col items-center justify-center p-6 text-white shadow-xl">
-                <i data-lucide="sparkles" class="w-10 h-10 text-amber-300 mb-2 animate-pulse"></i>
-                <span class="text-sm font-bold font-serif-kr">당신이 선택한 카드</span>
-                <span class="text-xs text-indigo-200 mt-1 font-medium">카드를 톡 눌러서 뒤집어보세요 👆</span>
-              </div>
-              <!-- Back (Flipped Reveal) -->
-              <div id="tarotCardBack" class="tarot-card-back p-5 flex flex-col justify-between text-left overflow-y-auto shadow-xl">
-                <div>
-                  <div class="flex items-center justify-between mb-2 border-b border-slate-200 pb-2">
-                    <span id="tarotCardKrName" class="text-base font-extrabold text-slate-900 font-serif-kr"></span>
-                    <span id="tarotCardElem" class="text-[11px] px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-900 font-bold border border-indigo-300"></span>
-                  </div>
-                  <div id="tarotCardTheme" class="text-xs font-bold text-indigo-700 mb-2"></div>
-                  <p id="tarotCardSummary" class="text-xs text-slate-700 font-medium leading-relaxed mb-3"></p>
+        <!-- 🎴 STEP 2: 3장의 카드 뒤집힌 리딩 결과 화면 -->
+        <div id="tarotRevealedSection" class="hidden space-y-6 pt-2">
+          
+          <div class="tarot-3slots-grid">
+            <!-- Card 1: 과거 -->
+            <div class="tarot-slot-box">
+              <div id="slotInner-0" class="tarot-slot-inner cursor-pointer" onclick="App.toggleSlotFlip(0)">
+                <div class="tarot-slot-front">
+                  <span class="text-xs text-amber-300 font-bold mb-1">1. 과거 & 원인</span>
+                  <span class="text-sm font-serif-kr font-bold text-white">터치하여 뒤집기 👆</span>
                 </div>
-                <div class="space-y-1.5 pt-2 border-t border-slate-200 text-xs">
-                  <p class="text-slate-900"><strong>💡 조언:</strong> <span id="tarotGeneralAdv" class="text-slate-700 font-medium"></span></p>
-                  <p class="text-rose-950"><strong>💖 애정:</strong> <span id="tarotLoveAdv" class="text-slate-700 font-medium"></span></p>
-                  <p class="text-amber-950"><strong>💰 금전:</strong> <span id="tarotMoneyAdv" class="text-slate-700 font-medium"></span></p>
+                <div class="tarot-slot-back">
+                  <div>
+                    <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full inline-block mb-1">과거의 시작</span>
+                    <h4 id="cardName-0" class="text-sm font-extrabold text-slate-900 font-serif-kr mb-1"></h4>
+                    <p id="cardSummary-0" class="text-xs text-slate-700 leading-relaxed font-medium mb-2"></p>
+                  </div>
+                  <div class="pt-2 border-t border-slate-100 text-[11px] text-indigo-900 font-bold">
+                    <span>💡 과거의 메시지:</span>
+                    <p id="cardAdv-0" class="font-medium text-slate-700 mt-0.5"></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 2: 현재 -->
+            <div class="tarot-slot-box">
+              <div id="slotInner-1" class="tarot-slot-inner cursor-pointer" onclick="App.toggleSlotFlip(1)">
+                <div class="tarot-slot-front">
+                  <span class="text-xs text-amber-300 font-bold mb-1">2. 현재 & 조언</span>
+                  <span class="text-sm font-serif-kr font-bold text-white">터치하여 뒤집기 👆</span>
+                </div>
+                <div class="tarot-slot-back">
+                  <div>
+                    <span class="text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full inline-block mb-1">현재의 핵심</span>
+                    <h4 id="cardName-1" class="text-sm font-extrabold text-slate-900 font-serif-kr mb-1"></h4>
+                    <p id="cardSummary-1" class="text-xs text-slate-700 leading-relaxed font-medium mb-2"></p>
+                  </div>
+                  <div class="pt-2 border-t border-slate-100 text-[11px] text-rose-950 font-bold">
+                    <span>💡 지금의 조언:</span>
+                    <p id="cardAdv-1" class="font-medium text-slate-700 mt-0.5"></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 3: 미래 -->
+            <div class="tarot-slot-box">
+              <div id="slotInner-2" class="tarot-slot-inner cursor-pointer" onclick="App.toggleSlotFlip(2)">
+                <div class="tarot-slot-front">
+                  <span class="text-xs text-amber-300 font-bold mb-1">3. 미래 & 결말</span>
+                  <span class="text-sm font-serif-kr font-bold text-white">터치하여 뒤집기 👆</span>
+                </div>
+                <div class="tarot-slot-back">
+                  <div>
+                    <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full inline-block mb-1">미래의 결실</span>
+                    <h4 id="cardName-2" class="text-sm font-extrabold text-slate-900 font-serif-kr mb-1"></h4>
+                    <p id="cardSummary-2" class="text-xs text-slate-700 leading-relaxed font-medium mb-2"></p>
+                  </div>
+                  <div class="pt-2 border-t border-slate-100 text-[11px] text-emerald-950 font-bold">
+                    <span>💡 미래의 전망:</span>
+                    <p id="cardAdv-2" class="font-medium text-slate-700 mt-0.5"></p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="pt-2 flex items-center justify-center space-x-2">
-            <button type="button" onclick="App.resetTarotSpread()" class="px-4 py-2 rounded-xl modern-chip text-xs font-bold text-slate-900 hover:text-black inline-flex items-center space-x-1.5 shadow-sm">
-              <i data-lucide="shuffle" class="w-3.5 h-3.5 text-indigo-700"></i>
-              <span>다른 카드 다시 고르기 🔄</span>
+          <!-- Comprehensive Story Synthesis Card -->
+          <div class="p-5 rounded-2xl bg-indigo-50 border border-indigo-200 text-left space-y-2">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="compass" class="w-4 h-4 text-indigo-700"></i>
+              <h4 class="text-xs font-bold text-indigo-950">3장의 카드가 전하는 종합 스토리 리딩</h4>
+            </div>
+            <p id="tarotComprehensiveStory" class="text-xs sm:text-sm text-slate-800 font-medium leading-relaxed font-serif-kr"></p>
+          </div>
+
+          <!-- Reset Button -->
+          <div class="pt-1 flex items-center justify-center">
+            <button type="button" onclick="App.resetTarotSpread()" class="px-5 py-2.5 rounded-xl modern-chip text-xs font-bold text-slate-900 hover:text-black inline-flex items-center space-x-1.5 shadow-sm">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-indigo-700"></i>
+              <span>새로운 고민 다시 점치기 🔄</span>
             </button>
           </div>
         </div>
@@ -353,7 +432,7 @@
         </div>
       </div>
 
-      <!-- 🐾 12지신 수호동물 파트너 카드 (클릭 시 확실한 팝 모션 & 하트/별 파티클 & 명언 로테이션) -->
+      <!-- 🐾 12지신 수호동물 파트너 카드 -->
       <div id="mascotCard" class="mascot-card p-5 relative overflow-hidden flex flex-col sm:flex-row items-center gap-4 cursor-pointer select-none" onclick="App.interactMascot(event)">
         <!-- Mascot Avatar -->
         <div class="relative shrink-0 flex flex-col items-center">
@@ -381,7 +460,7 @@
       </div>
 
       <!-- User Profile Header Card -->
-      <div class="modern-card p-6 relative overflow-hidden bg-white">
+      <div id="profileHeaderCard" class="modern-card p-6 relative overflow-hidden bg-white">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div class="inline-flex items-center space-x-1.5 text-xs text-amber-800 mb-2 font-bold">
@@ -400,17 +479,26 @@
             </div>
           </div>
 
-          <!-- Total Score Badge -->
-          <div class="flex items-center space-x-3 bg-amber-100/90 px-4 py-2.5 rounded-2xl border border-amber-300 shrink-0 self-start sm:self-auto shadow-sm">
+          <!-- Total Score Badge (오늘의 운세 모드 시에만 노출) -->
+          <div id="resDailyScoreBox" class="flex items-center space-x-3 bg-amber-100/90 px-4 py-2.5 rounded-2xl border border-amber-300 shrink-0 self-start sm:self-auto shadow-sm">
             <div>
               <div class="text-[10px] text-amber-900 font-bold">오늘의 운세 지수</div>
               <div id="resScoreGrade" class="text-sm font-extrabold text-amber-950">대길(大吉)</div>
             </div>
             <span id="resTotalScore" class="text-3xl font-black text-amber-700">88</span>
           </div>
+
+          <!-- Saju Constitutional Destiny Badge (사주 모드 시 노출) -->
+          <div id="resSajuDestinyBox" class="hidden flex items-center space-x-3 bg-indigo-50 px-4 py-2.5 rounded-2xl border border-indigo-200 shrink-0 self-start sm:self-auto shadow-sm">
+            <div>
+              <div class="text-[10px] text-indigo-700 font-bold">사주 체질 & 용신</div>
+              <div id="resSajuDestinyGrade" class="text-sm font-extrabold text-indigo-950">신강(身强) 사주</div>
+            </div>
+            <span id="resSajuYongsinBadge" class="text-2xl font-black text-indigo-700">木</span>
+          </div>
         </div>
 
-        <!-- "내 사주가 좋은 이유 3가지" 아코디언 버튼 -->
+        <!-- "내 사주가 좋은 이유 3가지" 아코디언 버튼 (사주 모드 시에만 노출) -->
         <div id="blessingBtnContainer" class="mt-5 pt-4 border-t border-slate-200 flex items-center justify-between">
           <button type="button" onclick="App.toggleBlessingCard()" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-100 via-purple-100 to-sky-100 border border-amber-300 text-amber-950 text-xs font-bold flex items-center justify-between hover:border-amber-500 transition group shadow-sm">
             <span class="flex items-center space-x-2">
@@ -427,26 +515,23 @@
         </div>
       </div>
 
-      <!-- Navigation Tabs (사주 모드 시 사주/오행/재물 노출, 오늘의 운세 모드 시 숨김) -->
+      <!-- Navigation Tabs (사주 모드 시: 사주원국 / 앞으로 나아갈 방향 / 오행 / 재물 노출) -->
       <div id="resultNavTabs" class="flex items-center space-x-1.5 overflow-x-auto pb-1 no-print scrollbar-none text-xs">
-        <button onclick="App.switchResultTab('daily')" id="tabBtn-daily" class="result-tab-btn tab-btn px-3.5 py-2 rounded-xl font-bold whitespace-nowrap active-tab bg-slate-900 text-white">
-          🔮 오늘의 운세
+        <button onclick="App.switchResultTab('saju')" id="tabBtn-saju" class="result-tab-btn tab-btn px-3.5 py-2 rounded-xl font-bold whitespace-nowrap active-tab bg-slate-900 text-white">
+          📜 사주 원국 (연애·대운)
         </button>
-        <button onclick="App.switchResultTab('saju')" id="tabBtn-saju" class="result-tab-btn tab-btn px-3.5 py-2 rounded-xl font-semibold whitespace-nowrap modern-chip text-slate-800 hover:text-black">
-          📜 사주 (연애·대운)
+        <button onclick="App.switchResultTab('future')" id="tabBtn-future" class="result-tab-btn tab-btn px-3.5 py-2 rounded-xl font-semibold whitespace-nowrap modern-chip text-slate-800 hover:text-black">
+          🧭 앞으로 나아갈 방향 & 미래 전략
         </button>
         <button onclick="App.switchResultTab('element')" id="tabBtn-element" class="result-tab-btn tab-btn px-3.5 py-2 rounded-xl font-semibold whitespace-nowrap modern-chip text-slate-800 hover:text-black">
-          🌱 오행 밸런스
+          🌱 오행 밸런스 & 결핍 진단
         </button>
         <button onclick="App.switchResultTab('wealth')" id="tabBtn-wealth" class="result-tab-btn tab-btn px-3.5 py-2 rounded-xl font-semibold whitespace-nowrap modern-chip text-slate-800 hover:text-black">
-          💰 재물 & 커리어
-        </button>
-        <button onclick="App.switchResultTab('tarot')" id="tabBtn-tarot" class="result-tab-btn tab-btn px-3.5 py-2 rounded-xl font-semibold whitespace-nowrap modern-chip text-slate-800 hover:text-black">
-          🃏 타로
+          💰 재물 & 커리어 전략
         </button>
       </div>
 
-      <!-- TAB 1: 오늘의 운세 -->
+      <!-- TAB 1: 오늘의 운세 (오늘의 운세 모드 시 단독 노출) -->
       <div id="tabContent-daily" class="tab-pane space-y-4">
         
         <!-- Summary Card -->
@@ -518,7 +603,7 @@
         </div>
       </div>
 
-      <!-- TAB 2: 사주 (연애운 & 궁합 포함!) -->
+      <!-- TAB 2: 사주 원국 (연애운·대운 통합) -->
       <div id="tabContent-saju" class="tab-pane hidden space-y-4">
         
         <!-- 4 Pillars Table -->
@@ -588,7 +673,7 @@
           </div>
         </div>
 
-        <!-- 💖 사주 안에 포함된 연애운 & 인연 기질 분석 -->
+        <!-- 💖 사주 연애운 & 인연 기질 -->
         <div class="modern-card p-5 space-y-3 bg-white border-2 border-rose-200">
           <div class="flex items-center justify-between">
             <h4 class="text-sm font-extrabold text-rose-900 font-serif-kr flex items-center space-x-1.5">
@@ -610,7 +695,7 @@
           </div>
         </div>
 
-        <!-- 상대방과의 궁합 분석 (입력 시 표시) -->
+        <!-- 상대방과의 궁합 분석 (선택 시) -->
         <div id="partnerResultCard" class="hidden modern-card p-5 space-y-3 border-2 border-purple-300 bg-white">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-purple-900">두 사람의 궁합 분석</span>
@@ -654,7 +739,77 @@
         </div>
       </div>
 
-      <!-- TAB 3: 오행 밸런스 & 없는 오행 정밀 진단 -->
+      <!-- TAB 3: 앞으로 나아갈 방향 & 미래 전략 (NEW! 사주 전용 미래 로드맵) -->
+      <div id="tabContent-future" class="tab-pane hidden space-y-4">
+        
+        <!-- Core Mission & Direction Card -->
+        <div class="modern-card p-6 space-y-4 bg-white border-2 border-indigo-200">
+          <div class="flex items-center justify-between">
+            <span class="px-3 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-900 border border-indigo-300">
+              🚀 미래 인생 나침반
+            </span>
+            <span class="text-xs text-slate-500 font-medium">용신 & 일주 결합 로드맵</span>
+          </div>
+          <h3 class="text-lg font-extrabold text-slate-900 font-serif-kr">
+            앞으로 나아가야 할 인생의 핵심 방향
+          </h3>
+          <div class="p-4 rounded-2xl bg-indigo-50/80 border border-indigo-200 space-y-2">
+            <span class="text-xs font-bold text-indigo-950 block">🎯 추천 집중 진로 & 라이프스타일:</span>
+            <p id="futureFieldText" class="text-sm font-extrabold text-indigo-900 font-serif-kr"></p>
+            <p id="futureDirectionDesc" class="text-xs text-slate-800 font-medium leading-relaxed"></p>
+          </div>
+          <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-300 text-xs">
+            <strong class="text-slate-900">📌 핵심 실천 전략:</strong>
+            <p id="futureActionText" class="text-slate-700 font-medium mt-1"></p>
+          </div>
+        </div>
+
+        <!-- Key Milestones & Turning Points -->
+        <div class="modern-card p-5 space-y-3 bg-white">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-extrabold text-slate-900">🧭 대운으로 보는 인생의 3대 도약 타이밍</h4>
+            <span class="text-[11px] text-slate-600 font-bold">변곡점 가이드</span>
+          </div>
+          <div id="futureMilestonesContainer" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
+        </div>
+
+        <!-- Pitfalls & Defense Shield -->
+        <div class="modern-card p-5 space-y-3 bg-white">
+          <h4 class="text-xs font-extrabold text-rose-950 flex items-center space-x-1.5">
+            <span>🛡️</span>
+            <span>피해야 할 인생의 함정과 방패 전략</span>
+          </h4>
+          <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 space-y-1.5 text-xs">
+            <h5 id="futureTrapTitle" class="font-extrabold text-rose-950"></h5>
+            <p id="futureTrapDesc" class="text-slate-800 font-medium leading-relaxed"></p>
+          </div>
+        </div>
+
+        <!-- Future Remedy Prescription -->
+        <div class="modern-card p-5 space-y-3 bg-white">
+          <h4 class="text-xs font-extrabold text-emerald-950 flex items-center space-x-1.5">
+            <span>🌿</span>
+            <span>미래 개운(開運) 일상 가이드</span>
+          </h4>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+            <div class="p-3 rounded-2xl bg-emerald-50 border border-emerald-200">
+              <span class="text-emerald-950 font-bold block mb-1">행운을 부르는 컬러 & 방위</span>
+              <p id="futureRemedyColor" class="text-slate-800 font-medium"></p>
+            </div>
+            <div class="p-3 rounded-2xl bg-emerald-50 border border-emerald-200">
+              <span class="text-emerald-950 font-bold block mb-1">추천하는 마음가짐 & 습관</span>
+              <p id="futureRemedyHabit" class="text-slate-800 font-medium"></p>
+            </div>
+            <div class="p-3 rounded-2xl bg-emerald-50 border border-emerald-200">
+              <span class="text-emerald-950 font-bold block mb-1">나를 돕는 귀인(貴人)의 특징</span>
+              <p id="futureRemedyPerson" class="text-slate-800 font-medium"></p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- TAB 4: 오행 밸런스 & 결핍 진단 -->
       <div id="tabContent-element" class="tab-pane hidden space-y-4">
         
         <!-- Element Distribution -->
@@ -758,7 +913,7 @@
         </div>
       </div>
 
-      <!-- TAB 4: 재물 & 커리어 -->
+      <!-- TAB 5: 재물 & 커리어 전략 -->
       <div id="tabContent-wealth" class="tab-pane hidden space-y-4">
         <div class="modern-card p-5 space-y-3 bg-white">
           <h3 class="text-sm font-extrabold text-slate-900 font-serif-kr">재물과 성공 전략</h3>
@@ -772,70 +927,11 @@
               <span class="text-sky-950 font-extrabold block mb-1">적성 직업군</span>
               <p id="careerFieldsDesc" class="text-slate-800 font-medium"></p>
             </div>
-            <div class="p-3 rounded-2xl bg-emerald-50 border border-emerald-300">
+            <div class="p-3 rounded-2xl bg-emerald-50 border border-emerald-200">
               <span class="text-emerald-950 font-extrabold block mb-1">황금 타이밍</span>
               <p id="wealthTimingDesc" class="text-slate-800 font-medium"></p>
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- TAB 5: 타로 (대시보드 내부 타로) -->
-      <div id="tabContent-tarot" class="tab-pane hidden space-y-4">
-        <div class="modern-card p-5 text-center space-y-4 bg-white">
-          <div class="space-y-1">
-            <h3 class="text-base font-extrabold text-slate-900 font-serif-kr">오늘의 타로 카드</h3>
-            <p class="text-xs text-slate-700 font-medium max-w-sm mx-auto">
-              5장의 카드 중 1장을 직접 터치하여 오늘의 직관적 조언을 확인하세요.
-            </p>
-          </div>
-
-          <!-- Result Tarot Spread -->
-          <div id="resTarotSpreadSection" class="py-2">
-            <div class="tarot-spread-deck flex items-center justify-center gap-2 sm:gap-3 py-3 select-none">
-              <div class="tarot-spread-card" onclick="App.pickResultTarotCard(0, event)" style="transform: rotate(-6deg);"></div>
-              <div class="tarot-spread-card" onclick="App.pickResultTarotCard(1, event)" style="transform: rotate(-3deg);"></div>
-              <div class="tarot-spread-card" onclick="App.pickResultTarotCard(2, event)" style="transform: rotate(0deg);"></div>
-              <div class="tarot-spread-card" onclick="App.pickResultTarotCard(3, event)" style="transform: rotate(3deg);"></div>
-              <div class="tarot-spread-card" onclick="App.pickResultTarotCard(4, event)" style="transform: rotate(6deg);"></div>
-            </div>
-          </div>
-
-          <!-- Result Revealed Card -->
-          <div id="resTarotRevealedBox" class="hidden space-y-4 pt-2">
-            <div class="tarot-perspective cursor-pointer select-none" onclick="App.flipResultRevealedTarot(event)">
-              <div id="resultTarotCardInner" class="tarot-card-inner">
-                <div class="tarot-card-front flex flex-col items-center justify-center p-6 text-white shadow-xl">
-                  <i data-lucide="sparkles" class="w-10 h-10 text-amber-300 mb-2 animate-pulse"></i>
-                  <span class="text-sm font-bold font-serif-kr">선택한 카드</span>
-                  <span class="text-xs text-indigo-200 mt-1 font-medium">카드를 톡 눌러서 뒤집어보세요 👆</span>
-                </div>
-                <div class="tarot-card-back p-5 flex flex-col justify-between text-left overflow-y-auto shadow-xl">
-                  <div>
-                    <div class="flex items-center justify-between mb-2 border-b border-slate-200 pb-2">
-                      <span id="resTarotCardKrName" class="text-base font-extrabold text-slate-900 font-serif-kr"></span>
-                      <span id="resTarotCardElem" class="text-[11px] px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-900 font-bold border border-indigo-300"></span>
-                    </div>
-                    <div id="resTarotCardTheme" class="text-xs font-bold text-indigo-700 mb-2"></div>
-                    <p id="resTarotCardSummary" class="text-xs text-slate-700 font-medium leading-relaxed mb-3"></p>
-                  </div>
-                  <div class="space-y-1.5 pt-2 border-t border-slate-200 text-xs">
-                    <p class="text-slate-900"><strong>💡 조언:</strong> <span id="resTarotGeneralAdv" class="text-slate-700 font-medium"></span></p>
-                    <p class="text-rose-950"><strong>💖 애정:</strong> <span id="resTarotLoveAdv" class="text-slate-700 font-medium"></span></p>
-                    <p class="text-amber-950"><strong>💰 금전:</strong> <span id="resTarotMoneyAdv" class="text-slate-700 font-medium"></span></p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <button type="button" onclick="App.resetResultTarotSpread()" class="px-4 py-2 rounded-xl modern-chip text-xs font-bold text-slate-900 hover:text-black inline-flex items-center space-x-1.5 shadow-sm">
-                <i data-lucide="shuffle" class="w-3.5 h-3.5 text-indigo-700"></i>
-                <span>다른 카드 다시 고르기 🔄</span>
-              </button>
-            </div>
-          </div>
-
         </div>
       </div>
 
@@ -856,7 +952,7 @@
   <script src="js/engine/calendar.js"></script>
   <script src="js/engine/saju.js"></script>
   <script src="js/engine/fortune.js"></script>
-  <script src="js/app.js?v=20261011_7"></script>
+  <script src="js/app.js?v=20261011_8"></script>
 
 </body>
 </html>

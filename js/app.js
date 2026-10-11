@@ -1,7 +1,7 @@
 /**
  * Main Application Controller (천명 - 오늘의 운세 · 사주 · 타로)
  * High-Contrast Comfortable Light Theme (2026 Trend)
- * 12지신 수호동물 상호작용 & KASI 정통 만세력 & 대화형 카드 고르기 타로 시스템
+ * 12지신 수호동물 상호작용 & KASI 정통 만세력 & 3-Card 대화형 타로 시스템
  */
 
 const ZODIAC_MASCOTS = {
@@ -98,8 +98,13 @@ const App = {
   dailyFortune: null,
   partnerSaju: null,
   compatResult: null,
-  currentTarotCard: null,
-  tarotCategory: "today",
+
+  // 3-Card 타로 시스템 상태
+  tarotCategory: "love", // 'love', 'career', 'money', 'mind'
+  tarotDeckCards: [], // 펼쳐진 12장의 카드
+  tarotPickedCards: [], // 사용자가 선택한 3장 [{ deckIdx, card }]
+
+  // 12지신 수호동물 상태
   currentMascot: null,
   mascotQuoteIdx: 0,
   isBlessingOpen: false,
@@ -107,7 +112,7 @@ const App = {
   init() {
     this.populateDateSelects();
     this.initRealtimeBanner();
-    this.initTarotCard();
+    this.initTarotDeck();
     this.setMode("daily");
 
     // 초기 수호동물 설정
@@ -195,8 +200,8 @@ const App = {
       // 🃏 타로 전용 뷰 활성화
       if (sajuFormCard) sajuFormCard.classList.add("hidden");
       if (tarotStandAloneCard) tarotStandAloneCard.classList.remove("hidden");
-      if (heroTitle) heroTitle.textContent = "마음을 비추는 타로 카드";
-      if (heroSubtitle) heroSubtitle.textContent = "생년월일 입력 없이 마음속 고민을 비추는 타로 리딩을 지금 시작하세요.";
+      if (heroTitle) heroTitle.textContent = "마음을 비추는 3-Card 타로";
+      if (heroSubtitle) heroSubtitle.textContent = "질문 주제를 선택하고, 펼쳐진 카드 중 3장을 직접 골라 과거·현재·미래의 해답을 확인하세요.";
       this.resetTarotSpread();
     } else if (mode === "daily") {
       // 🔮 오늘의 운세 뷰 활성화
@@ -208,13 +213,13 @@ const App = {
       if (heroSubtitle) heroSubtitle.textContent = "오늘 일진과 시간대별 길흉, 행운의 컬러 & 방위를 간편하게 확인하세요.";
       if (submitBtnText) submitBtnText.textContent = "🔮 오늘 하루 운세 확인하기";
     } else {
-      // 📜 사주 뷰 활성화 (연애운·대운 포함)
+      // 📜 사주 뷰 활성화 (연애운·앞으로 나아갈 방향·대운 포함)
       if (sajuFormCard) sajuFormCard.classList.remove("hidden");
       if (tarotStandAloneCard) tarotStandAloneCard.classList.add("hidden");
       if (advFields) advFields.classList.remove("hidden");
       if (partnerFields) partnerFields.classList.add("expanded");
       if (heroTitle) heroTitle.textContent = "한국천문연구원 정통 사주 만세력";
-      if (heroSubtitle) heroSubtitle.textContent = "KASI 정본 역법으로 사주팔자 4주 8자, 연애운, 10년 대운, 오행을 정밀 분석합니다.";
+      if (heroSubtitle) heroSubtitle.textContent = "KASI 정본 역법으로 사주팔자 4주 8자, 연애운, 앞으로 나아갈 방향, 오행 밸런스를 정밀 분석합니다.";
       if (submitBtnText) submitBtnText.textContent = "📜 정통 사주 4주 8자 분석하기";
     }
 
@@ -397,8 +402,9 @@ const App = {
 
     document.getElementById("resIljuAnimalSymbol").textContent = s.iljuDetail.symbol;
     document.getElementById("resStrengthBadge").textContent = s.strengthStatus;
-    document.getElementById("resTotalScore").textContent = f.totalScore;
 
+    // 오늘의 운세 점수
+    document.getElementById("resTotalScore").textContent = f.totalScore;
     let scoreGrade = "평온(平溫)";
     if (f.totalScore >= 95) scoreGrade = "대대길(大大吉)";
     else if (f.totalScore >= 88) scoreGrade = "대길(大吉)";
@@ -425,19 +431,39 @@ const App = {
       });
     }
 
-    // 🔮 모드별 카테고리 완전 분리 (오늘의 운세 선택 시 다른 사주/오행/재물/타로 카테고리 완전 숨김!)
+    // 🔮 모드별 카테고리 완전 분리 & 헤더 뱃지 스위칭
     const reportTitle = document.getElementById("resReportTitle");
     const blessingBtnContainer = document.getElementById("blessingBtnContainer");
     const blessingSection = document.getElementById("blessingSection");
     const resultNavTabs = document.getElementById("resultNavTabs");
+    const dailyScoreBox = document.getElementById("resDailyScoreBox");
+    const sajuDestinyBox = document.getElementById("resSajuDestinyBox");
 
     if (this.currentMode === "daily") {
+      // [오늘의 운세 모드]: 운세 점수 뱃지만 노출, 사주 관련 탭/뱃지 일체 격리
       if (reportTitle) reportTitle.textContent = "님의 오늘의 운세 보고서";
+      if (dailyScoreBox) dailyScoreBox.classList.remove("hidden");
+      if (sajuDestinyBox) sajuDestinyBox.classList.add("hidden");
       if (blessingBtnContainer) blessingBtnContainer.classList.add("hidden");
       if (blessingSection) blessingSection.classList.remove("expanded");
       if (resultNavTabs) resultNavTabs.classList.add("hidden");
+
+      // 탭 패널도 오늘의 운세 탭만 활성화
+      const panes = document.querySelectorAll(".tab-pane");
+      panes.forEach(p => p.classList.add("hidden"));
+      const dailyPane = document.getElementById("tabContent-daily");
+      if (dailyPane) dailyPane.classList.remove("hidden");
     } else {
-      if (reportTitle) reportTitle.textContent = "님의 정통 사주명식 & 평생 대운 보고서";
+      // [정통 사주 모드]: 사주 체질 및 용신 뱃지 노출, 운세 점수 숨김, 사주 네비게이션 탭 노출
+      if (reportTitle) reportTitle.textContent = "님의 정통 사주명식 & 미래 로드맵 보고서";
+      if (dailyScoreBox) dailyScoreBox.classList.add("hidden");
+      if (sajuDestinyBox) sajuDestinyBox.classList.remove("hidden");
+
+      const destinyGrade = document.getElementById("resSajuDestinyGrade");
+      const yongsinBadge = document.getElementById("resSajuYongsinBadge");
+      if (destinyGrade) destinyGrade.textContent = s.strengthStatus;
+      if (yongsinBadge) yongsinBadge.textContent = s.yongsin;
+
       if (blessingBtnContainer) blessingBtnContainer.classList.remove("hidden");
       if (resultNavTabs) {
         resultNavTabs.classList.remove("hidden");
@@ -445,10 +471,15 @@ const App = {
         if (tabBtnDaily) tabBtnDaily.classList.add("hidden");
         const tabBtnSaju = document.getElementById("tabBtn-saju");
         if (tabBtnSaju) tabBtnSaju.classList.remove("hidden");
+        const tabBtnFuture = document.getElementById("tabBtn-future");
+        if (tabBtnFuture) tabBtnFuture.classList.remove("hidden");
       }
+
+      // 사주 전용 앞으로 나아갈 방향 렌더링
+      this.renderFutureRoadmap(s);
     }
 
-    // 2. 오늘의 운세
+    // 2. 오늘의 운세 내용 채우기
     document.getElementById("dailyThemeTitle").textContent = f.theme;
     document.getElementById("dailySummaryText").textContent = f.summary;
     document.getElementById("dailyActionText").textContent = f.action;
@@ -645,6 +676,120 @@ const App = {
     if (window.lucide) window.lucide.createIcons();
   },
 
+  // 🧭 사주 전용: 앞으로 나아갈 방향 & 미래 전략 렌더링
+  renderFutureRoadmap(s) {
+    const yongsin = s.yongsin || "목";
+    const ilju = s.iljuDetail || { name: "갑자", symbol: "푸른 쥐", strength: "", caution: "" };
+
+    const yongsinFields = {
+      "목": {
+        field: "🌱 목(木) 기운: 기획·콘텐츠 크리에이티브, 교육·인재 육성, 바이오·친환경",
+        direction: `본원은 [${ilju.name}]으로, 창조적 성장과 확장을 돕는 [목(木)] 기운이 가장 강력한 용신(用神)입니다. 새로운 씨앗을 뿌리고 아이디어를 구체화하는 기획, 교육, 브랜딩, 창작 분야에서 잠재력이 극대화됩니다. 남의 방식을 모방하기보다 자신만의 오리지널 철학을 세울 때 인생의 커다란 도약이 시작됩니다.`,
+        action: `매일 아침 새로운 지식을 습득하는 루틴을 만들고, 중장기적 성장 로드맵을 시각화하여 한 걸음씩 실행하세요.`
+      },
+      "화": {
+        field: "🔥 화(火) 기운: IT 미디어·엔터테인먼트, 마케팅·홍보, 디자인·예술 혁신",
+        direction: `본원은 [${ilju.name}]으로, 열정과 표현력을 폭발시키는 [화(火)] 기운이 핵심 용신입니다. 대중 앞에서 매력을 발산하거나 플랫폼, 영상, 디자인, 마케팅처럼 사람들의 시선을 사로잡는 무대에서 독보적인 성공을 거둘 수 있습니다. 스스로를 세상에 당당하게 드러내세요.`,
+        action: `소극적인 태도를 벗어나 적극적으로 네트워크를 넓히고, 직관적인 결과물을 세상에 과감히 발표하세요.`
+      },
+      "토": {
+        field: "⛰️ 토(土) 기운: 부동산·자산 관리, 플랫폼 중개, 컨설팅, 조직 경영",
+        direction: `본원은 [${ilju.name}]으로, 신뢰와 포용력을 상징하는 [토(土)] 기운이 핵심 용신입니다. 사람과 사람, 자본과 정보를 연결하는 중개 및 플랫폼 비즈니스, 자산 운용에서 탁월한 수완을 발휘합니다. 묵직하고 흔들리지 않는 신용이 최고의 재산입니다.`,
+        action: `단기 시세 차익보다는 10년을 바라보는 든든한 실물 자산과 신뢰 기반의 협력 파트너십을 구축하세요.`
+      },
+      "금": {
+        field: "⚔️ 금(金) 기운: 금융·투자 분석, 법률·행정, 정밀 테크·엔지니어링, 전문 라이선스",
+        direction: `본원은 [${ilju.name}]으로, 냉철한 결단과 시스템 완성을 뜻하는 [금(金)] 기운이 핵심 용신입니다. 복잡한 문제를 명확하게 규격화하고 마무리 짓는 금융, 법률, 데이터, 엔지니어링 등 전문 기술 분야에서 압도적인 전문성을 확보할 수 있습니다.`,
+        action: `원칙과 프로세스를 명확히 세우고, 불필요한 인간관계와 낭비 요소를 과감히 정리하는 단호함을 유지하세요.`
+      },
+      "수": {
+        field: "💧 수(水) 기운: 글로벌 무역·유통, 심리·데이터 분석, 전략 기획, 자유 전문직",
+        direction: `본원은 [${ilju.name}]으로, 깊은 지혜와 유연한 흐름을 뜻하는 [수(水)] 기운이 핵심 용신입니다. 경계를 뛰어넘는 글로벌 비즈니스, 전략 기획, 인간 심리 분석 및 자유로운 지식 창업에서 물처럼 막힘없이 큰 부와 명예를 축적합니다.`,
+        action: `고정관념에 갇히지 말고 상황에 유연하게 대처하며, 깊은 사색과 독서를 통해 통찰력을 날카롭게 벼리세요.`
+      }
+    };
+
+    const info = yongsinFields[yongsin] || yongsinFields["목"];
+
+    const fieldEl = document.getElementById("futureFieldText");
+    const dirEl = document.getElementById("futureDirectionDesc");
+    const actEl = document.getElementById("futureActionText");
+
+    if (fieldEl) fieldEl.textContent = info.field;
+    if (dirEl) dirEl.textContent = info.direction;
+    if (actEl) actEl.textContent = info.action;
+
+    // 대운으로 보는 3대 도약 타이밍
+    const milesEl = document.getElementById("futureMilestonesContainer");
+    if (milesEl) {
+      milesEl.innerHTML = "";
+      const daeun = s.daeunList || [];
+      const selectedDaeun = daeun.slice(1, 4).length === 3 ? daeun.slice(1, 4) : daeun.slice(0, 3);
+      const phases = [
+        { label: "1차 도약기 (기반 구축)", badge: "도약기" },
+        { label: "2차 전환기 (인생 최대 황금기)", badge: "황금기" },
+        { label: "3차 수확기 (결실과 완성)", badge: "수확기" }
+      ];
+
+      selectedDaeun.forEach((d, idx) => {
+        const ph = phases[idx] || { label: "주요 대운 변곡점", badge: "변곡점" };
+        const card = document.createElement("div");
+        card.className = "p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200 space-y-1.5 text-xs";
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-600 text-white font-extrabold">${ph.badge}</span>
+            <span class="font-extrabold text-indigo-900">${d.startAge}~${d.endAge}세</span>
+          </div>
+          <h5 class="font-serif-kr text-xs font-black text-slate-900">${d.name} (${d.ganHanja}${d.jiHanja}) 대운</h5>
+          <p class="text-[11px] text-slate-700 font-medium">십신: <strong>${d.tenGod}</strong> 흐름 속에서 ${idx === 1 ? "인생 최고의 역량 발휘와 재정적 확장" : (idx === 0 ? "전문성 연마와 핵심 발판 마련" : "장기적 안정과 명예로운 결실")}이 성취됩니다.</p>
+        `;
+        milesEl.appendChild(card);
+      });
+    }
+
+    // 피해야 할 함정과 방패 전략
+    const trapTitleEl = document.getElementById("futureTrapTitle");
+    const trapDescEl = document.getElementById("futureTrapDesc");
+    const cautionText = ilju.caution || "무리한 감정적 결정이나 성급함을 경계하세요.";
+    if (trapTitleEl) trapTitleEl.textContent = "⚠️ 인생에서 반드시 경계해야 할 핵심 함정";
+    if (trapDescEl) {
+      trapDescEl.textContent = `당신의 성향상 "${cautionText}"라는 취약점이 있습니다. 특히 대운의 교차기나 감정이 격해졌을 때 성급하게 직장을 옮기거나 큰돈을 베팅하는 것을 피해야 합니다. 중요한 결정 앞에서는 최소 3일간의 숙려 기간을 두는 '냉철한 방패 전략'을 반드시 지키세요.`;
+    }
+
+    // 미래 개운(開運) 일상 가이드
+    const remedyColorMap = {
+      "목": "초록색·청색 계열 패션 / 동쪽(東) 방위 책상 배치 / 실내 반려식물",
+      "화": "붉은색·주황색·와인 포인트 / 남쪽(南) 방위 / 밝은 조명 인테리어",
+      "토": "황토색·베이지·브라운 / 중앙 및 남서 방위 / 도자기 및 흙 화분",
+      "금": "화이트·실버·골드 메탈 / 서쪽(西) 방위 / 깔끔한 미니멀리즘 소품",
+      "수": "블랙·네이비·딥블루 / 북쪽(北) 방위 / 충분한 수분 섭취와 수족관"
+    };
+
+    const remedyHabitMap = {
+      "목": "아침 10분 산책과 독서, 하루 목표를 손글씨로 적는 기록 습관",
+      "화": "자신감 넘치는 스피치 연습과 운동을 통한 땀 배출 루틴",
+      "토": "일정한 기상 시간 유지와 흔들리지 않는 감정 일기 작성",
+      "금": "매주 불필요한 물건과 모바일 앱을 정리하는 디톡스 습관",
+      "수": "잠들기 전 15분 명상과 클래식 음악 감상, 깊은 사색"
+    };
+
+    const remedyPersonMap = {
+      "목": "나의 비전에 긍정적인 자극을 주고 용기를 북돋아주는 성장 지향형 멘토",
+      "화": "열정적이고 솔직하며 유쾌한 에너지를 전파해주는 리더형 인연",
+      "토": "입이 무겁고 믿음직하며 어떤 상황에서도 든든하게 받쳐주는 조력자",
+      "금": "냉철한 피드백으로 군더더기를 걷어내주는 원칙주의자 전문가",
+      "수": "폭넓은 식견과 유연성으로 다양한 관점의 해답을 열어주는 지혜로운 참모"
+    };
+
+    const colorEl = document.getElementById("futureRemedyColor");
+    const habitEl = document.getElementById("futureRemedyHabit");
+    const personEl = document.getElementById("futureRemedyPerson");
+
+    if (colorEl) colorEl.textContent = remedyColorMap[yongsin] || remedyColorMap["목"];
+    if (habitEl) habitEl.textContent = remedyHabitMap[yongsin] || remedyHabitMap["목"];
+    if (personEl) personEl.textContent = remedyPersonMap[yongsin] || remedyPersonMap["목"];
+  },
+
   renderPillarsTable(pillars) {
     const setPillarBadge = (ganBadgeId, jiBadgeId, ganObj, jiObj, tenGodGanId, tenGodJiId, tenGodGan, tenGodJi, jijangganId, jiChar) => {
       const gEl = document.getElementById(ganBadgeId);
@@ -765,26 +910,56 @@ const App = {
       p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
       p.style.left = `${x - 14 + (Math.random() * 32 - 16)}px`;
       p.style.top = `${y - 14 + (Math.random() * 24 - 12)}px`;
-      p.style.setProperty("--dx", `${(Math.random() - 0.5) * 70}px`);
-      document.body.appendChild(p);
-      setTimeout(() => { p.remove(); }, 850);
+      if (p.style && p.style.setProperty) {
+        p.style.setProperty("--dx", `${(Math.random() - 0.5) * 70}px`);
+      }
+      if (document.body && document.body.appendChild) {
+        document.body.appendChild(p);
+      }
+      setTimeout(() => { if (p.remove) p.remove(); }, 850);
     }
   },
 
   // ==========================================================================
-  // 🃏 대화형 카드 직접 고르기 타로 시스템
+  // 🃏 3-Card 대화형 타로 시스템 (실제 타로 카드 리딩처럼 3장 직접 선택 및 종합 해석)
   // ==========================================================================
 
-  initTarotCard() {
-    const cards = window.TarotData || [];
-    if (cards.length === 0) return;
-    const randIdx = Math.floor(Math.random() * cards.length);
-    this.currentTarotCard = cards[randIdx];
+  initTarotDeck() {
+    const allCards = window.TarotData || [];
+    if (allCards.length === 0) return;
+
+    // 전체 22장 중 12장을 무작위 셔플하여 펼침 덱 구성
+    const shuffled = [...allCards].sort(() => Math.random() - 0.5);
+    this.tarotDeckCards = shuffled.slice(0, 12);
+    this.tarotPickedCards = [];
+
+    this.renderTarotDeck();
+  },
+
+  renderTarotDeck() {
+    const grid = document.getElementById("tarotDeckGrid");
+    if (!grid) return;
+    grid.innerHTML = "";
+
+    this.tarotDeckCards.forEach((card, idx) => {
+      const cardEl = document.createElement("div");
+      cardEl.className = "tarot-pickable-card";
+      cardEl.id = `pickCard-${idx}`;
+      cardEl.setAttribute("onclick", `App.pick3CardTarot(${idx}, event)`);
+      cardEl.innerHTML = `
+        <div class="tarot-card-seal">🎴</div>
+        <div class="tarot-card-pattern"></div>
+        <span class="tarot-card-number">${idx + 1}</span>
+      `;
+      grid.appendChild(cardEl);
+    });
+
+    this.updateTarotPickStateUI();
   },
 
   setTarotCategory(cat) {
     this.tarotCategory = cat;
-    const cats = ["today", "love", "money", "mind"];
+    const cats = ["love", "career", "money", "mind"];
     cats.forEach(c => {
       const btn = document.getElementById(`tarotCat-${c}`);
       if (btn) {
@@ -796,150 +971,179 @@ const App = {
       }
     });
 
-    this.updateTarotText();
+    // 이미 3장이 뒤집혀있는 상태라면 카테고리별 조언 갱신
+    if (this.tarotPickedCards.length === 3) {
+      this.populateRevealedTarotCards();
+    }
   },
 
-  // 사용자가 5장 중 1장의 카드를 직접 터치했을 때 실행 (첫 화면)
-  pickTarotCard(index, e) {
-    const cards = window.TarotData || [];
-    if (cards.length > 0) {
-      const randIdx = Math.floor(Math.random() * cards.length);
-      this.currentTarotCard = cards[randIdx];
-    }
+  pick3CardTarot(deckIdx, e) {
+    if (this.tarotPickedCards.length >= 3) return;
+    const cardEl = document.getElementById(`pickCard-${deckIdx}`);
+    if (cardEl && cardEl.classList.contains("picked")) return;
 
-    const spreadSection = document.getElementById("tarotSpreadSection");
-    const revealedBox = document.getElementById("tarotRevealedBox");
-    const inner = document.getElementById("tarotCardInner");
+    const card = this.tarotDeckCards[deckIdx];
+    if (!card) return;
 
-    if (spreadSection) spreadSection.classList.add("hidden");
-    if (revealedBox) revealedBox.classList.remove("hidden");
-
-    this.updateTarotText();
-
-    if (inner) {
-      inner.classList.remove("flipped");
-      setTimeout(() => {
-        inner.classList.add("flipped");
-      }, 150);
+    this.tarotPickedCards.push({ deckIdx, card });
+    if (cardEl) {
+      cardEl.classList.add("picked");
     }
 
     const clientX = (e && e.clientX) ? e.clientX : (window.innerWidth / 2);
     const clientY = (e && e.clientY) ? e.clientY : (window.innerHeight / 2);
     this.spawnMascotParticles(clientX, clientY);
 
-    if (window.confetti) {
-      try {
-        window.confetti({ particleCount: 30, spread: 60, origin: { y: 0.6 } });
-      } catch (err) {}
+    this.updateTarotPickStateUI();
+  },
+
+  updateTarotPickStateUI() {
+    const countBadge = document.getElementById("tarotPickCountBadge");
+    const count = this.tarotPickedCards.length;
+    if (countBadge) {
+      countBadge.textContent = `${count} / 3장 선택됨`;
+    }
+
+    const slotNames = ["과거 / 원인", "현재 / 조언", "미래 / 결말"];
+    for (let i = 0; i < 3; i++) {
+      const previewEl = document.getElementById(`slotPreview-${i}`);
+      if (previewEl) {
+        if (i < count) {
+          const picked = this.tarotPickedCards[i].card;
+          const shortName = picked.nameKr ? picked.nameKr.split(" (")[0] : picked.name;
+          previewEl.className = "p-2 rounded-xl bg-indigo-600 text-white text-center text-xs font-bold py-3 shadow-sm border border-indigo-700 transition animate-scale-pop";
+          previewEl.innerHTML = `✓ ${slotNames[i]}<br><span class="text-[11px] font-extrabold opacity-95">${shortName}</span>`;
+        } else {
+          previewEl.className = "p-2 rounded-xl bg-white border border-dashed border-indigo-300 text-center text-xs font-bold text-slate-400 py-3";
+          previewEl.innerHTML = `${i + 1}. ${slotNames[i]}`;
+        }
+      }
+    }
+
+    const promptText = document.getElementById("tarotPickPromptText");
+    const actionBox = document.getElementById("tarotRevealActionBox");
+
+    if (count === 3) {
+      if (promptText) {
+        promptText.textContent = "✨ 3장의 카드를 모두 골랐습니다! 아래 버튼을 눌러 종합 타로 해석을 확인하세요.";
+        promptText.className = "text-xs font-black text-indigo-900";
+      }
+      if (actionBox) actionBox.classList.remove("hidden");
+    } else {
+      if (promptText) {
+        promptText.textContent = `👇 마음을 가다듬고, 끌리는 카드를 ${3 - count}장 더 골라주세요 (${count}/3)`;
+        promptText.className = "text-xs font-bold text-indigo-700 animate-pulse";
+      }
+      if (actionBox) actionBox.classList.add("hidden");
     }
   },
 
-  flipRevealedTarot(e) {
-    const inner = document.getElementById("tarotCardInner");
+  reveal3CardReading() {
+    if (this.tarotPickedCards.length < 3) return;
+
+    const spreadSec = document.getElementById("tarotSpreadSection");
+    const revealSec = document.getElementById("tarotRevealedSection");
+    if (spreadSec) spreadSec.classList.add("hidden");
+    if (revealSec) revealSec.classList.remove("hidden");
+
+    this.populateRevealedTarotCards();
+
+    // 3장의 카드 순차적 3D 플립 애니메이션
+    for (let i = 0; i < 3; i++) {
+      const inner = document.getElementById(`slotInner-${i}`);
+      if (inner) {
+        inner.classList.remove("flipped");
+        setTimeout(() => {
+          inner.classList.add("flipped");
+        }, 150 + i * 220);
+      }
+    }
+
+    if (window.confetti) {
+      try {
+        window.confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 } });
+      } catch (e) {}
+    }
+
+    if (window.lucide) window.lucide.createIcons();
+  },
+
+  populateRevealedTarotCards() {
+    if (this.tarotPickedCards.length < 3) return;
+    const cat = this.tarotCategory || "love";
+
+    const getAdviceByCat = (card, positionIdx) => {
+      if (cat === "love") return card.loveAdvice || card.generalAdvice;
+      if (cat === "money") return card.moneyAdvice || card.generalAdvice;
+      if (cat === "career") {
+        if (positionIdx === 0) return `${card.theme} - 이전부터 축적되어 온 커리어 기반입니다.`;
+        if (positionIdx === 1) return card.generalAdvice;
+        return `${card.theme} - 목표를 향해 집중할 때 펼쳐질 눈부신 성취입니다.`;
+      }
+      // mind
+      if (positionIdx === 0) return card.summary;
+      if (positionIdx === 1) return card.generalAdvice;
+      return `${card.theme} - 내면의 평화와 단단한 중심을 되찾게 됩니다.`;
+    };
+
+    const cards = this.tarotPickedCards.map(p => p.card);
+
+    for (let i = 0; i < 3; i++) {
+      const c = cards[i];
+      const nameEl = document.getElementById(`cardName-${i}`);
+      const sumEl = document.getElementById(`cardSummary-${i}`);
+      const advEl = document.getElementById(`cardAdv-${i}`);
+
+      if (nameEl) nameEl.textContent = c.nameKr;
+      if (sumEl) sumEl.textContent = c.summary;
+      if (advEl) advEl.textContent = getAdviceByCat(c, i);
+    }
+
+    // 종합 스토리 리딩
+    const catNames = {
+      love: "연애와 사랑",
+      career: "진로와 이직",
+      money: "금전과 사업",
+      mind: "마음 치유와 힐링"
+    };
+
+    const storyEl = document.getElementById("tarotComprehensiveStory");
+    if (storyEl) {
+      const c1 = cards[0];
+      const c2 = cards[1];
+      const c3 = cards[2];
+      storyEl.innerHTML = `
+        <span class="text-indigo-900 font-extrabold block mb-1.5 text-xs">【${catNames[cat] || "종합"} 운명의 3단계 스토리】</span>
+        <span class="block mb-1"><strong class="text-slate-900">1. 과거의 원인:</strong> [${c1.nameKr}] 카드는 이전까지 "${c1.summary}"라는 배경이 바탕이 되어 지금의 현실이 형성되었음을 나타냅니다.</span>
+        <span class="block mb-1"><strong class="text-slate-900">2. 현재의 조언:</strong> 지금 마주한 핵심은 [${c2.nameKr}]의 흐름입니다. ${getAdviceByCat(c2, 1)}</span>
+        <span class="block"><strong class="text-slate-900">3. 미래의 결실:</strong> 이 조언을 나침반 삼아 나아간다면, [${c3.nameKr}]의 상징처럼 ${getAdviceByCat(c3, 2)} 값진 결실과 안정을 얻게 될 것입니다.</span>
+      `;
+    }
+  },
+
+  toggleSlotFlip(idx) {
+    const inner = document.getElementById(`slotInner-${idx}`);
     if (inner) {
       inner.classList.toggle("flipped");
     }
   },
 
   resetTarotSpread() {
-    const spreadSection = document.getElementById("tarotSpreadSection");
-    const revealedBox = document.getElementById("tarotRevealedBox");
-    const inner = document.getElementById("tarotCardInner");
+    this.tarotPickedCards = [];
+    const spreadSec = document.getElementById("tarotSpreadSection");
+    const revealSec = document.getElementById("tarotRevealedSection");
+    const actionBox = document.getElementById("tarotRevealActionBox");
 
-    if (inner) inner.classList.remove("flipped");
-    if (revealedBox) revealedBox.classList.add("hidden");
-    if (spreadSection) spreadSection.classList.remove("hidden");
-  },
+    if (revealSec) revealSec.classList.add("hidden");
+    if (spreadSec) spreadSec.classList.remove("hidden");
+    if (actionBox) actionBox.classList.add("hidden");
 
-  // 결과 화면 내부의 타로 카드 고르기
-  pickResultTarotCard(index, e) {
-    const cards = window.TarotData || [];
-    if (cards.length > 0) {
-      const randIdx = Math.floor(Math.random() * cards.length);
-      this.currentTarotCard = cards[randIdx];
+    for (let i = 0; i < 3; i++) {
+      const inner = document.getElementById(`slotInner-${i}`);
+      if (inner) inner.classList.remove("flipped");
     }
 
-    const spreadSection = document.getElementById("resTarotSpreadSection");
-    const revealedBox = document.getElementById("resTarotRevealedBox");
-    const inner = document.getElementById("resultTarotCardInner");
-
-    if (spreadSection) spreadSection.classList.add("hidden");
-    if (revealedBox) revealedBox.classList.remove("hidden");
-
-    this.updateTarotText();
-
-    if (inner) {
-      inner.classList.remove("flipped");
-      setTimeout(() => {
-        inner.classList.add("flipped");
-      }, 150);
-    }
-
-    const clientX = (e && e.clientX) ? e.clientX : (window.innerWidth / 2);
-    const clientY = (e && e.clientY) ? e.clientY : (window.innerHeight / 2);
-    this.spawnMascotParticles(clientX, clientY);
-
-    if (window.confetti) {
-      try {
-        window.confetti({ particleCount: 30, spread: 60, origin: { y: 0.6 } });
-      } catch (err) {}
-    }
-  },
-
-  flipResultRevealedTarot(e) {
-    const inner = document.getElementById("resultTarotCardInner");
-    if (inner) {
-      inner.classList.toggle("flipped");
-    }
-  },
-
-  resetResultTarotSpread() {
-    const spreadSection = document.getElementById("resTarotSpreadSection");
-    const revealedBox = document.getElementById("resTarotRevealedBox");
-    const inner = document.getElementById("resultTarotCardInner");
-
-    if (inner) inner.classList.remove("flipped");
-    if (revealedBox) revealedBox.classList.add("hidden");
-    if (spreadSection) spreadSection.classList.remove("hidden");
-  },
-
-  updateTarotText() {
-    const card = this.currentTarotCard;
-    if (!card) return;
-
-    // 메인 타로 텍스트
-    const krName = document.getElementById("tarotCardKrName");
-    const elem = document.getElementById("tarotCardElem");
-    const theme = document.getElementById("tarotCardTheme");
-    const summary = document.getElementById("tarotCardSummary");
-    const genAdv = document.getElementById("tarotGeneralAdv");
-    const loveAdv = document.getElementById("tarotLoveAdv");
-    const moneyAdv = document.getElementById("tarotMoneyAdv");
-
-    if (krName) krName.textContent = card.nameKr;
-    if (elem) elem.textContent = card.element;
-    if (theme) theme.textContent = card.theme;
-    if (summary) summary.textContent = card.summary;
-    if (genAdv) genAdv.textContent = card.generalAdvice;
-    if (loveAdv) loveAdv.textContent = card.loveAdvice;
-    if (moneyAdv) moneyAdv.textContent = card.moneyAdvice;
-
-    // 결과 탭 타로 텍스트
-    const resKrName = document.getElementById("resTarotCardKrName");
-    const resElem = document.getElementById("resTarotCardElem");
-    const resTheme = document.getElementById("resTarotCardTheme");
-    const resSummary = document.getElementById("resTarotCardSummary");
-    const resGenAdv = document.getElementById("resTarotGeneralAdv");
-    const resLoveAdv = document.getElementById("resTarotLoveAdv");
-    const resMoneyAdv = document.getElementById("resTarotMoneyAdv");
-
-    if (resKrName) resKrName.textContent = card.nameKr;
-    if (resElem) resElem.textContent = card.element;
-    if (resTheme) resTheme.textContent = card.theme;
-    if (resSummary) resSummary.textContent = card.summary;
-    if (resGenAdv) resGenAdv.textContent = card.generalAdvice;
-    if (resLoveAdv) resLoveAdv.textContent = card.loveAdvice;
-    if (resMoneyAdv) resMoneyAdv.textContent = card.moneyAdvice;
+    this.initTarotDeck();
   },
 
   copyResultText() {

@@ -1,0 +1,197 @@
+/* ==========================================================================
+   Daily Fortune & Saju - Custom Luxury Styling
+   동양풍 모던 럭셔리 & 글래스모피즘 테마 스타일시트
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700;900&family=Pretendard:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --font-serif: 'Noto Serif KR', serif;
+  --font-sans: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+  
+  /* 오행 색상 */
+  --wood-color: #10b981;
+  --wood-bg: rgba(16, 185, 129, 0.15);
+  --fire-color: #f43f5e;
+  --fire-bg: rgba(244, 63, 94, 0.15);
+  --earth-color: #f59e0b;
+  --earth-bg: rgba(245, 158, 11, 0.15);
+  --metal-color: #e2e8f0;
+  --metal-bg: rgba(226, 232, 240, 0.15);
+  --water-color: #38bdf8;
+  --water-bg: rgba(56, 189, 248, 0.15);
+
+  /* 테마 골드 */
+  --gold-primary: #d4af37;
+  --gold-light: #fef08a;
+  --gold-glow: rgba(212, 175, 55, 0.35);
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #0b0f19;
+  color: #f1f5f9;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.font-serif-kr {
+  font-family: var(--font-serif);
+}
+
+/* 앰비언트 배경 글로우 */
+.bg-ambient {
+  background: 
+    radial-gradient(circle at 15% 15%, rgba(212, 175, 55, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 85% 25%, rgba(139, 92, 246, 0.1) 0%, transparent 45%),
+    radial-gradient(circle at 50% 85%, rgba(56, 189, 248, 0.06) 0%, transparent 50%),
+    #0b0f19;
+}
+
+/* 글래스모피즘 카드 */
+.glass-card {
+  background: rgba(17, 24, 39, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.glass-card-gold {
+  background: linear-gradient(135deg, rgba(30, 27, 46, 0.8), rgba(20, 20, 35, 0.9));
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  box-shadow: 0 10px 40px rgba(212, 175, 55, 0.1);
+}
+
+.glass-pill {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 골드 텍스트 그라데이션 */
+.text-gold-gradient {
+  background: linear-gradient(135deg, #fef08a 0%, #d4af37 50%, #b45309 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* 오행 카드 뱃지 스타일 */
+.element-wood {
+  color: var(--wood-color);
+  background: var(--wood-bg);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+.element-fire {
+  color: var(--fire-color);
+  background: var(--fire-bg);
+  border-color: rgba(244, 63, 94, 0.4);
+}
+.element-earth {
+  color: var(--earth-color);
+  background: var(--earth-bg);
+  border-color: rgba(245, 158, 11, 0.4);
+}
+.element-metal {
+  color: var(--metal-color);
+  background: var(--metal-bg);
+  border-color: rgba(226, 232, 240, 0.4);
+}
+.element-water {
+  color: var(--water-color);
+  background: var(--water-bg);
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+/* 타로 3D 플립 카드 효과 */
+.tarot-perspective {
+  perspective: 1000px;
+}
+
+.tarot-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform-style: preserve-3d;
+}
+
+.tarot-card-inner.flipped {
+  transform: rotateY(180deg);
+}
+
+.tarot-card-front,
+.tarot-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  border-radius: 1rem;
+}
+
+.tarot-card-back {
+  transform: rotateY(180deg);
+}
+
+/* 빛나는 펄스 애니메이션 */
+@keyframes goldPulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(212, 175, 55, 0.45);
+  }
+}
+
+.animate-gold-pulse {
+  animation: goldPulse 3s infinite ease-in-out;
+}
+
+/* 폼 전환 아코디언 애니메이션 */
+.expandable-section {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, margin 0.3s ease;
+}
+
+.expandable-section.expanded {
+  max-height: 800px;
+  opacity: 1;
+}
+
+/* 커스텀 스크롤바 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0b0f19;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 175, 55, 0.4);
+}
+
+/* 인쇄용 스타일 */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #111827 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .glass-card, .glass-card-gold {
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: none !important;
+    color: #111827 !important;
+  }
+}

@@ -118,10 +118,22 @@ const DAILY_TENGOD_GUIDE = {
  * 특정 날짜에 대한 고정밀 오늘의 운세 계산
  * 사용자 사주(일간, 일지, 오행 분포, 용신)와 당일 일진의 다차원 상호작용
  */
-function calculateDailyFortune(sajuResult, targetDate = new Date()) {
-  const tYear = targetDate.getFullYear();
-  const tMonth = targetDate.getMonth() + 1;
-  const tDay = targetDate.getDate();
+function calculateDailyFortune(sajuResult, targetDate = new Date(), maybeMonth, maybeDay) {
+  let tYear, tMonth, tDay;
+  if (typeof targetDate === "number" && maybeMonth !== undefined) {
+    tYear = targetDate;
+    tMonth = maybeMonth;
+    tDay = maybeDay || 1;
+  } else if (targetDate && typeof targetDate.getFullYear === "function") {
+    tYear = targetDate.getFullYear();
+    tMonth = targetDate.getMonth() + 1;
+    tDay = targetDate.getDate();
+  } else {
+    const now = new Date();
+    tYear = now.getFullYear();
+    tMonth = now.getMonth() + 1;
+    tDay = now.getDate();
+  }
 
   const todayIljin = window.CalendarEngine.getDayGanJi(tYear, tMonth, tDay);
   const userDayGan = sajuResult.pillars.day.gan;

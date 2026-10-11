@@ -293,16 +293,11 @@ const App = {
     };
 
     // 사주 원국 계산
-    this.userSaju = window.SajuEngine.calculatePillars(userInput);
+    const sajuCalcFn = window.SajuEngine.calculatePillars || window.SajuEngine.calculateSaju;
+    this.userSaju = sajuCalcFn.call(window.SajuEngine, userInput);
 
     // 오늘의 운세 계산
-    const now = new Date();
-    this.dailyFortune = window.FortuneEngine.calculateDailyFortune(
-      this.userSaju,
-      now.getFullYear(),
-      now.getMonth() + 1,
-      now.getDate()
-    );
+    this.dailyFortune = window.FortuneEngine.calculateDailyFortune(this.userSaju, new Date());
 
     // 궁합 분석 (선택 시)
     const enablePartner = document.getElementById("enablePartner").checked;
@@ -313,7 +308,7 @@ const App = {
       const pMonth = parseInt(document.getElementById("partnerMonth").value, 10);
       const pDay = parseInt(document.getElementById("partnerDay").value, 10);
 
-      this.partnerSaju = window.SajuEngine.calculatePillars({
+      this.partnerSaju = sajuCalcFn.call(window.SajuEngine, {
         name: pName,
         gender: pGender,
         calendarType: "solar",

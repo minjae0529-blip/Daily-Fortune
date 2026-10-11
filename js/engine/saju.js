@@ -547,6 +547,7 @@ function calculateSaju(params) {
 
   window.SajuEngine = {
     calculateSaju,
+    calculatePillars: calculateSaju,
     getTenGod,
     formatJijanggan,
     JIJANGGAN_DATA

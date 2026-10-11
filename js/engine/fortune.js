@@ -1,6 +1,6 @@
 /**
  * Daily Fortune & Category Readings Engine (Love, Wealth, Compatibility)
- * 일진(日辰) 상생상극 기반 오늘의 운세, 연애운, 재물운, 궁합 계산 엔진
+ * 일진(日辰) 상생상극 및 하도(河圖) 5행 수리학 기반 고정밀 오늘의 운세 엔진
  */
 
 // 천간합 (天干合)
@@ -40,11 +40,21 @@ const JI_CHUNG = {
   "사해": "사해충 (巳亥沖) - 생각의 충돌과 새로운 시각", "해사": "사해충 (巳亥沖) - 생각의 충돌과 새로운 시각"
 };
 
-// 십신별 오늘의 테마 가이드
+// 하도(河圖) 5행 수리학 표준 수비학 매핑
+// 수(1,6), 화(2,7), 목(3,8), 금(4,9), 토(5,10)
+const HADO_NUMBERS = {
+  "수": [1, 6],
+  "화": [2, 7],
+  "목": [3, 8],
+  "금": [4, 9],
+  "토": [5, 10]
+};
+
+// 십신별 상세 일진 가이드
 const DAILY_TENGOD_GUIDE = {
   "비견(比肩)": {
-    theme: "동료와의 협력과 당당한 자기주장의 날",
-    summary: "내 편이 되어주는 든든한 동료나 친구의 조력을 받으며 주체성을 발휘하기 좋습니다.",
+    theme: "동료와의 협력과 당당한 주체성의 날",
+    summary: "내 편이 되어주는 든든한 동료나 조력자를 만나며 주체적으로 뜻을 펼치기 좋습니다.",
     action: "팀 프로젝트나 지인과의 협업에 적극 나서보세요. 당당한 태도가 호감을 부릅니다.",
     avoid: "사소한 자존심 대결이나 고집으로 인한 감정 소모를 피하세요."
   },
@@ -105,7 +115,8 @@ const DAILY_TENGOD_GUIDE = {
 };
 
 /**
- * 특정 날짜에 대한 오늘의 운세 계산
+ * 특정 날짜에 대한 고정밀 오늘의 운세 계산
+ * 사용자 사주(일간, 일지, 오행 분포, 용신)와 당일 일진의 다차원 상호작용
  */
 function calculateDailyFortune(sajuResult, targetDate = new Date()) {
   const tYear = targetDate.getFullYear();
@@ -134,42 +145,136 @@ function calculateDailyFortune(sajuResult, targetDate = new Date()) {
   const hasJiChung = !!JI_CHUNG[jiPair];
   const jiChungDesc = JI_CHUNG[jiPair] || null;
 
-  // 3. 점수 계산 (기본 78점 ~ 98점)
-  let baseScore = 80;
-  if (hasGanHap) baseScore += 10;
-  if (hasJiHap) baseScore += 8;
-  if (hasGanChung) baseScore -= 6;
-  if (hasJiChung) baseScore -= 5;
+  // 3. 점수 계산 (사용자별 고유 편차 계산)
+  // 일간 인덱스(0~9)와 당일 일진 인덱스(0~59)의 상호작용
+  const userGanIdx = window.CalendarEngine.HEAVENLY_STEMS.findIndex(g => g.char === userDayGan.char);
+  const userJiIdx = window.CalendarEngine.EARTHLY_BRANCHES.findIndex(j => j.char === userDayJi.char);
+  
+  // 개인 고유 파동치 (Base Personal Resonance)
+  const personalResonance = ((userGanIdx * 7 + userJiIdx * 3 + todayIljin.index * 5) % 15) - 7;
 
-  // 오행 상생/상극 가중치
+  let baseScore = 80 + personalResonance;
+  if (hasGanHap) baseScore += 12;
+  if (hasJiHap) baseScore += 9;
+  if (hasGanChung) baseScore -= 8;
+  if (hasJiChung) baseScore -= 7;
+
+  // 사용자 오행과 당일 오행의 생극제화 가중치
   const userEl = userDayGan.element;
-  const todayEl = todayIljin.gan.element;
-  if (userEl === todayEl || userEl === sajuResult.yongsin) baseScore += 5;
+  const todayGanEl = todayIljin.gan.element;
+  const todayJiEl = todayIljin.ji.element;
 
-  const totalScore = Math.max(65, Math.min(99, baseScore));
+  // 용신이 오늘 천간 또는 지지에 들어오면 대길 가산점
+  if (todayGanEl === sajuResult.yongsin) baseScore += 6;
+  if (todayJiEl === sajuResult.yongsin) baseScore += 5;
 
-  // 4대 지수
-  const moneyScore = Math.max(60, Math.min(98, totalScore + (todayTenGod.includes("재") ? 8 : -3)));
-  const loveScore = Math.max(60, Math.min(98, totalScore + (hasGanHap || hasJiHap || todayTenGod.includes("관") || todayTenGod.includes("재") ? 9 : -2)));
-  const healthScore = Math.max(65, Math.min(95, totalScore + (hasJiChung ? -7 : 4)));
-  const careerScore = Math.max(60, Math.min(99, totalScore + (todayTenGod.includes("관") || todayTenGod.includes("인") ? 8 : 2)));
+  const totalScore = Math.max(62, Math.min(99, Math.round(baseScore)));
 
-  // 행운의 아이템 산출 (용신 및 부족한 오행 기반)
-  const luckyColors = { "목": "초록색, 민트", "화": "붉은색, 코랄", "토": "노란색, 베이지, 골드", "금": "흰색, 은색", "수": "남색, 하늘색, 블랙" };
-  const luckyDirections = { "목": "동쪽 (East)", "화": "남쪽 (South)", "토": "중앙 및 남서쪽", "금": "서쪽 (West)", "수": "북쪽 (North)" };
-  const luckyFoods = { "목": "신선한 샐러드, 녹차, 채소 요리", "화": "따뜻한 국물, 로스팅 커피, 매콤한 요리", "토": "달콤한 디저트, 잡곡밥, 호박죽", "금": "정갈한 한정식, 견과류, 배즙", "수": "시원한 해산물, 미네랄 워터, 해초류" };
+  // 4대 지수 개별 계산 (사용자 일주 및 당일 십신에 따라 완전히 차별화)
+  const moneyOffset = (userJiIdx % 5) - 2;
+  const loveOffset = (userGanIdx % 5) - 2;
+  const healthOffset = ((userGanIdx + userJiIdx) % 5) - 2;
+  const careerOffset = (todayIljin.index % 5) - 2;
 
-  const luckyTargetEl = sajuResult.yongsin || "목";
-  const luckyNum1 = ((todayIljin.index + 3) % 9) + 1;
-  const luckyNum2 = ((todayIljin.index + 7) % 9) + 1;
+  const moneyScore = Math.max(60, Math.min(98, totalScore + (todayTenGod.includes("재") ? 8 : -3) + moneyOffset));
+  const loveScore = Math.max(60, Math.min(98, totalScore + (hasGanHap || hasJiHap || todayTenGod.includes("관") || todayTenGod.includes("재") ? 9 : -2) + loveOffset));
+  const healthScore = Math.max(63, Math.min(96, totalScore + (hasJiChung ? -9 : 4) + healthOffset));
+  const careerScore = Math.max(60, Math.min(99, totalScore + (todayTenGod.includes("관") || todayTenGod.includes("인") ? 8 : 2) + careerOffset));
 
-  // 시간대별 운세
-  const hourlyFlow = [
-    { time: "아침 (06:00 ~ 12:00)", status: "상승", desc: "활기찬 에너지로 머리가 맑아지며 중요한 계획을 세우기 좋습니다." },
-    { time: "오후 (12:00 ~ 18:00)", status: totalScore > 80 ? "최고조" : "원만", desc: "대인관계와 커뮤니케이션에서 빛을 발하며 기회가 찾아옵니다." },
-    { time: "저녁 (18:00 ~ 22:00)", status: "안정", desc: "편안한 사람들과 여유를 즐기며 보람찬 하루를 정리하기 알맞습니다." },
-    { time: "밤 (22:00 ~ 06:00)", status: "재충전", desc: "내면의 영감이 솟아나며 숙면을 통해 기운을 완충하는 시간입니다." }
+  // 4. [개선] 오늘 나에게 가장 절실한 "개운 오행(Lucky Target Element)" 동적 도출
+  // 사주 원국의 5행 결핍도 + 당일 일진의 기운을 다스리는 상생 오행
+  const elements = sajuResult.elements;
+  let leastElement = "목";
+  let minWeight = 999;
+  ["목", "화", "토", "금", "수"].forEach(elKey => {
+    if (elements[elKey] < minWeight) {
+      minWeight = elements[elKey];
+      leastElement = elKey;
+    }
+  });
+
+  // 오늘 일진과의 상호작용:
+  // 오늘 기운이 강할 때 균형을 잡아줄 오행(용신 또는 결핍 오행과의 조화)
+  let luckyTargetEl = leastElement;
+  if (hasGanChung || hasJiChung) {
+    // 충이 발생한 날은 이를 완충해주는 통관 오행(용신)을 최우선 채택
+    luckyTargetEl = sajuResult.yongsin || leastElement;
+  } else if ((userGanIdx + todayIljin.ganIndex) % 2 === 0) {
+    luckyTargetEl = sajuResult.yongsin;
+  }
+
+  // 5. [개선] 하도(河圖) 수리학 기반 개인 맞춤 행운의 숫자 도출
+  const hadoNums = HADO_NUMBERS[luckyTargetEl] || [3, 8];
+  // 개인 생일 일진과 당일 일진의 조화 수
+  const personalLuckySeed1 = (userGanIdx + todayIljin.ganIndex + hadoNums[0]) % 10;
+  const personalLuckySeed2 = (userJiIdx + todayIljin.jiIndex + hadoNums[1]) % 10;
+  const num1 = personalLuckySeed1 === 0 ? 10 : personalLuckySeed1;
+  let num2 = personalLuckySeed2 === 0 ? 7 : personalLuckySeed2;
+  if (num1 === num2) num2 = (num1 % 9) + 1;
+
+  // 6. [개선] 개운 오행별 컬러 및 방위, 음식 매핑
+  const luckyColorMap = {
+    "목": ["에메랄드 그린, 싱그러운 민트", "포레스트 그린, 올리브", "애플그린, 연두색"],
+    "화": ["선명한 레드, 따스한 코랄", "로즈 핑크, 다홍색", "루비 버건디, 주황색"],
+    "토": ["고급스러운 골드, 카멜 베이지", "머스터드 옐로우, 크림색", "샌드 브라운, 테라코타"],
+    "금": ["순백의 화이트, 세련된 실버", "샴페인 골드, 아이보리", "플래티넘 그레이, 진주색"],
+    "수": ["깊은 네이비, 스카이 블루", "차콜 블랙, 미드나잇 블루", "코발트 블루, 바다색"]
+  };
+  const luckyDirMap = {
+    "목": "동쪽 (East) - 새로운 생기가 솟아나는 방위",
+    "화": "남쪽 (South) - 밝은 열정과 활력이 넘치는 방위",
+    "토": "중앙 및 남서쪽 (Center/South-West) - 안정과 포용의 방위",
+    "금": "서쪽 (West) - 결실과 정돈을 부르는 방위",
+    "수": "북쪽 (North) - 지혜와 차분한 영감이 깃든 방위"
+  };
+  const luckyFoodMap = {
+    "목": "신선한 그린 샐러드, 키위, 녹차, 채소 쌈밥",
+    "화": "따뜻한 드립 커피, 매콤한 한식 찌개, 토마토 파스타",
+    "토": "달콤한 단호박죽, 잡곡 비빔밥, 꿀차, 군고구마",
+    "금": "정갈한 생선구이, 견과류, 배 도라지차, 흰 쌀밥",
+    "수": "시원한 조개탕, 해산물 요리, 미네랄 워터, 해초 냉채"
+  };
+
+  const colorVariants = luckyColorMap[luckyTargetEl] || luckyColorMap["목"];
+  const colorIndex = (userGanIdx + todayIljin.index) % colorVariants.length;
+  const chosenColor = colorVariants[colorIndex];
+  const chosenDir = luckyDirMap[luckyTargetEl];
+  const chosenFood = luckyFoodMap[luckyTargetEl];
+
+  // 7. [개선] 개인 사주 일지와 시간대별 시지 상호작용 기반 "시간대별 운세 리듬"
+  // 아침(06~12: 진사오), 오후(12~18: 미신유), 저녁(18~22: 술해), 밤(22~06: 자축인)
+  const timeSlots = [
+    { name: "아침 (06:00 ~ 12:00)", branch: "진", offset: 2 },
+    { name: "오후 (12:00 ~ 18:00)", branch: "오", offset: 5 },
+    { name: "저녁 (18:00 ~ 22:00)", branch: "유", offset: 8 },
+    { name: "밤 (22:00 ~ 06:00)", branch: "자", offset: 11 }
   ];
+
+  const hourlyFlow = timeSlots.map(slot => {
+    const slotJi = slot.branch;
+    const pair = userDayJi.char + slotJi;
+    const isSlotHap = !!JI_YUKHAP[pair];
+    const isSlotChung = !!JI_CHUNG[pair];
+
+    let status = "원만";
+    let desc = "안정적인 흐름 속에 맡은 일에 차분히 집중하기 좋은 시간대입니다.";
+
+    if (isSlotHap) {
+      status = "최고조(大吉)";
+      desc = "나의 일지와 육합을 이루어 귀인의 조력과 뜻밖의 성과가 활짝 열립니다.";
+    } else if (isSlotChung) {
+      status = "주의(愼重)";
+      desc = "기운의 변화가 급격하니 성급한 결정이나 언쟁을 피하고 신중을 기하세요.";
+    } else if (totalScore >= 85) {
+      status = "상승";
+      desc = "긍정적인 파동이 감돌아 중요한 미팅이나 새로운 결정을 내리기 알맞습니다.";
+    } else if (totalScore < 75) {
+      status = "휴식/재충전";
+      desc = "무리한 일정보다는 몸과 마음을 차분히 이완하며 내실을 다지세요.";
+    }
+
+    return { time: slot.name, status, desc };
+  });
 
   return {
     dateString: `${tYear}년 ${tMonth}월 ${tDay}일`,
@@ -198,10 +303,11 @@ function calculateDailyFortune(sajuResult, targetDate = new Date()) {
       career: careerScore
     },
     lucky: {
-      color: luckyColors[luckyTargetEl] || "황금색 (Gold)",
-      numbers: `${luckyNum1}, ${luckyNum2}`,
-      direction: luckyDirections[luckyTargetEl] || "동남쪽",
-      food: luckyFoods[luckyTargetEl] || "영양가 있는 따뜻한 식사"
+      color: chosenColor,
+      numbers: `${num1}, ${num2}`,
+      direction: chosenDir,
+      food: chosenFood,
+      targetElement: luckyTargetEl
     },
     hourlyFlow
   };

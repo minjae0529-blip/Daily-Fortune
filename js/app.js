@@ -1073,17 +1073,30 @@ const App = {
     const cat = this.tarotCategory || "love";
 
     const getAdviceByCat = (card, positionIdx) => {
-      if (cat === "love") return card.loveAdvice || card.generalAdvice;
-      if (cat === "money") return card.moneyAdvice || card.generalAdvice;
-      if (cat === "career") {
-        if (positionIdx === 0) return `${card.theme} - 이전부터 축적되어 온 커리어 기반입니다.`;
-        if (positionIdx === 1) return card.generalAdvice;
-        return `${card.theme} - 목표를 향해 집중할 때 펼쳐질 눈부신 성취입니다.`;
+      let baseText = "";
+      if (cat === "love") baseText = card.loveAdvice || card.generalAdvice;
+      else if (cat === "career") baseText = card.careerAdvice || card.generalAdvice;
+      else if (cat === "money") baseText = card.moneyAdvice || card.generalAdvice;
+      else baseText = card.mindAdvice || card.generalAdvice;
+
+      if (positionIdx === 0) {
+        // 과거 / 원인
+        return `${card.realityCheck || ""} ${card.summary || ""}`.trim();
+      } else if (positionIdx === 1) {
+        // 현재 / 조언
+        return baseText;
+      } else {
+        // 미래 / 결말
+        if (card.nature === "harsh") {
+          return `⚠️ [파국·단절의 경고] ${baseText}`;
+        } else if (card.nature === "warning") {
+          return `⚠️ [정체·기만의 주의] ${baseText}`;
+        } else if (card.nature === "caution") {
+          return `⚖️ [조건부 결말] 리스크를 냉정히 통제하지 못하면 실패합니다. ${baseText}`;
+        } else {
+          return `✨ [성취의 길] 안일함을 버리고 현재의 뼈아픈 대가를 치렀을 때만 도달합니다. ${baseText}`;
+        }
       }
-      // mind
-      if (positionIdx === 0) return card.summary;
-      if (positionIdx === 1) return card.generalAdvice;
-      return `${card.theme} - 내면의 평화와 단단한 중심을 되찾게 됩니다.`;
     };
 
     const cards = this.tarotPickedCards.map(p => p.card);
@@ -1099,12 +1112,12 @@ const App = {
       if (advEl) advEl.textContent = getAdviceByCat(c, i);
     }
 
-    // 종합 스토리 리딩
+    // 현실 직시 종합 스토리 리딩
     const catNames = {
-      love: "연애와 사랑",
-      career: "진로와 이직",
-      money: "금전과 사업",
-      mind: "마음 치유와 힐링"
+      love: "연애 & 사랑",
+      career: "진로 & 이직",
+      money: "금전 & 사업",
+      mind: "마음 치유 & 현실 자각"
     };
 
     const storyEl = document.getElementById("tarotComprehensiveStory");
@@ -1112,11 +1125,35 @@ const App = {
       const c1 = cards[0];
       const c2 = cards[1];
       const c3 = cards[2];
+
+      let futureSynthesis = "";
+      if (c3.nature === "harsh") {
+        futureSynthesis = `미래 카드인 [${c3.nameKr}]은 헛된 희망고문을 거부합니다. 지금 당장 과거의 미련을 끊고 현재의 잘못된 흐름을 과감히 도려내지 않는다면, 피할 수 없는 파국과 혹독한 대가를 치르게 될 것임을 엄중히 경고합니다.`;
+      } else if (c3.nature === "warning") {
+        futureSynthesis = `미래의 [${c3.nameKr}] 카드는 안갯속 정체와 기만을 가리키고 있습니다. 눈앞의 달콤한 환상이나 확인되지 않은 낙관론에 속지 마세요. 발이 묶이고 뒤통수를 맞지 않으려면 지금 확실한 안전장치를 걸어 잠가야 합니다.`;
+      } else if (c3.nature === "caution") {
+        futureSynthesis = `미래의 [${c3.nameKr}]은 양날의 검입니다. 저절로 얻어지는 행운이란 결코 없으며, 현재 [${c2.nameKr}]이 지적하는 취약점과 나태함을 고치지 않으면 그 어떤 성취도 사상누각처럼 무너집니다. 철저한 현실 점검이 유일한 해법입니다.`;
+      } else {
+        futureSynthesis = `미래의 [${c3.nameKr}]은 빛을 향하고 있으나, 이는 과거 [${c1.nameKr}]의 과오를 완전히 청산하고 현재 [${c2.nameKr}]의 뼈아픈 조언을 묵묵히 실행했을 때에만 열리는 '조건부 결실'입니다. 근거 없는 방심은 금물입니다.`;
+      }
+
       storyEl.innerHTML = `
-        <span class="text-indigo-900 font-extrabold block mb-1.5 text-xs">【${catNames[cat] || "종합"} 운명의 3단계 스토리】</span>
-        <span class="block mb-1"><strong class="text-slate-900">1. 과거의 원인:</strong> [${c1.nameKr}] 카드는 이전까지 "${c1.summary}"라는 배경이 바탕이 되어 지금의 현실이 형성되었음을 나타냅니다.</span>
-        <span class="block mb-1"><strong class="text-slate-900">2. 현재의 조언:</strong> 지금 마주한 핵심은 [${c2.nameKr}]의 흐름입니다. ${getAdviceByCat(c2, 1)}</span>
-        <span class="block"><strong class="text-slate-900">3. 미래의 결실:</strong> 이 조언을 나침반 삼아 나아간다면, [${c3.nameKr}]의 상징처럼 ${getAdviceByCat(c3, 2)} 값진 결실과 안정을 얻게 될 것입니다.</span>
+        <span class="text-indigo-950 font-extrabold block mb-2 text-xs border-b border-indigo-200 pb-1.5 flex items-center justify-between">
+          <span>【${catNames[cat] || "종합"} 현실 직시 3단계 스토리】</span>
+          <span class="text-[10px] text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">희망고문 없는 팩트 리딩</span>
+        </span>
+        <span class="block mb-2">
+          <strong class="text-indigo-950 font-bold block mb-0.5">1단계 과거 (원인과 팩트):</strong>
+          [${c1.nameKr}] — ${c1.realityCheck} 과거에 ${c1.summary}
+        </span>
+        <span class="block mb-2">
+          <strong class="text-rose-950 font-bold block mb-0.5">2단계 현재 (뼈아픈 현실 직언):</strong>
+          [${c2.nameKr}] — 지금 눈가리고 아웅 할 때가 아닙니다. ${getAdviceByCat(c2, 1)}
+        </span>
+        <span class="block">
+          <strong class="text-slate-950 font-bold block mb-0.5">3단계 미래 (현실적 결말 & 엄중한 경고):</strong>
+          [${c3.nameKr}] — ${futureSynthesis}
+        </span>
       `;
     }
   },

@@ -1,44 +1,24 @@
 /* ==========================================================================
-   Daily Fortune & Saju - Bright Modern Aurora Theme (Light Mode 2026)
-   토스/포스텔러 스타일의 화사하고 산뜻한 라이트 UI & 귀여운 애니메이션
+   Daily Fortune & Saju - High-Contrast Comfortable Light Theme (2026 Trend)
+   선명하고 또렷한 텍스트 가독성, 부드러운 배경, 대화형 타로 카드 덱 인터랙션
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&family=Noto+Serif+KR:wght@500;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&family=Noto+Serif+KR:wght@600;700;900&display=swap');
 
 :root {
   --font-sans: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
   --font-serif: 'Noto Serif KR', serif;
 
-  /* 화사하고 생동감 넘치는 오행 캔디 컬러 */
-  --wood-accent: #059669;
-  --wood-bg: #ecfdf5;
-  --wood-border: #a7f3d0;
-
-  --fire-accent: #e11d48;
-  --fire-bg: #fff1f2;
-  --fire-border: #fecdd3;
-
-  --earth-accent: #d97706;
-  --earth-bg: #fffbeb;
-  --earth-border: #fde68a;
-
-  --metal-accent: #475569;
-  --metal-bg: #f8fafc;
-  --metal-border: #cbd5e1;
-
-  --water-accent: #0284c7;
-  --water-bg: #f0f9ff;
-  --water-border: #bae6fd;
-
-  /* 밝고 깨끗한 라이트 모드 기본 팔레트 */
-  --bg-main: #f8faff;
+  /* 눈이 편안한 소프트 슬레이트 배경 */
+  --bg-main: #f1f5f9;
   --bg-card: #ffffff;
-  --bg-subtle: #f1f5f9;
-  --border-subtle: #e2e8f0;
-  --border-focus: #f59e0b;
-  --text-main: #0f172a;
-  --text-body: #334155;
-  --text-muted: #64748b;
+  --border-card: #cbd5e1;
+  --border-focus: #d97706;
+
+  /* 고대비 가독성 텍스트 */
+  --text-title: #0f172a;
+  --text-body: #1e293b;
+  --text-muted: #475569;
 }
 
 body {
@@ -54,74 +34,63 @@ body {
   font-family: var(--font-serif);
 }
 
-/* 화사하고 깨끗한 앰비언트 오로라 배경 (Light Radiant Glow) */
+/* 부드럽고 차분한 앰비언트 배경 (눈부심 방지 + 선명한 대비) */
 .bg-ambient {
   background: 
-    radial-gradient(ellipse 90% 50% at 50% -5%, rgba(99, 102, 241, 0.08), transparent),
-    radial-gradient(ellipse 70% 45% at 95% 15%, rgba(244, 63, 94, 0.06), transparent),
-    radial-gradient(ellipse 75% 50% at 5% 85%, rgba(245, 158, 11, 0.07), transparent),
-    radial-gradient(ellipse 60% 40% at 85% 90%, rgba(56, 189, 248, 0.06), transparent),
-    #f8faff;
+    radial-gradient(ellipse 80% 50% at 50% -5%, rgba(99, 102, 241, 0.07), transparent),
+    radial-gradient(ellipse 70% 45% at 95% 15%, rgba(244, 63, 94, 0.05), transparent),
+    radial-gradient(ellipse 75% 50% at 5% 85%, rgba(245, 158, 11, 0.06), transparent),
+    #f1f5f9;
   background-attachment: fixed;
 }
 
-/* 산뜻한 모던 글래스모피즘 카드 (White Card with Soft Shadow) */
+/* 또렷한 고대비 모던 카드 */
 .modern-card {
   background: #ffffff;
-  border: 1px solid #eef2f6;
+  border: 1.5px solid #cbd5e1;
   border-radius: 1.5rem;
   box-shadow: 
-    0 10px 25px -5px rgba(99, 102, 241, 0.05),
-    0 4px 6px -2px rgba(0, 0, 0, 0.02);
+    0 10px 25px -5px rgba(15, 23, 42, 0.06),
+    0 4px 6px -2px rgba(15, 23, 42, 0.03);
   transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 .modern-card:hover {
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
   box-shadow: 
-    0 16px 32px -5px rgba(99, 102, 241, 0.08),
-    0 6px 10px -2px rgba(0, 0, 0, 0.03);
+    0 16px 32px -5px rgba(15, 23, 42, 0.09),
+    0 6px 10px -2px rgba(15, 23, 42, 0.04);
 }
 
-.modern-card-highlight {
-  background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%);
-  border: 1.5px solid #fde68a;
-  border-radius: 1.5rem;
-  box-shadow: 
-    0 12px 30px -5px rgba(245, 158, 11, 0.12),
-    0 4px 6px -2px rgba(0, 0, 0, 0.02);
-}
-
-/* 귀여운 수호 캐릭터 마스코트 카드 (따뜻한 피치/옐로우 톤) */
+/* 귀여운 수호 캐릭터 마스코트 카드 */
 .mascot-card {
-  background: linear-gradient(135deg, #fffbeb 0%, #fff7ed 50%, #fef2f2 100%);
-  border: 1.5px solid #fde68a;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 50%, #fff7ed 100%);
+  border: 2px solid #f59e0b;
   border-radius: 1.5rem;
   box-shadow: 
-    0 10px 25px -4px rgba(245, 158, 11, 0.15),
-    0 2px 6px -1px rgba(0, 0, 0, 0.03);
+    0 10px 25px -4px rgba(245, 158, 11, 0.18),
+    0 2px 6px -1px rgba(0, 0, 0, 0.04);
   transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
   position: relative;
 }
 
 .mascot-card:hover {
   transform: translateY(-2px);
-  border-color: #f59e0b;
-  box-shadow: 0 16px 35px -5px rgba(245, 158, 11, 0.22);
+  box-shadow: 0 16px 35px -5px rgba(245, 158, 11, 0.28);
 }
 
 .mascot-avatar-container {
   background: #ffffff;
-  border: 2px solid #fde68a;
-  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.15);
+  border: 2.5px solid #f59e0b;
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.2);
   transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* 말풍선 스타일 */
 .speech-bubble {
   background: #ffffff;
-  border: 1px solid #fde68a;
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.08);
+  border: 1.5px solid #f59e0b;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.1);
   transition: all 0.25s ease;
 }
 
@@ -134,17 +103,18 @@ body {
   100% { transform: scale(1); background-color: #ffffff; }
 }
 
-/* 귀여운 칩 버튼 */
+/* 선명한 칩 버튼 */
 .modern-chip {
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  background: #e2e8f0;
+  border: 1.5px solid #cbd5e1;
+  color: #0f172a;
   border-radius: 0.85rem;
   transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .modern-chip:hover {
-  background: #e2e8f0;
-  color: #0f172a;
+  background: #cbd5e1;
+  border-color: #94a3b8;
   transform: translateY(-1px);
 }
 
@@ -152,18 +122,18 @@ body {
   transform: scale(0.96);
 }
 
-/* 활성 탭 버튼 (산뜻한 세그먼트 스타일) */
+/* 탭 버튼 스타일 */
 .tab-btn {
   transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .tab-btn.active-tab {
   background: #0f172a !important;
   color: #ffffff !important;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
   transform: translateY(-1px);
 }
 
-/* 쫀득한 젤리 오행 게이지 바 */
+/* 젤리 오행 게이지 바 */
 .jelly-bar {
   transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
   position: relative;
@@ -176,7 +146,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
   animation: shineSweep 2.5s infinite;
 }
 
@@ -185,38 +155,37 @@ body {
   100% { transform: translateX(100%); }
 }
 
-/* 오행 뱃지 (선명하고 산뜻한 파스텔 배경 & 진한 글자색) */
+/* 고대비 오행 뱃지 (선명한 테두리와 짙은 폰트) */
 .element-wood {
-  color: #059669;
-  background: #ecfdf5;
-  border: 1.5px solid #a7f3d0;
+  color: #064e3b !important;
+  background: #d1fae5 !important;
+  border: 2px solid #34d399 !important;
 }
 .element-fire {
-  color: #e11d48;
-  background: #fff1f2;
-  border: 1.5px solid #fecdd3;
+  color: #881337 !important;
+  background: #ffe4e6 !important;
+  border: 2px solid #fb7185 !important;
 }
 .element-earth {
-  color: #d97706;
-  background: #fffbeb;
-  border: 1.5px solid #fde68a;
+  color: #78350f !important;
+  background: #fef3c7 !important;
+  border: 2px solid #f59e0b !important;
 }
 .element-metal {
-  color: #475569;
-  background: #f8fafc;
-  border: 1.5px solid #cbd5e1;
+  color: #0f172a !important;
+  background: #e2e8f0 !important;
+  border: 2px solid #94a3b8 !important;
 }
 .element-water {
-  color: #0284c7;
-  background: #f0f9ff;
-  border: 1.5px solid #bae6fd;
+  color: #0c4a6e !important;
+  background: #e0f2fe !important;
+  border: 2px solid #38bdf8 !important;
 }
 
 /* ==========================================================================
-   귀여운 애니메이션 모음
+   귀여운 애니메이션 & 마스코트 상호작용
    ========================================================================== */
 
-/* 1. 마스코트 바운스 (숨쉬듯 통통 튀는 모션) */
 @keyframes mascotBounce {
   0%, 100% {
     transform: translateY(0) scale(1) rotate(0deg);
@@ -234,7 +203,6 @@ body {
   display: inline-block;
 }
 
-/* 마스코트 탭 시 팝 모션 (클릭 시 확실한 반응) */
 @keyframes mascotTapPop {
   0% { transform: scale(1) rotate(0deg); }
   25% { transform: scale(1.3) rotate(-12deg); }
@@ -247,13 +215,13 @@ body {
   animation: mascotTapPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
 }
 
-/* 플로팅 파티클 이펙트 (하트, 별, 클로버) */
+/* 플로팅 파티클 */
 .floating-particle {
   position: fixed;
   pointer-events: none;
   z-index: 9999;
   user-select: none;
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   animation: floatUpFade 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -271,7 +239,6 @@ body {
   }
 }
 
-/* 부드러운 스텝별 슬라이드 페이드인 */
 @keyframes slideUpFade {
   from {
     opacity: 0;
@@ -287,7 +254,6 @@ body {
   animation: slideUpFade 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
-/* 아코디언 */
 .expandable-section {
   max-height: 0;
   opacity: 0;
@@ -300,9 +266,64 @@ body {
   opacity: 1;
 }
 
-/* 타로 3D 플립 카드 (화사한 파스텔 카드) */
+/* ==========================================================================
+   🃏 타로 인터랙티브 카드 덱 & 카드 펼치기 시스템
+   ========================================================================== */
+
+.tarot-spread-container {
+  padding: 1.5rem 0.5rem;
+  overflow-x: auto;
+}
+
+.tarot-spread-card {
+  width: 90px;
+  height: 145px;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, #312e81 0%, #4338ca 50%, #4c1d95 100%);
+  border: 2px solid #a5b4fc;
+  box-shadow: 0 6px 16px rgba(49, 46, 129, 0.25);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.tarot-spread-card:hover {
+  transform: translateY(-14px) scale(1.08) !important;
+  border-color: #f59e0b;
+  box-shadow: 0 14px 28px rgba(245, 158, 11, 0.35);
+  z-index: 10;
+}
+
+.tarot-spread-card:active {
+  transform: scale(0.95) !important;
+}
+
+.tarot-spread-card::before {
+  content: '✦';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.75rem;
+  color: #fde68a;
+  opacity: 0.85;
+}
+
+@media (min-width: 640px) {
+  .tarot-spread-card {
+    width: 105px;
+    height: 165px;
+  }
+}
+
+/* 타로 3D 플립 카드 (결과 카드) */
 .tarot-perspective {
-  perspective: 1000px;
+  perspective: 1200px;
+  width: 250px;
+  height: 380px;
+  margin: 0 auto;
 }
 
 .tarot-card-inner {
@@ -310,7 +331,7 @@ body {
   width: 100%;
   height: 100%;
   text-align: center;
-  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.65s cubic-bezier(0.34, 1.56, 0.64, 1);
   transform-style: preserve-3d;
 }
 
@@ -323,27 +344,38 @@ body {
   position: absolute;
   width: 100%;
   height: 100%;
+  top: 0;
+  left: 0;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
   border-radius: 1.5rem;
 }
 
-.tarot-card-back {
-  transform: rotateY(180deg);
+.tarot-card-front {
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+  border: 2.5px solid #a5b4fc;
+  box-shadow: 0 12px 30px rgba(49, 46, 129, 0.3);
 }
 
-/* 밝은 모드 스크롤바 */
+.tarot-card-back {
+  transform: rotateY(180deg);
+  background: #ffffff;
+  border: 2.5px solid #4f46e5;
+  box-shadow: 0 12px 30px rgba(79, 70, 229, 0.2);
+}
+
+/* 스크롤바 */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #e2e8f0;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #94a3b8;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #64748b;
 }

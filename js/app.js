@@ -1,7 +1,7 @@
 /**
- * Main Application Controller (천명 - 오늘의 운세 · 정통 사주 · 신비한 타로)
- * Bright Modern Aurora Light Theme (2026 Trend)
- * 12지신 수호동물 인터랙티브 애니메이션 & KASI 정통 만세력 & 타로 시스템
+ * Main Application Controller (천명 - 오늘의 운세 · 사주 · 타로)
+ * High-Contrast Comfortable Light Theme (2026 Trend)
+ * 12지신 수호동물 상호작용 & KASI 정통 만세력 & 대화형 카드 고르기 타로 시스템
  */
 
 const ZODIAC_MASCOTS = {
@@ -110,7 +110,7 @@ const App = {
     this.initTarotCard();
     this.setMode("daily");
 
-    // 기본 수호동물 설정 (초기 클릭 대비)
+    // 초기 수호동물 설정
     this.currentMascot = ZODIAC_MASCOTS["진"] || Object.values(ZODIAC_MASCOTS)[0];
 
     if (window.lucide) {
@@ -118,7 +118,6 @@ const App = {
     }
   },
 
-  // 오늘 날짜 및 실시간 일진 배너
   initRealtimeBanner() {
     const now = new Date();
     const y = now.getFullYear();
@@ -143,7 +142,6 @@ const App = {
     }
   },
 
-  // 생년월일 셀렉트 생성
   populateDateSelects() {
     const curYear = new Date().getFullYear();
     const fillOptions = (elemId, start, end, selectedVal, padZero = false, suffix = "") => {
@@ -171,7 +169,7 @@ const App = {
     fillOptions("partnerDay", 1, 31, 20, false, "일");
   },
 
-  // 3대 대표 서비스 모드 변경 (오늘의 운세 vs 정통 사주 vs 신비한 타로)
+  // 3대 서비스 모드 변경 (오늘의 운세 / 사주 / 타로)
   setMode(mode) {
     this.currentMode = mode;
     const btnDaily = document.getElementById("modeBtnDaily");
@@ -186,20 +184,20 @@ const App = {
     const partnerFields = document.getElementById("partnerSection");
     const submitBtnText = document.getElementById("submitBtnText");
 
-    const activeBtnClass = "py-3 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center space-x-1.5 bg-white text-slate-900 shadow-sm border border-slate-200";
-    const inactiveBtnClass = "py-3 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center justify-center space-x-1.5 text-slate-600 hover:text-slate-900";
+    const activeBtnClass = "py-3 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center space-x-1.5 bg-white text-slate-900 shadow-sm border border-slate-300";
+    const inactiveBtnClass = "py-3 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center justify-center space-x-1.5 text-slate-700 hover:text-slate-900";
 
     if (btnDaily) btnDaily.className = (mode === "daily") ? activeBtnClass : inactiveBtnClass;
     if (btnSaju) btnSaju.className = (mode === "saju") ? activeBtnClass : inactiveBtnClass;
     if (btnTarot) btnTarot.className = (mode === "tarot") ? activeBtnClass : inactiveBtnClass;
 
     if (mode === "tarot") {
-      // 🃏 신비한 타로 전용 뷰 활성화
+      // 🃏 타로 전용 뷰 활성화
       if (sajuFormCard) sajuFormCard.classList.add("hidden");
       if (tarotStandAloneCard) tarotStandAloneCard.classList.remove("hidden");
-      if (heroTitle) heroTitle.textContent = "마음을 비추는 신비한 타로 카드";
-      if (heroSubtitle) heroSubtitle.textContent = "생년월일 입력 없이 마음속 고민을 비추는 78장 타로 리딩을 바로 시작해 보세요.";
-      this.initTarotCard();
+      if (heroTitle) heroTitle.textContent = "마음을 비추는 타로 카드";
+      if (heroSubtitle) heroSubtitle.textContent = "생년월일 입력 없이 마음속 고민을 비추는 타로 리딩을 지금 시작하세요.";
+      this.resetTarotSpread();
     } else if (mode === "daily") {
       // 🔮 오늘의 운세 뷰 활성화
       if (sajuFormCard) sajuFormCard.classList.remove("hidden");
@@ -210,13 +208,13 @@ const App = {
       if (heroSubtitle) heroSubtitle.textContent = "오늘 일진과 시간대별 길흉, 행운의 컬러 & 방위를 간편하게 확인하세요.";
       if (submitBtnText) submitBtnText.textContent = "🔮 오늘 하루 운세 확인하기";
     } else {
-      // 📜 정통 사주 뷰 활성화
+      // 📜 사주 뷰 활성화 (연애운·대운 포함)
       if (sajuFormCard) sajuFormCard.classList.remove("hidden");
       if (tarotStandAloneCard) tarotStandAloneCard.classList.add("hidden");
       if (advFields) advFields.classList.remove("hidden");
       if (partnerFields) partnerFields.classList.add("expanded");
       if (heroTitle) heroTitle.textContent = "한국천문연구원 정통 사주 만세력";
-      if (heroSubtitle) heroSubtitle.textContent = "KASI 정본 천문 역법으로 4주 8자 원국표, 10년 대운, 오행 밸런스를 오차 없이 분석합니다.";
+      if (heroSubtitle) heroSubtitle.textContent = "KASI 정본 역법으로 사주팔자 4주 8자, 연애운, 10년 대운, 오행을 정밀 분석합니다.";
       if (submitBtnText) submitBtnText.textContent = "📜 정통 사주 4주 8자 분석하기";
     }
 
@@ -259,7 +257,6 @@ const App = {
     }
   },
 
-  // 폼 제출
   handleSubmit(e) {
     e.preventDefault();
 
@@ -351,20 +348,17 @@ const App = {
       this.switchResultTab("daily");
     }
 
-    // 마스코트 파티클 폭죽 반응
     setTimeout(() => {
       this.interactMascot();
     }, 450);
   },
 
-  // 홈(입력창)으로 리셋
   resetToHome() {
     document.getElementById("resultSection").classList.add("hidden");
     document.getElementById("inputSection").classList.remove("hidden");
     window.scrollTo({ top: 0, behavior: "smooth" });
   },
 
-  // "내 사주가 좋은 이유" 아코디언 토글
   toggleBlessingCard() {
     const sec = document.getElementById("blessingSection");
     const chevron = document.getElementById("blessingChevron");
@@ -379,12 +373,11 @@ const App = {
     }
   },
 
-  // 결과 렌더링 총괄
   renderResults() {
     const s = this.userSaju;
     const f = this.dailyFortune;
 
-    // 0. 귀여운 십이지신 수호동물 마스코트 파트너 렌더링
+    // 0. 마스코트 파트너
     const dayJiChar = s.pillars.day.ji.char;
     const yearJiChar = s.pillars.year.ji.char;
     const mascot = ZODIAC_MASCOTS[dayJiChar] || ZODIAC_MASCOTS[yearJiChar] || ZODIAC_MASCOTS["자"];
@@ -417,27 +410,27 @@ const App = {
     else if (f.totalScore >= 80) scoreGrade = "길(吉)";
     document.getElementById("resScoreGrade").textContent = scoreGrade;
 
-    // "내 사주가 좋은 이유 3가지" 렌더링 (화사한 라이트 카드)
+    // "내 사주가 좋은 이유 3가지"
     const blessingContainer = document.getElementById("blessingContainer");
     if (blessingContainer) {
       blessingContainer.innerHTML = "";
       s.blessingPoints.forEach((b, idx) => {
         const bCard = document.createElement("div");
-        bCard.className = `p-4 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-1.5 animate-slide-up`;
+        bCard.className = `p-4 rounded-2xl bg-white border border-slate-300 shadow-sm space-y-1.5 animate-slide-up`;
         bCard.style.animationDelay = `${idx * 120}ms`;
         bCard.innerHTML = `
           <div class="flex items-center justify-between text-xs mb-1">
-            <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-bold">${b.badge}</span>
-            <span class="text-slate-400 font-mono text-[10px]">POINT ${b.step}</span>
+            <span class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-400 text-[10px] font-extrabold">${b.badge}</span>
+            <span class="text-slate-500 font-mono text-[10px] font-bold">POINT ${b.step}</span>
           </div>
-          <h5 class="text-xs font-bold text-slate-900 font-serif-kr">${b.title}</h5>
-          <p class="text-[11px] text-slate-600 leading-relaxed">${b.desc}</p>
+          <h5 class="text-xs font-extrabold text-slate-900 font-serif-kr">${b.title}</h5>
+          <p class="text-xs text-slate-700 font-medium leading-relaxed">${b.desc}</p>
         `;
         blessingContainer.appendChild(bCard);
       });
     }
 
-    // 2. 오늘의 운세 탭
+    // 2. 오늘의 운세
     document.getElementById("dailyThemeTitle").textContent = f.theme;
     document.getElementById("dailySummaryText").textContent = f.summary;
     document.getElementById("dailyActionText").textContent = f.action;
@@ -454,150 +447,25 @@ const App = {
     document.getElementById("luckyDirection").textContent = f.lucky.direction;
     document.getElementById("luckyFood").textContent = f.lucky.food;
 
-    // 시간대별 운세 (라이트 카드)
     const hourlyContainer = document.getElementById("hourlyContainer");
     hourlyContainer.innerHTML = "";
     f.hourlyFlow.forEach(h => {
       const card = document.createElement("div");
-      card.className = "p-2.5 rounded-xl bg-slate-50 border border-slate-200";
+      card.className = "p-2.5 rounded-xl bg-slate-50 border border-slate-300";
       card.innerHTML = `
         <div class="flex items-center justify-between text-xs mb-0.5">
-          <span class="text-slate-500 text-[11px] font-medium">${h.time}</span>
-          <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-800">${h.status}</span>
+          <span class="text-slate-700 text-xs font-bold">${h.time}</span>
+          <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300">${h.status}</span>
         </div>
-        <p class="text-[11px] text-slate-600">${h.desc}</p>
+        <p class="text-xs text-slate-700 font-medium">${h.desc}</p>
       `;
       hourlyContainer.appendChild(card);
     });
 
-    // 3. 정통 사주팔자 만세력 표 렌더링
+    // 3. 정통 사주명식 & 💖 연애운 통합 렌더링
     this.renderPillarsTable(s.pillars);
 
-    document.getElementById("iljuTitle").textContent = `${s.iljuDetail.name} (${s.iljuDetail.symbol})`;
-    document.getElementById("iljuDesc").textContent = s.iljuDetail.desc;
-    document.getElementById("iljuStrength").textContent = s.iljuDetail.strength;
-    document.getElementById("iljuCaution").textContent = s.iljuDetail.caution;
-    document.getElementById("iljuLove").textContent = s.iljuDetail.loveStyle;
-    document.getElementById("iljuWealth").textContent = s.iljuDetail.wealthStyle;
-
-    // 신살 렌더링
-    const sinsalContainer = document.getElementById("sinsalContainer");
-    sinsalContainer.innerHTML = "";
-    if (s.sinsal && s.sinsal.length > 0) {
-      s.sinsal.forEach(item => {
-        const div = document.createElement("div");
-        div.className = "p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-1";
-        div.innerHTML = `
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-900 font-serif-kr">${item.name}</span>
-            <span class="text-[10px] font-semibold text-slate-500">${item.type}</span>
-          </div>
-          <div class="text-[11px] text-indigo-600 font-medium">위치: ${item.position || "사주 원국"}</div>
-          <p class="text-[11px] text-slate-600">${item.modern}</p>
-        `;
-        sinsalContainer.appendChild(div);
-      });
-    } else {
-      sinsalContainer.innerHTML = `<p class="text-xs text-slate-500 col-span-2">사주의 균형이 온화하여 특수한 흉살이 없으며 평탄한 복록을 누립니다.</p>`;
-    }
-
-    // 대운 렌더링
-    document.getElementById("daeunMeta").textContent = `대운수: ${s.daeunNumber}세 (${s.isForward ? "순행" : "역행"})`;
-    const daeunContainer = document.getElementById("daeunContainer");
-    daeunContainer.innerHTML = "";
-    s.daeunList.forEach(d => {
-      const dCard = document.createElement("div");
-      dCard.className = "p-2 rounded-2xl bg-slate-50 border border-slate-200 text-center";
-      dCard.innerHTML = `
-        <div class="text-[10px] text-amber-700 font-bold">${d.startAge}~${d.endAge}세</div>
-        <div class="font-serif-kr text-sm font-bold text-slate-900 my-0.5">${d.ganHanja}${d.jiHanja}</div>
-        <div class="text-[9px] text-slate-500">${d.name}</div>
-        <div class="text-[9px] text-slate-400 font-medium">${d.tenGod}</div>
-      `;
-      daeunContainer.appendChild(dCard);
-    });
-
-    // 4. 오행 밸런스 탭
-    const counts = s.elementCounts;
-    const pcts = s.elementPercentages;
-
-    const setElementUI = (key, countId, barId) => {
-      const c = counts[key] || 0;
-      const p = pcts[key] || 0;
-      const labelEl = document.getElementById(countId);
-      const barEl = document.getElementById(barId);
-      if (labelEl) {
-        labelEl.textContent = `${c}개 (${p}%)`;
-      }
-      if (barEl) {
-        setTimeout(() => {
-          barEl.style.width = `${Math.min(100, p * 1.5)}%`;
-        }, 100);
-      }
-    };
-
-    setElementUI("목", "woodCountLabel", "barWood");
-    setElementUI("화", "fireCountLabel", "barFire");
-    setElementUI("토", "earthCountLabel", "barEarth");
-    setElementUI("금", "metalCountLabel", "barMetal");
-    setElementUI("수", "waterCountLabel", "barWater");
-
-    // 신강/신약 및 용신 해설
-    document.getElementById("diagStrengthText").textContent = `${s.strengthStatus} (신약·신강 지수: ${s.strengthScore}점)`;
-    document.getElementById("diagPowerSummary").textContent = s.isSinGang
-      ? "일간(자신)을 생조하는 비겁과 인성의 힘이 왕성하여 주체성이 매우 강하고 독립심과 추진력이 뛰어난 체질입니다."
-      : "식상, 재성, 관성의 설기(洩氣)가 많아 섬세하고 기민하며, 타인과의 조화와 환경 적응력이 뛰어난 체질입니다.";
-    document.getElementById("diagYongsinDesc").textContent = `사주의 과열되거나 부족한 기운을 다스려주는 가장 소중한 수호 글자는 [${s.yongsin}] 기운입니다. 삶에서 이 기운을 가까이할 때 가장 큰 행운과 도약이 찾아옵니다.`;
-
-    // 없는 오행 진단 렌더링
-    const missingContainer = document.getElementById("missingElementsContainer");
-    if (missingContainer) {
-      missingContainer.innerHTML = "";
-      if (s.missingElements && s.missingElements.length > 0) {
-        s.missingElements.forEach(m => {
-          const card = document.createElement("div");
-          card.className = "p-3 rounded-2xl bg-rose-50/70 border border-rose-200 space-y-1 text-xs";
-          card.innerHTML = `
-            <div class="flex items-center justify-between">
-              <span class="font-bold text-rose-800">⚠️ 원국에 없는 오행: ${m.name} (0개)</span>
-              <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-rose-100 text-rose-700 font-semibold">결핍 기운</span>
-            </div>
-            <p class="text-[11px] text-slate-700">• <strong>특징:</strong> ${m.lack}</p>
-            <p class="text-[11px] text-emerald-800">• <strong>개운 처방:</strong> ${m.remedy}</p>
-          `;
-          missingContainer.appendChild(card);
-        });
-      } else {
-        missingContainer.innerHTML = `
-          <div class="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 col-span-2 text-center text-xs">
-            <span class="font-bold text-emerald-800 block mb-0.5">🎉 오행구족(五行具足) 사주</span>
-            <p class="text-[11px] text-slate-600">목·화·토·금·수의 5대 기운이 결핍 없이 골고루 존재하여, 삶의 굴곡을 유연하게 넘기는 원만한 사주입니다.</p>
-          </div>
-        `;
-      }
-    }
-
-    // 없는 십신 진단 렌더링
-    const missingTenGodsContainer = document.getElementById("missingTenGodsContainer");
-    if (missingTenGodsContainer) {
-      missingTenGodsContainer.innerHTML = "";
-      if (s.missingTenGods && s.missingTenGods.length > 0) {
-        s.missingTenGods.forEach(mt => {
-          const card = document.createElement("div");
-          card.className = "p-3 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-1 text-xs";
-          card.innerHTML = `
-            <div class="flex items-center justify-between">
-              <span class="font-bold text-amber-900">${mt.type} : ${mt.title}</span>
-              <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-800 font-semibold">특화 잠재력</span>
-            </div>
-            <p class="text-[11px] text-slate-700 leading-relaxed">${mt.meaning}</p>
-          `;
-          missingTenGodsContainer.appendChild(card);
-        });
-      }
-    }
-
-    // 5. 연애 & 궁합 탭
+    // 사주 안의 연애운 렌더링
     document.getElementById("loveDnaDesc").textContent = `${s.userInfo.name} 님의 일지는 [${s.pillars.day.ji.element}] 기운을 품고 있어, ${s.iljuDetail.loveStyle}`;
     document.getElementById("loveMatchBest").textContent = `나의 기운을 보듬어주는 [${s.yongsin}] 기운이나 천간합을 이루는 인연과 가장 이상적인 호흡을 이룹니다.`;
     document.getElementById("loveCharmPoint").textContent = `${s.iljuDetail.keywords.join(", ")}의 매력이 상대방의 마음을 깊이 사로잡습니다.`;
@@ -627,7 +495,128 @@ const App = {
       partnerCard.classList.add("hidden");
     }
 
-    // 6. 재물 & 커리어 탭
+    document.getElementById("iljuTitle").textContent = `${s.iljuDetail.name} (${s.iljuDetail.symbol})`;
+    document.getElementById("iljuDesc").textContent = s.iljuDetail.desc;
+    document.getElementById("iljuStrength").textContent = s.iljuDetail.strength;
+    document.getElementById("iljuCaution").textContent = s.iljuDetail.caution;
+    document.getElementById("iljuLove").textContent = s.iljuDetail.loveStyle;
+    document.getElementById("iljuWealth").textContent = s.iljuDetail.wealthStyle;
+
+    // 신살 렌더링
+    const sinsalContainer = document.getElementById("sinsalContainer");
+    sinsalContainer.innerHTML = "";
+    if (s.sinsal && s.sinsal.length > 0) {
+      s.sinsal.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "p-3 rounded-2xl bg-slate-50 border border-slate-300 space-y-1";
+        div.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-extrabold text-slate-900 font-serif-kr">${item.name}</span>
+            <span class="text-[11px] font-bold text-slate-600">${item.type}</span>
+          </div>
+          <div class="text-xs text-indigo-700 font-bold">위치: ${item.position || "사주 원국"}</div>
+          <p class="text-xs text-slate-700 font-medium">${item.modern}</p>
+        `;
+        sinsalContainer.appendChild(div);
+      });
+    } else {
+      sinsalContainer.innerHTML = `<p class="text-xs text-slate-600 font-medium col-span-2">사주의 균형이 온화하여 특수한 흉살이 없으며 평탄한 복록을 누립니다.</p>`;
+    }
+
+    // 대운 렌더링
+    document.getElementById("daeunMeta").textContent = `대운수: ${s.daeunNumber}세 (${s.isForward ? "순행" : "역행"})`;
+    const daeunContainer = document.getElementById("daeunContainer");
+    daeunContainer.innerHTML = "";
+    s.daeunList.forEach(d => {
+      const dCard = document.createElement("div");
+      dCard.className = "p-2 rounded-2xl bg-slate-50 border border-slate-300 text-center";
+      dCard.innerHTML = `
+        <div class="text-[10px] text-amber-900 font-extrabold">${d.startAge}~${d.endAge}세</div>
+        <div class="font-serif-kr text-sm font-extrabold text-slate-900 my-0.5">${d.ganHanja}${d.jiHanja}</div>
+        <div class="text-[10px] text-slate-700 font-bold">${d.name}</div>
+        <div class="text-[9px] text-slate-500 font-medium">${d.tenGod}</div>
+      `;
+      daeunContainer.appendChild(dCard);
+    });
+
+    // 4. 오행 밸런스
+    const counts = s.elementCounts;
+    const pcts = s.elementPercentages;
+
+    const setElementUI = (key, countId, barId) => {
+      const c = counts[key] || 0;
+      const p = pcts[key] || 0;
+      const labelEl = document.getElementById(countId);
+      const barEl = document.getElementById(barId);
+      if (labelEl) {
+        labelEl.textContent = `${c}개 (${p}%)`;
+      }
+      if (barEl) {
+        setTimeout(() => {
+          barEl.style.width = `${Math.min(100, p * 1.5)}%`;
+        }, 100);
+      }
+    };
+
+    setElementUI("목", "woodCountLabel", "barWood");
+    setElementUI("화", "fireCountLabel", "barFire");
+    setElementUI("토", "earthCountLabel", "barEarth");
+    setElementUI("금", "metalCountLabel", "barMetal");
+    setElementUI("수", "waterCountLabel", "barWater");
+
+    document.getElementById("diagStrengthText").textContent = `${s.strengthStatus} (신약·신강 지수: ${s.strengthScore}점)`;
+    document.getElementById("diagPowerSummary").textContent = s.isSinGang
+      ? "일간(자신)을 생조하는 비겁과 인성의 힘이 왕성하여 주체성이 매우 강하고 독립심과 추진력이 뛰어난 체질입니다."
+      : "식상, 재성, 관성의 설기(洩氣)가 많아 섬세하고 기민하며, 타인과의 조화와 환경 적응력이 뛰어난 체질입니다.";
+    document.getElementById("diagYongsinDesc").textContent = `사주의 과열되거나 부족한 기운을 다스려주는 가장 소중한 수호 글자는 [${s.yongsin}] 기운입니다. 삶에서 이 기운을 가까이할 때 가장 큰 행운과 도약이 찾아옵니다.`;
+
+    const missingContainer = document.getElementById("missingElementsContainer");
+    if (missingContainer) {
+      missingContainer.innerHTML = "";
+      if (s.missingElements && s.missingElements.length > 0) {
+        s.missingElements.forEach(m => {
+          const card = document.createElement("div");
+          card.className = "p-3 rounded-2xl bg-rose-50 border border-rose-300 space-y-1 text-xs";
+          card.innerHTML = `
+            <div class="flex items-center justify-between">
+              <span class="font-extrabold text-rose-950">⚠️ 원국에 없는 오행: ${m.name} (0개)</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-rose-200 text-rose-900 font-extrabold">결핍 기운</span>
+            </div>
+            <p class="text-xs text-slate-800 font-medium">• <strong>특징:</strong> ${m.lack}</p>
+            <p class="text-xs text-emerald-900 font-bold">• <strong>개운 처방:</strong> ${m.remedy}</p>
+          `;
+          missingContainer.appendChild(card);
+        });
+      } else {
+        missingContainer.innerHTML = `
+          <div class="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-300 col-span-2 text-center text-xs">
+            <span class="font-extrabold text-emerald-950 block mb-0.5">🎉 오행구족(五行具足) 사주</span>
+            <p class="text-xs text-slate-700 font-medium">목·화·토·금·수의 5대 기운이 결핍 없이 골고루 존재하여, 삶의 굴곡을 유연하게 넘기는 원만한 사주입니다.</p>
+          </div>
+        `;
+      }
+    }
+
+    const missingTenGodsContainer = document.getElementById("missingTenGodsContainer");
+    if (missingTenGodsContainer) {
+      missingTenGodsContainer.innerHTML = "";
+      if (s.missingTenGods && s.missingTenGods.length > 0) {
+        s.missingTenGods.forEach(mt => {
+          const card = document.createElement("div");
+          card.className = "p-3 rounded-2xl bg-amber-50 border border-amber-300 space-y-1 text-xs";
+          card.innerHTML = `
+            <div class="flex items-center justify-between">
+              <span class="font-extrabold text-amber-950">${mt.type} : ${mt.title}</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 font-extrabold">특화 잠재력</span>
+            </div>
+            <p class="text-xs text-slate-800 font-medium leading-relaxed">${mt.meaning}</p>
+          `;
+          missingTenGodsContainer.appendChild(card);
+        });
+      }
+    }
+
+    // 5. 재물 & 커리어
     document.getElementById("wealthDnaDesc").textContent = `${s.userInfo.name} 님의 사주는 ${s.iljuDetail.wealthStyle}`;
     document.getElementById("wealthStyleDesc").textContent = s.isSinGang 
       ? "추진력과 주체성을 바탕으로 규모 있는 부를 일구는 사업·투자형에 최적화되어 있습니다." 
@@ -638,18 +627,17 @@ const App = {
     if (window.lucide) window.lucide.createIcons();
   },
 
-  // 4주 8자 카드 스타일 및 실제 지장간 출력
   renderPillarsTable(pillars) {
     const setPillarBadge = (ganBadgeId, jiBadgeId, ganObj, jiObj, tenGodGanId, tenGodJiId, tenGodGan, tenGodJi, jijangganId, jiChar) => {
       const gEl = document.getElementById(ganBadgeId);
       const jEl = document.getElementById(jiBadgeId);
       if (gEl && ganObj) {
-        gEl.className = `w-11 h-11 sm:w-14 sm:h-14 mx-auto rounded-xl flex flex-col items-center justify-center font-serif-kr text-lg sm:text-xl font-bold my-1 shadow-sm ${this.getElementClass(ganObj.element)}`;
-        gEl.innerHTML = `<span>${ganObj.hanja}</span><span class="text-[9px] font-sans font-normal opacity-70">${ganObj.char}</span>`;
+        gEl.className = `w-11 h-11 sm:w-14 sm:h-14 mx-auto rounded-xl flex flex-col items-center justify-center font-serif-kr text-lg sm:text-xl font-black my-1 shadow-sm ${this.getElementClass(ganObj.element)}`;
+        gEl.innerHTML = `<span>${ganObj.hanja}</span><span class="text-[10px] font-sans font-bold opacity-80">${ganObj.char}</span>`;
       }
       if (jEl && jiObj) {
-        jEl.className = `w-11 h-11 sm:w-14 sm:h-14 mx-auto rounded-xl flex flex-col items-center justify-center font-serif-kr text-lg sm:text-xl font-bold my-1 shadow-sm ${this.getElementClass(jiObj.element)}`;
-        jEl.innerHTML = `<span>${jiObj.hanja}</span><span class="text-[9px] font-sans font-normal opacity-70">${jiObj.char}</span>`;
+        jEl.className = `w-11 h-11 sm:w-14 sm:h-14 mx-auto rounded-xl flex flex-col items-center justify-center font-serif-kr text-lg sm:text-xl font-black my-1 shadow-sm ${this.getElementClass(jiObj.element)}`;
+        jEl.innerHTML = `<span>${jiObj.hanja}</span><span class="text-[10px] font-sans font-bold opacity-80">${jiObj.char}</span>`;
       }
       if (document.getElementById(tenGodGanId)) document.getElementById(tenGodGanId).textContent = tenGodGan || "-";
       if (document.getElementById(tenGodJiId)) document.getElementById(tenGodJiId).textContent = tenGodJi || "-";
@@ -658,11 +646,9 @@ const App = {
       }
     };
 
-    // 년주
+    // 년주, 월주, 일주
     setPillarBadge("yearGanBadge", "yearJiBadge", pillars.year.gan, pillars.year.ji, "yearTenGodGan", "yearTenGodJi", pillars.year.tenGodGan, pillars.year.tenGodJi, "yearJijanggan", pillars.year.ji.char);
-    // 월주
     setPillarBadge("monthGanBadge", "monthJiBadge", pillars.month.gan, pillars.month.ji, "monthTenGodGan", "monthTenGodJi", pillars.month.tenGodGan, pillars.month.tenGodJi, "monthJijanggan", pillars.month.ji.char);
-    // 일주
     setPillarBadge("dayGanBadge", "dayJiBadge", pillars.day.gan, pillars.day.ji, null, "dayTenGodJi", "본원(나)", pillars.day.tenGodJi, "dayJijanggan", pillars.day.ji.char);
 
     // 시주
@@ -695,7 +681,7 @@ const App = {
     this.activeTab = tabName;
     const tabBtns = document.querySelectorAll(".result-tab-btn");
     tabBtns.forEach(btn => {
-      btn.className = "result-tab-btn tab-btn px-3.5 py-2 rounded-xl font-semibold whitespace-nowrap modern-chip text-slate-600 hover:text-slate-900";
+      btn.className = "result-tab-btn tab-btn px-3.5 py-2 rounded-xl font-bold whitespace-nowrap modern-chip text-slate-800 hover:text-black";
     });
 
     const activeBtn = document.getElementById(`tabBtn-${tabName}`);
@@ -714,7 +700,7 @@ const App = {
     if (window.lucide) window.lucide.createIcons();
   },
 
-  // 🐾 마스코트 상호작용 (확실한 팝 모션 + 말풍선 교체 + 하트/별 폭죽 파티클)
+  // 🐾 마스코트 상호작용
   interactMascot(e) {
     if (!this.currentMascot) {
       this.currentMascot = ZODIAC_MASCOTS["진"] || Object.values(ZODIAC_MASCOTS)[0];
@@ -722,33 +708,29 @@ const App = {
     const quotes = this.currentMascot.quotes || [];
     this.mascotQuoteIdx = ((this.mascotQuoteIdx || 0) + 1) % quotes.length;
     
-    // 1. 말풍선 갱신 및 펄스 효과
     const quoteEl = document.getElementById("mascotQuote");
     if (quoteEl) {
       quoteEl.textContent = `"${quotes[this.mascotQuoteIdx]}"`;
       quoteEl.classList.remove("quote-flash");
-      void quoteEl.offsetWidth; // reflow
+      void quoteEl.offsetWidth;
       quoteEl.classList.add("quote-flash");
     }
 
-    // 2. 아바타 컨테이너 팝 스케일 모션
     const avatarContainer = document.getElementById("mascotAvatarContainer");
     if (avatarContainer) {
       avatarContainer.classList.remove("mascot-tap-pop");
-      void avatarContainer.offsetWidth; // reflow
+      void avatarContainer.offsetWidth;
       avatarContainer.classList.add("mascot-tap-pop");
     }
 
-    // 3. 브라우저 네이티브 하트/별 플로팅 파티클 생성
     const clientX = (e && e.clientX) ? e.clientX : (window.innerWidth / 2);
     const clientY = (e && e.clientY) ? e.clientY : (window.innerHeight / 3);
     this.spawnMascotParticles(clientX, clientY);
 
-    // 4. Canvas Confetti 지원 시 추가 분출
     if (window.confetti) {
       try {
         window.confetti({
-          particleCount: 22,
+          particleCount: 24,
           spread: 50,
           origin: { y: Math.max(0.15, (clientY / window.innerHeight) - 0.05) },
           colors: ["#f59e0b", "#f43f5e", "#a855f7", "#06b6d4", "#10b981"]
@@ -757,7 +739,6 @@ const App = {
     }
   },
 
-  // 화면 클릭 지점에서 솟아오르는 귀여운 하트/별/클로버 파티클
   spawnMascotParticles(x, y) {
     const emojis = ["💖", "✨", "⭐", "🍀", "🎉", "🌸", "🥰", "💫", "🍯"];
     for (let i = 0; i < 8; i++) {
@@ -772,7 +753,10 @@ const App = {
     }
   },
 
-  // 타로 카드 초기화
+  // ==========================================================================
+  // 🃏 대화형 카드 직접 고르기 타로 시스템
+  // ==========================================================================
+
   initTarotCard() {
     const cards = window.TarotData || [];
     if (cards.length === 0) return;
@@ -780,7 +764,6 @@ const App = {
     this.currentTarotCard = cards[randIdx];
   },
 
-  // 타로 질문 카테고리 설정
   setTarotCategory(cat) {
     this.tarotCategory = cat;
     const cats = ["today", "love", "money", "mind"];
@@ -788,22 +771,125 @@ const App = {
       const btn = document.getElementById(`tarotCat-${c}`);
       if (btn) {
         if (c === cat) {
-          btn.className = "px-3 py-1.5 rounded-full font-semibold bg-indigo-600 text-white shadow-sm transition";
+          btn.className = "px-3.5 py-1.5 rounded-full font-bold bg-indigo-600 text-white shadow-sm transition";
         } else {
-          btn.className = "px-3 py-1.5 rounded-full font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition";
+          btn.className = "px-3.5 py-1.5 rounded-full font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300 transition";
         }
       }
     });
 
-    // 이미 뒤집힌 상태라면 카드 텍스트 업데이트
     this.updateTarotText();
+  },
+
+  // 사용자가 5장 중 1장의 카드를 직접 터치했을 때 실행 (첫 화면)
+  pickTarotCard(index, e) {
+    const cards = window.TarotData || [];
+    if (cards.length > 0) {
+      const randIdx = Math.floor(Math.random() * cards.length);
+      this.currentTarotCard = cards[randIdx];
+    }
+
+    const spreadSection = document.getElementById("tarotSpreadSection");
+    const revealedBox = document.getElementById("tarotRevealedBox");
+    const inner = document.getElementById("tarotCardInner");
+
+    if (spreadSection) spreadSection.classList.add("hidden");
+    if (revealedBox) revealedBox.classList.remove("hidden");
+
+    this.updateTarotText();
+
+    if (inner) {
+      inner.classList.remove("flipped");
+      setTimeout(() => {
+        inner.classList.add("flipped");
+      }, 150);
+    }
+
+    const clientX = (e && e.clientX) ? e.clientX : (window.innerWidth / 2);
+    const clientY = (e && e.clientY) ? e.clientY : (window.innerHeight / 2);
+    this.spawnMascotParticles(clientX, clientY);
+
+    if (window.confetti) {
+      try {
+        window.confetti({ particleCount: 30, spread: 60, origin: { y: 0.6 } });
+      } catch (err) {}
+    }
+  },
+
+  flipRevealedTarot(e) {
+    const inner = document.getElementById("tarotCardInner");
+    if (inner) {
+      inner.classList.toggle("flipped");
+    }
+  },
+
+  resetTarotSpread() {
+    const spreadSection = document.getElementById("tarotSpreadSection");
+    const revealedBox = document.getElementById("tarotRevealedBox");
+    const inner = document.getElementById("tarotCardInner");
+
+    if (inner) inner.classList.remove("flipped");
+    if (revealedBox) revealedBox.classList.add("hidden");
+    if (spreadSection) spreadSection.classList.remove("hidden");
+  },
+
+  // 결과 화면 내부의 타로 카드 고르기
+  pickResultTarotCard(index, e) {
+    const cards = window.TarotData || [];
+    if (cards.length > 0) {
+      const randIdx = Math.floor(Math.random() * cards.length);
+      this.currentTarotCard = cards[randIdx];
+    }
+
+    const spreadSection = document.getElementById("resTarotSpreadSection");
+    const revealedBox = document.getElementById("resTarotRevealedBox");
+    const inner = document.getElementById("resultTarotCardInner");
+
+    if (spreadSection) spreadSection.classList.add("hidden");
+    if (revealedBox) revealedBox.classList.remove("hidden");
+
+    this.updateTarotText();
+
+    if (inner) {
+      inner.classList.remove("flipped");
+      setTimeout(() => {
+        inner.classList.add("flipped");
+      }, 150);
+    }
+
+    const clientX = (e && e.clientX) ? e.clientX : (window.innerWidth / 2);
+    const clientY = (e && e.clientY) ? e.clientY : (window.innerHeight / 2);
+    this.spawnMascotParticles(clientX, clientY);
+
+    if (window.confetti) {
+      try {
+        window.confetti({ particleCount: 30, spread: 60, origin: { y: 0.6 } });
+      } catch (err) {}
+    }
+  },
+
+  flipResultRevealedTarot(e) {
+    const inner = document.getElementById("resultTarotCardInner");
+    if (inner) {
+      inner.classList.toggle("flipped");
+    }
+  },
+
+  resetResultTarotSpread() {
+    const spreadSection = document.getElementById("resTarotSpreadSection");
+    const revealedBox = document.getElementById("resTarotRevealedBox");
+    const inner = document.getElementById("resultTarotCardInner");
+
+    if (inner) inner.classList.remove("flipped");
+    if (revealedBox) revealedBox.classList.add("hidden");
+    if (spreadSection) spreadSection.classList.remove("hidden");
   },
 
   updateTarotText() {
     const card = this.currentTarotCard;
     if (!card) return;
 
-    // 메인 카드 텍스트
+    // 메인 타로 텍스트
     const krName = document.getElementById("tarotCardKrName");
     const elem = document.getElementById("tarotCardElem");
     const theme = document.getElementById("tarotCardTheme");
@@ -820,7 +906,7 @@ const App = {
     if (loveAdv) loveAdv.textContent = card.loveAdvice;
     if (moneyAdv) moneyAdv.textContent = card.moneyAdvice;
 
-    // 결과 탭 타로 카드 텍스트
+    // 결과 탭 타로 텍스트
     const resKrName = document.getElementById("resTarotCardKrName");
     const resElem = document.getElementById("resTarotCardElem");
     const resTheme = document.getElementById("resTarotCardTheme");
@@ -838,49 +924,6 @@ const App = {
     if (resMoneyAdv) resMoneyAdv.textContent = card.moneyAdvice;
   },
 
-  // 타로 카드 뒤집기
-  flipTarotCard(e) {
-    const inners = [
-      document.getElementById("tarotCardInner"),
-      document.getElementById("resultTarotCardInner")
-    ];
-
-    this.updateTarotText();
-
-    inners.forEach(inner => {
-      if (inner && !inner.classList.contains("flipped")) {
-        inner.classList.add("flipped");
-      }
-    });
-
-    const clientX = (e && e.clientX) ? e.clientX : (window.innerWidth / 2);
-    const clientY = (e && e.clientY) ? e.clientY : (window.innerHeight / 2);
-    this.spawnMascotParticles(clientX, clientY);
-
-    if (window.confetti) {
-      try {
-        window.confetti({ particleCount: 30, spread: 55, origin: { y: 0.6 } });
-      } catch (err) {}
-    }
-  },
-
-  // 타로 카드 셔플
-  shuffleTarotCard() {
-    const inners = [
-      document.getElementById("tarotCardInner"),
-      document.getElementById("resultTarotCardInner")
-    ];
-
-    inners.forEach(inner => {
-      if (inner) inner.classList.remove("flipped");
-    });
-
-    setTimeout(() => {
-      this.initTarotCard();
-      this.updateTarotText();
-    }, 320);
-  },
-
   copyResultText() {
     if (!this.userSaju || !this.dailyFortune) return;
     const s = this.userSaju;
@@ -890,6 +933,7 @@ const App = {
 • 이름: ${s.userInfo.name} (${s.userInfo.genderKr})
 • 생년월일: ${s.userInfo.solarDateString}
 • 일주: ${s.iljuDetail.name} (${s.iljuDetail.symbol})
+• 연애 기질: ${s.iljuDetail.loveStyle}
 • 사주 체질: ${s.strengthStatus} (용신: ${s.yongsin})
 • 없는 오행: ${s.missingElements.length > 0 ? s.missingElements.map(m => m.name).join(", ") : "없음(오행구족)"}
 -----------------------------------------
@@ -911,7 +955,7 @@ https://minjae0529-blip.github.io/Daily-Fortune/`;
   shareLink() {
     if (navigator.share) {
       navigator.share({
-        title: "천명(天命) - 오늘의 운세 · 정통 사주 · 신비한 타로",
+        title: "천명(天命) - 오늘의 운세 · 사주 · 타로",
         text: "한국천문연구원 역법 기반 고정밀 사주 만세력과 오늘의 운세, 타로 카드를 확인해보세요!",
         url: window.location.href
       }).catch(() => {});

@@ -234,14 +234,15 @@ function getSolarTermDate(year, termIndex) {
 }
 
 /**
- * Get accurate Iljin (Day 60-Gapja) for any Gregorian date
- * Reference: 2024-01-01 was Gapjin (甲辰, index 40)
+ * 한국천문연구원(KASI) 기준 정밀 일진(60갑자) 계산
+ * 기준일: 1992년 10월 24일 = 계유(癸酉, index 9)
+ * 검증: 2024년 1월 1일 = 갑자(甲子, index 0), 2026년 10월 11일 = 무오(戊午, index 54)
  */
 function getDayGanJi(year, month, day) {
-  const refDate = new Date(2024, 0, 1);
-  const targetDate = new Date(year, month - 1, day);
-  const diffDays = Math.round((targetDate - refDate) / 86400000);
-  const iljinIndex = ((40 + diffDays) % 60 + 60) % 60;
+  const anchorMs = Date.UTC(1992, 9, 24);
+  const targetMs = Date.UTC(year, month - 1, day);
+  const diffDays = Math.round((targetMs - anchorMs) / 86400000);
+  const iljinIndex = ((9 + diffDays) % 60 + 60) % 60;
   return {
     index: iljinIndex,
     ganIndex: iljinIndex % 10,
@@ -253,13 +254,55 @@ function getDayGanJi(year, month, day) {
   };
 }
 
+function getSafeSolarTermDate(year, termIndex) {
+  if (typeof window !== "undefined" && window.Manseryeok && window.Manseryeok.getSolarTerm) {
+    try {
+      const term = window.Manseryeok.getSolarTerm(year, termIndex);
+      const kst = new Date(term.date.getTime() + 9 * 3600000);
+      return {
+        year: kst.getUTCFullYear(),
+        month: kst.getUTCMonth() + 1,
+        day: kst.getUTCDate(),
+        hour: kst.getUTCHours(),
+        minute: kst.getUTCMinutes()
+      };
+    } catch (e) {
+      // fallback
+    }
+  }
+  return getSolarTermDate(year, termIndex);
+}
+
+function getSafeLunarToSolar(lYear, lMonth, lDay, isLeap = false) {
+  if (typeof window !== "undefined" && window.Manseryeok && window.Manseryeok.lunarToSolar) {
+    try {
+      return window.Manseryeok.lunarToSolar(lYear, lMonth, lDay, Boolean(isLeap));
+    } catch (e) {
+      // fallback
+    }
+  }
+  return lunarToSolar(lYear, lMonth, lDay, isLeap);
+}
+
+function getSafeSolarToLunar(sYear, sMonth, sDay) {
+  if (typeof window !== "undefined" && window.Manseryeok && window.Manseryeok.solarToLunar) {
+    try {
+      return window.Manseryeok.solarToLunar(sYear, sMonth, sDay);
+    } catch (e) {
+      // fallback
+    }
+  }
+  return solarToLunar(sYear, sMonth, sDay);
+}
+
 window.CalendarEngine = {
   HEAVENLY_STEMS,
   EARTHLY_BRANCHES,
   SIXTY_GAPJA,
   SOLAR_TERMS_NAMES,
-  lunarToSolar,
-  solarToLunar,
-  getSolarTermDate,
+  lunarToSolar: getSafeLunarToSolar,
+  solarToLunar: getSafeSolarToLunar,
+  getSolarTermDate: getSafeSolarTermDate,
   getDayGanJi
 };
+

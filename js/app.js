@@ -171,6 +171,8 @@ const App = {
     const birthHour = isUnknownHour ? null : parseInt(document.getElementById("birthHour").value, 10);
     const birthMinute = isUnknownHour ? null : parseInt(document.getElementById("birthMinute").value, 10);
     const adjust30Min = document.getElementById("adjust30Min").checked;
+    const dayBoundaryEl = document.getElementById("dayBoundarySelect");
+    const dayBoundary = dayBoundaryEl ? dayBoundaryEl.value : "splitJasi";
 
     try {
       this.userSaju = window.SajuEngine.calculateSaju({
@@ -184,8 +186,10 @@ const App = {
         birthHour,
         birthMinute,
         isUnknownHour,
-        adjust30Min
+        adjust30Min,
+        dayBoundary
       });
+
 
       this.dailyFortune = window.FortuneEngine.calculateDailyFortune(this.userSaju);
 

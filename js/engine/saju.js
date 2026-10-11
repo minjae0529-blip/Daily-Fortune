@@ -135,84 +135,116 @@ function calculateSaju(params) {
     lunarInfo = window.CalendarEngine.solarToLunar(solarYear, solarMonth, solarDay);
   }
 
-  // 1. 입춘(立春) 계산 -> 년주(Year Pillar)
-  // 입춘은 24절기 인덱스 2
-  const ipchun = window.CalendarEngine.getSolarTermDate(solarYear, 2);
-  const birthDateObj = new Date(solarYear, solarMonth - 1, solarDay, birthHour || 12, birthMinute || 0);
-  const ipchunDateObj = new Date(ipchun.year, ipchun.month - 1, ipchun.day, ipchun.hour, ipchun.minute);
+  let yearGan = null, yearJi = null;
+  let monthGan = null, monthJi = null;
+  let dayGan = null, dayJi = null;
+  let hourGan = null, hourJi = null;
+  let luckPillarsData = null;
+  let voidBranches = [];
 
-  let sajuYear = solarYear;
-  if (birthDateObj < ipchunDateObj) {
-    // 입춘 전이면 전년도 간지
-    sajuYear = solarYear - 1;
-  }
+  const useManseryeok = typeof window !== "undefined" && window.Manseryeok && typeof window.Manseryeok.calculateFourPillars === "function";
 
-  const yearGanIdx = (sajuYear - 4) % 10;
-  const yearJiIdx = (sajuYear - 4) % 12;
-  const yearGan = window.CalendarEngine.HEAVENLY_STEMS[(yearGanIdx + 10) % 10];
-  const yearJi = window.CalendarEngine.EARTHLY_BRANCHES[(yearJiIdx + 12) % 12];
+  if (useManseryeok) {
+    try {
+      const bHour = isUnknownHour ? 12 : (birthHour !== null ? birthHour : 12);
+      const bMin = isUnknownHour ? 0 : (birthMinute !== null ? birthMinute : 0);
+      const fp = window.Manseryeok.calculateFourPillars({
+        year: solarYear,
+        month: solarMonth,
+        day: solarDay,
+        hour: bHour,
+        minute: bMin,
+        gender: gender === "female" ? "female" : "male",
+        isLunar: calendarType === "lunar",
+        isLeapMonth: Boolean(isLeap),
+        trueSolarTime: adjust30Min ? {
+          longitude: 127.5,
+          applyEquationOfTime: true,
+          applyHistoricalDst: true
+        } : undefined,
+        dayBoundary: params.dayBoundary || "splitJasi"
+      });
 
-  // 2. 24절기 12절(節) 기준 -> 월주(Month Pillar)
-  // 12절의 인덱스: 0(소한), 2(입춘), 4(경칩), 6(청명), 8(입하), 10(망종), 12(소서), 14(입추), 16(백로), 18(한로), 20(입동), 22(대설)
-  const termIndices = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22];
-  const monthJiChars = ["축", "인", "묘", "진", "사", "오", "미", "신", "유", "술", "해", "자"];
-  const termDates = termIndices.map(tIdx => window.CalendarEngine.getSolarTermDate(solarYear, tIdx));
+      const findStem = (ch) => window.CalendarEngine.HEAVENLY_STEMS.find(s => s.char === ch) || { char: ch, hanja: ch, element: "토", yinYang: "양", color: "#f59e0b" };
+      const findBranch = (ch) => window.CalendarEngine.EARTHLY_BRANCHES.find(b => b.char === ch) || { char: ch, hanja: ch, animal: "", element: "토", yinYang: "양", color: "#f59e0b" };
 
-  let monthJiIdx = 1; // 기본값 인(寅)월
-  for (let i = 0; i < 12; i++) {
-    const t = termDates[i];
-    const tDate = new Date(t.year, t.month - 1, t.day, t.hour, t.minute);
-    const nextT = i < 11 
-      ? termDates[i + 1] 
-      : window.CalendarEngine.getSolarTermDate(solarYear + 1, 0); // 다음해 소한
-    const nextDate = new Date(nextT.year, nextT.month - 1, nextT.day, nextT.hour, nextT.minute);
+      yearGan = findStem(fp.year.heavenlyStem);
+      yearJi = findBranch(fp.year.earthlyBranch);
+      monthGan = findStem(fp.month.heavenlyStem);
+      monthJi = findBranch(fp.month.earthlyBranch);
+      dayGan = findStem(fp.day.heavenlyStem);
+      dayJi = findBranch(fp.day.earthlyBranch);
 
-    if (birthDateObj >= tDate && birthDateObj < nextDate) {
-      monthJiIdx = (i + 1) % 12; // 0=축, 1=인, 2=묘...
-      break;
+      if (!isUnknownHour && birthHour !== null) {
+        hourGan = findStem(fp.hour.heavenlyStem);
+        hourJi = findBranch(fp.hour.earthlyBranch);
+      }
+
+      luckPillarsData = fp.luckPillars;
+      voidBranches = fp.voidBranches || [];
+    } catch (e) {
+      console.warn("Manseryeok calculateFourPillars fallback:", e);
     }
   }
 
-  // 오호둔년법(五虎遁年法): 연간에 따른 인월(寅月) 시작 천간
-  // 갑/기 -> 병인(2)
-  // 을/경 -> 무인(4)
-  // 병/신 -> 경인(6)
-  // 정/임 -> 임인(8)
-  // 무/계 -> 갑인(0)
-  const tigerStartGanMap = { 0: 2, 5: 2, 1: 4, 6: 4, 2: 6, 7: 6, 3: 8, 8: 8, 4: 0, 9: 0 };
-  const inWolGanStart = tigerStartGanMap[yearGanIdx];
-  // monthJiIdx: 1=인, 2=묘 ... 11=해, 0=축
-  // 인월(1)부터 몇 번째 달인지 오프셋
-  const offsetFromIn = (monthJiIdx - 1 + 12) % 12;
-  const monthGanIdx = (inWolGanStart + offsetFromIn) % 10;
-  const monthGan = window.CalendarEngine.HEAVENLY_STEMS[monthGanIdx];
-  const monthJi = window.CalendarEngine.EARTHLY_BRANCHES[monthJiIdx];
+  // Fallback calculation
+  if (!yearGan || !yearJi || !dayGan || !dayJi) {
+    const ipchun = window.CalendarEngine.getSolarTermDate(solarYear, 2);
+    const birthDateObj = new Date(solarYear, solarMonth - 1, solarDay, birthHour || 12, birthMinute || 0);
+    const ipchunDateObj = new Date(ipchun.year, ipchun.month - 1, ipchun.day, ipchun.hour, ipchun.minute);
 
-  // 3. 일주(Day Pillar)
-  const dayIljin = window.CalendarEngine.getDayGanJi(solarYear, solarMonth, solarDay);
-  const dayGan = dayIljin.gan;
-  const dayJi = dayIljin.ji;
+    let sajuYear = solarYear;
+    if (birthDateObj < ipchunDateObj) {
+      sajuYear = solarYear - 1;
+    }
 
-  // 4. 시주(Hour Pillar)
-  let hourGan = null;
-  let hourJi = null;
-  if (!isUnknownHour && birthHour !== null) {
-    const hJiIdx = getHourJiIndex(birthHour, birthMinute, adjust30Min);
-    hourJi = window.CalendarEngine.EARTHLY_BRANCHES[hJiIdx];
-    // 오서둔일법(五鼠遁日法 - 시두법): 일간에 따른 자시(子時) 시작 천간
-    // 갑/기 -> 갑자(0)
-    // 을/경 -> 병자(2)
-    // 병/신 -> 무자(4)
-    // 정/임 -> 경자(6)
-    // 무/계 -> 임자(8)
-    const ratStartGanMap = { 0: 0, 5: 0, 1: 2, 6: 2, 2: 4, 7: 4, 3: 6, 8: 6, 4: 8, 9: 8 };
-    const jaSiStartGan = ratStartGanMap[dayGan.char === "갑" || dayGan.char === "기" ? 0 : 
-      dayGan.char === "을" || dayGan.char === "경" ? 1 : 
-      dayGan.char === "병" || dayGan.char === "신" ? 2 : 
-      dayGan.char === "정" || dayGan.char === "임" ? 3 : 4];
-    const hourGanIdx = (jaSiStartGan + hJiIdx) % 10;
-    hourGan = window.CalendarEngine.HEAVENLY_STEMS[hourGanIdx];
+    const yearGanIdx = (sajuYear - 4) % 10;
+    const yearJiIdx = (sajuYear - 4) % 12;
+    yearGan = window.CalendarEngine.HEAVENLY_STEMS[(yearGanIdx + 10) % 10];
+    yearJi = window.CalendarEngine.EARTHLY_BRANCHES[(yearJiIdx + 12) % 12];
+
+    const termIndices = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22];
+    const termDates = termIndices.map(tIdx => window.CalendarEngine.getSolarTermDate(solarYear, tIdx));
+
+    let monthJiIdx = 1;
+    for (let i = 0; i < 12; i++) {
+      const t = termDates[i];
+      const tDate = new Date(t.year, t.month - 1, t.day, t.hour, t.minute);
+      const nextT = i < 11 
+        ? termDates[i + 1] 
+        : window.CalendarEngine.getSolarTermDate(solarYear + 1, 0);
+      const nextDate = new Date(nextT.year, nextT.month - 1, nextT.day, nextT.hour, nextT.minute);
+
+      if (birthDateObj >= tDate && birthDateObj < nextDate) {
+        monthJiIdx = (i + 1) % 12;
+        break;
+      }
+    }
+
+    const tigerStartGanMap = { 0: 2, 5: 2, 1: 4, 6: 4, 2: 6, 7: 6, 3: 8, 8: 8, 4: 0, 9: 0 };
+    const inWolGanStart = tigerStartGanMap[(yearGanIdx + 10) % 10];
+    const offsetFromIn = (monthJiIdx - 1 + 12) % 12;
+    const monthGanIdx = (inWolGanStart + offsetFromIn) % 10;
+    monthGan = window.CalendarEngine.HEAVENLY_STEMS[monthGanIdx];
+    monthJi = window.CalendarEngine.EARTHLY_BRANCHES[monthJiIdx];
+
+    const dayIljin = window.CalendarEngine.getDayGanJi(solarYear, solarMonth, solarDay);
+    dayGan = dayIljin.gan;
+    dayJi = dayIljin.ji;
+
+    if (!isUnknownHour && birthHour !== null) {
+      const hJiIdx = getHourJiIndex(birthHour, birthMinute, adjust30Min);
+      hourJi = window.CalendarEngine.EARTHLY_BRANCHES[hJiIdx];
+      const ratStartGanMap = { 0: 0, 5: 0, 1: 2, 6: 2, 2: 4, 7: 4, 3: 6, 8: 6, 4: 8, 9: 8 };
+      const jaSiStartGan = ratStartGanMap[dayGan.char === "갑" || dayGan.char === "기" ? 0 : 
+        dayGan.char === "을" || dayGan.char === "경" ? 1 : 
+        dayGan.char === "병" || dayGan.char === "신" ? 2 : 
+        dayGan.char === "정" || dayGan.char === "임" ? 3 : 4];
+      const hourGanIdx = (jaSiStartGan + hJiIdx) % 10;
+      hourGan = window.CalendarEngine.HEAVENLY_STEMS[hourGanIdx];
+    }
   }
+
 
   // 4주 기둥 구성
   const pillars = {
@@ -402,40 +434,56 @@ function calculateSaju(params) {
   const iljuDetail = window.GapjaIljuData[iljuKey] || window.GapjaIljuData["갑자"];
 
   // 8. 대운(10년 주기) 계산
-  // 양남음녀(갑/병/무/경/임 남성, 을/정/기/신/계 여성) -> 순행
-  // 음남양녀 -> 역행
+  let daeunNumber = 1;
+  const daeunList = [];
   const isYangGan = ["갑", "병", "무", "경", "임"].includes(yearGan.char);
   const isMale = gender === "male";
   const isForward = (isYangGan && isMale) || (!isYangGan && !isMale);
 
-  // 대운수(대략 1~10세 사이)
-  const daeunNumber = Math.max(1, Math.min(10, Math.floor(((solarDay * 3) % 9) + 1)));
-  const daeunList = [];
-  let curGanIdx = monthGanIdx;
-  let curJiIdx = monthJiIdx;
-
-  for (let i = 1; i <= 8; i++) {
-    if (isForward) {
-      curGanIdx = (curGanIdx + 1) % 10;
-      curJiIdx = (curJiIdx + 1) % 12;
-    } else {
-      curGanIdx = (curGanIdx - 1 + 10) % 10;
-      curJiIdx = (curJiIdx - 1 + 12) % 12;
-    }
-    const dGan = window.CalendarEngine.HEAVENLY_STEMS[curGanIdx];
-    const dJi = window.CalendarEngine.EARTHLY_BRANCHES[curJiIdx];
-    const age = daeunNumber + (i - 1) * 10;
-    daeunList.push({
-      startAge: age,
-      endAge: age + 9,
-      ganChar: dGan.char,
-      jiChar: dJi.char,
-      ganHanja: dGan.hanja,
-      jiHanja: dJi.hanja,
-      name: dGan.char + dJi.char,
-      element: `${dGan.element}/${dJi.element}`,
-      tenGod: getTenGod(dayGan, dGan)
+  if (luckPillarsData && luckPillarsData.pillars && luckPillarsData.pillars.length > 0) {
+    daeunNumber = luckPillarsData.startAge || 1;
+    luckPillarsData.pillars.forEach(item => {
+      const dGan = window.CalendarEngine.HEAVENLY_STEMS.find(s => s.char === item.pillar.heavenlyStem) || { char: item.pillar.heavenlyStem, hanja: "", element: "토" };
+      const dJi = window.CalendarEngine.EARTHLY_BRANCHES.find(j => j.char === item.pillar.earthlyBranch) || { char: item.pillar.earthlyBranch, hanja: "", element: "토" };
+      daeunList.push({
+        startAge: item.age,
+        endAge: item.age + 9,
+        ganChar: dGan.char,
+        jiChar: dJi.char,
+        ganHanja: dGan.hanja || "",
+        jiHanja: dJi.hanja || "",
+        name: dGan.char + dJi.char,
+        element: `${dGan.element}/${dJi.element}`,
+        tenGod: getTenGod(dayGan, dGan)
+      });
     });
+  } else {
+    daeunNumber = Math.max(1, Math.min(10, Math.floor(((solarDay * 3) % 9) + 1)));
+    let curGanIdx = window.CalendarEngine.HEAVENLY_STEMS.findIndex(s => s.char === monthGan.char);
+    let curJiIdx = window.CalendarEngine.EARTHLY_BRANCHES.findIndex(b => b.char === monthJi.char);
+    for (let i = 1; i <= 8; i++) {
+      if (isForward) {
+        curGanIdx = (curGanIdx + 1) % 10;
+        curJiIdx = (curJiIdx + 1) % 12;
+      } else {
+        curGanIdx = (curGanIdx - 1 + 10) % 10;
+        curJiIdx = (curJiIdx - 1 + 12) % 12;
+      }
+      const dGan = window.CalendarEngine.HEAVENLY_STEMS[curGanIdx];
+      const dJi = window.CalendarEngine.EARTHLY_BRANCHES[curJiIdx];
+      const age = daeunNumber + (i - 1) * 10;
+      daeunList.push({
+        startAge: age,
+        endAge: age + 9,
+        ganChar: dGan.char,
+        jiChar: dJi.char,
+        ganHanja: dGan.hanja,
+        jiHanja: dJi.hanja,
+        name: dGan.char + dJi.char,
+        element: `${dGan.element}/${dJi.element}`,
+        tenGod: getTenGod(dayGan, dGan)
+      });
+    }
   }
 
     // 사주 원국에 없는 오행(0개) 및 과다 오행(3개 이상 또는 35% 이상) 판별
@@ -489,7 +537,9 @@ function calculateSaju(params) {
       yongsin,
       yongsinDesc,
       sinsal,
+      voidBranches,
       daeunNumber,
+
       isForward,
       daeunList
     };

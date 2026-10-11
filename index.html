@@ -186,17 +186,28 @@
           </div>
 
           <!-- Saju Professional Time Options -->
-          <div id="advancedSajuFields" class="expandable-section space-y-3">
-            <div class="pt-1">
-              <div class="flex items-center justify-between p-3 rounded-xl bg-slate-900/40 border border-white/5 text-xs">
-                <div>
-                  <span class="text-slate-200 font-medium">한국 표준시 30분 보정</span>
-                  <p class="text-[10px] text-slate-400">동경 135도 vs 서울 127.5도 시차(-30분) 정밀 반영</p>
-                </div>
-                <input type="checkbox" id="adjust30Min" checked class="rounded bg-black/40 border-white/20 text-amber-500">
+          <div id="advancedSajuFields" class="space-y-2">
+            <div class="flex items-center justify-between p-3 rounded-xl bg-slate-900/40 border border-white/5 text-xs">
+              <div>
+                <span class="text-slate-200 font-medium">한국 표준시(-30분) & 서머타임 정밀 보정</span>
+                <p class="text-[10px] text-slate-400">동경 135° vs 서울 127.5° 시차 및 1987~88 서머타임 KASI 표준 자동 반영</p>
               </div>
+              <input type="checkbox" id="adjust30Min" checked class="rounded bg-black/40 border-white/20 text-amber-500">
+            </div>
+
+            <div class="flex items-center justify-between p-3 rounded-xl bg-slate-900/40 border border-white/5 text-xs">
+              <div>
+                <span class="text-slate-200 font-medium">자시(23~01시) 일주 판정 기준</span>
+                <p class="text-[10px] text-slate-400">시중 유명 만세력 앱 표준 (야자시 인정 권장)</p>
+              </div>
+              <select id="dayBoundarySelect" class="bg-slate-900 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-amber-300 focus:outline-none">
+                <option value="splitJasi" selected>야자시 인정 (점신·원광만세력 표준)</option>
+                <option value="midnight">자정(00시) 기준</option>
+                <option value="jasi">23:30부터 다음날 일주</option>
+              </select>
             </div>
           </div>
+
 
           <!-- Partner Options (Love mode) -->
           <div id="partnerSection" class="expandable-section space-y-3">
@@ -690,6 +701,7 @@
   </footer>
 
   <!-- Scripts -->
+  <script src="js/engine/manseryeok.bundle.js"></script>
   <script src="js/data/gapja60.js"></script>
   <script src="js/data/sinsal.js"></script>
   <script src="js/data/tarot.js"></script>
@@ -697,5 +709,6 @@
   <script src="js/engine/saju.js"></script>
   <script src="js/engine/fortune.js"></script>
   <script src="js/app.js"></script>
+
 </body>
 </html>

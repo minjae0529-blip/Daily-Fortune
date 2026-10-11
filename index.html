@@ -171,47 +171,50 @@
             </div>
           </div>
 
+          <!-- Birth Time (항상 노출 & 모름 체크박스 제공) -->
+          <div class="p-3.5 rounded-xl bg-black/30 border border-white/10 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-medium text-slate-300 flex items-center space-x-1.5">
+                <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-400"></i>
+                <span>태어난 시간 (시/분)</span>
+              </label>
+              <label class="inline-flex items-center space-x-1.5 cursor-pointer text-xs text-amber-300">
+                <input type="checkbox" id="unknownHour" onchange="App.toggleUnknownHour(this.checked)" class="rounded bg-black/40 border-amber-400/40 text-amber-500 focus:ring-0">
+                <span class="font-semibold">태어난 시간 모름</span>
+              </label>
+            </div>
+
+            <!-- Time Inputs & 12 Ganji Quick Picker -->
+            <div id="hourInputContainer" class="space-y-2 transition-opacity">
+              <div class="grid grid-cols-2 gap-2">
+                <select id="birthHour" class="bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-400 transition"></select>
+                <select id="birthMinute" class="bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-400 transition"></select>
+              </div>
+              
+              <!-- 12 Ganji Quick Buttons -->
+              <div id="ganjiBtnGroup" class="flex items-center space-x-1 overflow-x-auto py-1 scrollbar-none text-[11px]">
+                <span class="text-slate-500 text-[10px] shrink-0 mr-1">시진:</span>
+                <button type="button" onclick="App.setGanjiTime(0)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">자(23~01)</button>
+                <button type="button" onclick="App.setGanjiTime(2)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">축(01~03)</button>
+                <button type="button" onclick="App.setGanjiTime(4)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">인(03~05)</button>
+                <button type="button" onclick="App.setGanjiTime(6)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">묘(05~07)</button>
+                <button type="button" onclick="App.setGanjiTime(8)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">진(07~09)</button>
+                <button type="button" onclick="App.setGanjiTime(10)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">사(09~11)</button>
+                <button type="button" onclick="App.setGanjiTime(12)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">오(11~13)</button>
+                <button type="button" onclick="App.setGanjiTime(14)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">미(13~15)</button>
+                <button type="button" onclick="App.setGanjiTime(16)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">신(15~17)</button>
+                <button type="button" onclick="App.setGanjiTime(18)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">유(17~19)</button>
+                <button type="button" onclick="App.setGanjiTime(20)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">술(19~21)</button>
+                <button type="button" onclick="App.setGanjiTime(22)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 shrink-0">해(21~23)</button>
+              </div>
+            </div>
+          </div>
+
           <!-- Dynamic Expansion: Saju & Professional Time Options -->
-          <div id="advancedSajuFields" class="expandable-section space-y-4">
+          <div id="advancedSajuFields" class="expandable-section space-y-3">
             <div class="pt-2 border-t border-white/10">
-              <div class="flex items-center justify-between mb-2">
-                <label class="text-xs font-medium text-slate-300 flex items-center space-x-1.5">
-                  <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-400"></i>
-                  <span>태어난 시간 (시/분)</span>
-                </label>
-                <label class="inline-flex items-center space-x-1.5 cursor-pointer text-xs text-slate-400">
-                  <input type="checkbox" id="unknownHour" onchange="App.toggleUnknownHour(this.checked)" class="rounded bg-black/40 border-white/20 text-amber-500 focus:ring-0">
-                  <span>시간 모름 (3주 6자 정밀분석)</span>
-                </label>
-              </div>
-
-              <!-- Time Inputs & 12 Ganji Quick Picker -->
-              <div id="hourInputContainer" class="space-y-2">
-                <div class="grid grid-cols-2 gap-2">
-                  <select id="birthHour" class="bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-400 transition"></select>
-                  <select id="birthMinute" class="bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-400 transition"></select>
-                </div>
-                
-                <!-- 12 Ganji Quick Buttons -->
-                <div class="flex items-center space-x-1 overflow-x-auto py-1 scrollbar-none text-[11px]">
-                  <span class="text-slate-500 text-[10px] shrink-0 mr-1">시진 선택:</span>
-                  <button type="button" onclick="App.setGanjiTime(0)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300">자(23~01)</button>
-                  <button type="button" onclick="App.setGanjiTime(2)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300">축(01~03)</button>
-                  <button type="button" onclick="App.setGanjiTime(4)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300">인(03~05)</button>
-                  <button type="button" onclick="App.setGanjiTime(6)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300">묘(05~07)</button>
-                  <button type="button" onclick="App.setGanjiTime(8)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300">진(07~09)</button>
-                  <button type="button" onclick="App.setGanjiTime(10)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300">사(09~11)</button>
-                  <button type="button" onclick="App.setGanjiTime(12)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300">오(11~13)</button>
-                  <button type="button" onclick="App.setGanjiTime(14)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300">미(13~15)</button>
-                  <button type="button" onclick="App.setGanjiTime(16)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300">신(15~17)</button>
-                  <button type="button" onclick="App.setGanjiTime(18)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300">유(17~19)</button>
-                  <button type="button" onclick="App.setGanjiTime(20)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300">술(19~21)</button>
-                  <button type="button" onclick="App.setGanjiTime(22)" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300">해(21~23)</button>
-                </div>
-              </div>
-
               <!-- True Solar Time Adjust (30min) -->
-              <div class="mt-3 flex items-center justify-between p-2.5 rounded-xl bg-black/30 border border-white/5 text-xs">
+              <div class="flex items-center justify-between p-3 rounded-xl bg-black/40 border border-white/10 text-xs">
                 <div class="flex items-center space-x-2">
                   <i data-lucide="compass" class="w-4 h-4 text-sky-400"></i>
                   <div>
@@ -686,6 +689,15 @@
                 <p id="diagYongsinDesc" class="text-xs text-slate-300 leading-relaxed"></p>
               </div>
             </div>
+          </div>
+
+          <!-- 사주에 있는 오행 vs 없는 오행(0% 결핍) 정밀 진단 -->
+          <div class="pt-6 border-t border-white/10 space-y-3">
+            <h4 class="font-serif-kr text-sm font-bold text-amber-300 flex items-center space-x-2">
+              <i data-lucide="alert-circle" class="w-4 h-4 text-amber-400"></i>
+              <span>내 사주에 있는 기운 & 없는 오행(0% 결핍) 개운 처방</span>
+            </h4>
+            <div id="missingElementsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs"></div>
           </div>
         </div>
       </div>

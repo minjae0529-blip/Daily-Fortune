@@ -38,6 +38,21 @@ const JIJANGGAN_DATA = {
   "해": { yeo: "무", jung: "갑", jeong: "임", element: "수" }
 };
 
+// 지장간 포맷팅 헬퍼 함수
+function formatJijanggan(jiChar) {
+  const data = JIJANGGAN_DATA[jiChar];
+  if (!data) return "-";
+  const hanjaMap = {
+    "갑": "甲", "을": "乙", "병": "丙", "정": "丁", "무": "戊",
+    "기": "己", "경": "庚", "신": "辛", "임": "壬", "계": "癸"
+  };
+  const list = [];
+  if (data.yeo) list.push(`${hanjaMap[data.yeo] || data.yeo}(${data.yeo})`);
+  if (data.jung) list.push(`${hanjaMap[data.jung] || data.jung}(${data.jung})`);
+  if (data.jeong) list.push(`${hanjaMap[data.jeong] || data.jeong}(${data.jeong})`);
+  return list.join(" · ");
+}
+
 /**
  * 십신 계산 함수
  */
@@ -328,38 +343,62 @@ function calculateSaju(params) {
     });
   }
 
-  return {
-    userInfo: {
-      name,
-      gender,
-      genderKr: gender === "male" ? "남성" : "여성",
-      calendarType,
-      birthYear: solarYear,
-      birthMonth: solarMonth,
-      birthDay: solarDay,
-      birthHour,
-      birthMinute,
-      isUnknownHour,
-      lunarDate: lunarInfo,
-      solarDateString: `${solarYear}년 ${solarMonth}월 ${solarDay}일`
-    },
-    pillars,
-    iljuKey,
-    iljuDetail,
-    elements: elementWeights,
-    strengthStatus,
-    isSinGang,
-    myPower,
-    yongsin,
-    yongsinDesc,
-    sinsal,
-    daeunNumber,
-    isForward,
-    daeunList
-  };
-}
+    // 사주 원국에 없는 오행(0%) 및 과다 오행(35% 이상) 판별
+    const missingElements = [];
+    const excessElements = [];
+    const elementMeanings = {
+      "목": { name: "목(木)", lack: "추진력, 유연성, 새로운 시작의 기운 부족", remedy: "초록색 옷·식물 인테리어, 아침 산책, 독서 추천" },
+      "화": { name: "화(火)", lack: "열정, 표현력, 적극적인 대인관계 에너지 부족", remedy: "붉은색·코랄 계열 소품, 낮 시간 햇볕 쬐기, 유산소 운동 추천" },
+      "토": { name: "토(土)", lack: "끈기, 안정감, 중심을 잡는 포용력 부족", remedy: "노란색·베이지 소품, 도자기·흙 만지기, 규칙적인 식습관 추천" },
+      "금": { name: "금(金)", lack: "결단력, 절제력, 맺고 끊는 칼같은 마무리 부족", remedy: "흰색·실버 액세서리, 금속 제품 착용, 정리정돈 습관 추천" },
+      "수": { name: "수(水)", lack: "지혜, 융통성, 정서적 유연성과 쉼의 여유 부족", remedy: "블루·네이비 계열 의상, 물 자주 마시기, 반신욕·수영 추천" }
+    };
 
-window.SajuEngine = {
-  calculateSaju,
-  getTenGod
-};
+    ["목", "화", "토", "금", "수"].forEach(elKey => {
+      const weight = elementWeights[elKey];
+      if (weight === 0) {
+        missingElements.push({ element: elKey, ...elementMeanings[elKey] });
+      } else if (weight >= 35) {
+        excessElements.push({ element: elKey, weight, ...elementMeanings[elKey] });
+      }
+    });
+
+    return {
+      userInfo: {
+        name,
+        gender,
+        genderKr: gender === "male" ? "남성" : "여성",
+        calendarType,
+        birthYear: solarYear,
+        birthMonth: solarMonth,
+        birthDay: solarDay,
+        birthHour,
+        birthMinute,
+        isUnknownHour,
+        lunarDate: lunarInfo,
+        solarDateString: `${solarYear}년 ${solarMonth}월 ${solarDay}일`
+      },
+      pillars,
+      iljuKey,
+      iljuDetail,
+      elements: elementWeights,
+      missingElements,
+      excessElements,
+      strengthStatus,
+      isSinGang,
+      myPower,
+      yongsin,
+      yongsinDesc,
+      sinsal,
+      daeunNumber,
+      isForward,
+      daeunList
+    };
+  }
+
+  window.SajuEngine = {
+    calculateSaju,
+    getTenGod,
+    formatJijanggan,
+    JIJANGGAN_DATA
+  };

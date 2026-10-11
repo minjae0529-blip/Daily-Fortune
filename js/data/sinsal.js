@@ -95,6 +95,15 @@ function analyzeSinsal(sajuPillars) {
     hour ? hour.gan.char + hour.ji.char : null
   ].filter(Boolean);
 
+  const getBranchPositions = (targetChar) => {
+    const pos = [];
+    if (year.ji.char === targetChar) pos.push(`년지(${year.ji.hanja})`);
+    if (month.ji.char === targetChar) pos.push(`월지(${month.ji.hanja})`);
+    if (day.ji.char === targetChar) pos.push(`일지(${day.ji.hanja})`);
+    if (hour && hour.ji.char === targetChar) pos.push(`시지(${hour.ji.hanja})`);
+    return pos.join(", ");
+  };
+
   // 1. 천을귀인 (Day Gan criteria)
   const cheoneulMap = {
     "갑": ["축", "미"], "무": ["축", "미"], "경": ["축", "미"],
@@ -106,15 +115,15 @@ function analyzeSinsal(sajuPillars) {
   const targetCheoneul = cheoneulMap[dayGan] || [];
   const foundCheoneul = allBranches.filter(b => targetCheoneul.includes(b));
   if (foundCheoneul.length > 0) {
+    const locDesc = foundCheoneul.map(b => `${b} - ${getBranchPositions(b)}`).join("; ");
     result.push({
       ...SINSAL_DEFINITIONS["천을귀인"],
-      positions: foundCheoneul.map(b => `${b}(${foundCheoneul.indexOf(b) >= 0 ? "지지에 위치" : ""})`),
+      position: locDesc,
       detected: true
     });
   }
 
   // 2. 삼합 기반 신살 (도화, 역마, 화개)
-  // Base branch: use Day Ji or Year Ji
   const getSamhapGroup = (ji) => {
     if (["인", "오", "술"].includes(ji)) return "인오술";
     if (["사", "유", "축"].includes(ji)) return "사유축";
@@ -130,16 +139,34 @@ function analyzeSinsal(sajuPillars) {
 
   if (group) {
     // 도화살
-    if (allBranches.includes(dohwaMap[group])) {
-      result.push({ ...SINSAL_DEFINITIONS["도화살"], target: dohwaMap[group], detected: true });
+    const dohwaChar = dohwaMap[group];
+    if (allBranches.includes(dohwaChar)) {
+      result.push({
+        ...SINSAL_DEFINITIONS["도화살"],
+        target: dohwaChar,
+        position: `${dohwaChar} - ${getBranchPositions(dohwaChar)}`,
+        detected: true
+      });
     }
     // 역마살
-    if (allBranches.includes(yeokmaMap[group])) {
-      result.push({ ...SINSAL_DEFINITIONS["역마살"], target: yeokmaMap[group], detected: true });
+    const yeokmaChar = yeokmaMap[group];
+    if (allBranches.includes(yeokmaChar)) {
+      result.push({
+        ...SINSAL_DEFINITIONS["역마살"],
+        target: yeokmaChar,
+        position: `${yeokmaChar} - ${getBranchPositions(yeokmaChar)}`,
+        detected: true
+      });
     }
     // 화개살
-    if (allBranches.includes(hwagaeMap[group])) {
-      result.push({ ...SINSAL_DEFINITIONS["화개살"], target: hwagaeMap[group], detected: true });
+    const hwagaeChar = hwagaeMap[group];
+    if (allBranches.includes(hwagaeChar)) {
+      result.push({
+        ...SINSAL_DEFINITIONS["화개살"],
+        target: hwagaeChar,
+        position: `${hwagaeChar} - ${getBranchPositions(hwagaeChar)}`,
+        detected: true
+      });
     }
   }
 
@@ -149,26 +176,48 @@ function analyzeSinsal(sajuPillars) {
     "정": "유", "기": "유", "경": "해", "신": "자",
     "임": "인", "계": "묘"
   };
-  if (allBranches.includes(munchangMap[dayGan])) {
-    result.push({ ...SINSAL_DEFINITIONS["문창귀인"], target: munchangMap[dayGan], detected: true });
+  const munchangChar = munchangMap[dayGan];
+  if (allBranches.includes(munchangChar)) {
+    result.push({
+      ...SINSAL_DEFINITIONS["문창귀인"],
+      target: munchangChar,
+      position: `${munchangChar} - ${getBranchPositions(munchangChar)}`,
+      detected: true
+    });
   }
 
   // 4. 괴강살
   const goegangList = ["무진", "무술", "경진", "경술", "임진", "임술"];
-  if (allPillarsGapja.some(p => goegangList.includes(p))) {
-    result.push({ ...SINSAL_DEFINITIONS["괴강살"], detected: true });
+  const matchedGoegang = allPillarsGapja.filter(p => goegangList.includes(p));
+  if (matchedGoegang.length > 0) {
+    result.push({
+      ...SINSAL_DEFINITIONS["괴강살"],
+      position: matchedGoegang.join(", ") + " 기둥에 성립",
+      detected: true
+    });
   }
 
   // 5. 백호대살
   const baekhoList = ["갑진", "을미", "병술", "정축", "무진", "임술", "계축"];
-  if (allPillarsGapja.some(p => baekhoList.includes(p))) {
-    result.push({ ...SINSAL_DEFINITIONS["백호대살"], detected: true });
+  const matchedBaekho = allPillarsGapja.filter(p => baekhoList.includes(p));
+  if (matchedBaekho.length > 0) {
+    result.push({
+      ...SINSAL_DEFINITIONS["백호대살"],
+      position: matchedBaekho.join(", ") + " 기둥에 성립",
+      detected: true
+    });
   }
 
   // 6. 양인살
   const yanginMap = { "갑": "묘", "병": "오", "무": "오", "경": "유", "임": "자" };
-  if (allBranches.includes(yanginMap[dayGan])) {
-    result.push({ ...SINSAL_DEFINITIONS["양인살"], detected: true });
+  const yanginChar = yanginMap[dayGan];
+  if (allBranches.includes(yanginChar)) {
+    result.push({
+      ...SINSAL_DEFINITIONS["양인살"],
+      target: yanginChar,
+      position: `${yanginChar} - ${getBranchPositions(yanginChar)}`,
+      detected: true
+    });
   }
 
   return result;

@@ -135,8 +135,16 @@ const App = {
   toggleUnknownHour(isUnknown) {
     const hourSelect = document.getElementById("birthHour");
     const minuteSelect = document.getElementById("birthMinute");
+    const container = document.getElementById("hourInputContainer");
     if (hourSelect) hourSelect.disabled = isUnknown;
     if (minuteSelect) minuteSelect.disabled = isUnknown;
+    if (container) {
+      if (isUnknown) {
+        container.classList.add("opacity-30", "pointer-events-none");
+      } else {
+        container.classList.remove("opacity-30", "pointer-events-none");
+      }
+    }
   },
 
   togglePartnerActive(enabled) {
@@ -358,11 +366,15 @@ const App = {
     if (s.sinsal && s.sinsal.length > 0) {
       s.sinsal.forEach(item => {
         const div = document.createElement("div");
-        div.className = "p-3 rounded-xl bg-black/40 border border-white/5 space-y-1";
+        div.className = "p-3 rounded-xl bg-black/40 border border-white/5 space-y-1.5";
         div.innerHTML = `
           <div class="flex items-center justify-between">
             <span class="font-serif-kr text-xs font-bold text-amber-300">${item.name}</span>
             <span class="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-slate-300">${item.type}</span>
+          </div>
+          <div class="text-[11px] text-amber-400/90 font-medium flex items-center space-x-1">
+            <i data-lucide="map-pin" class="w-3 h-3"></i>
+            <span>${item.position || "사주 원국"}</span>
           </div>
           <p class="text-[11px] font-medium text-slate-200">${item.summary}</p>
           <p class="text-[10px] text-slate-400">${item.modern}</p>
@@ -405,6 +417,51 @@ const App = {
     document.getElementById("diagStrengthText").textContent = s.strengthStatus;
     document.getElementById("diagPowerSummary").textContent = `내 기운(비겁+인성)의 비중이 ${s.myPower}%로, ${s.strengthStatus}의 특성을 나타냅니다. 주관과 뚝심이 확실하며 자신만의 영역을 구축하는 힘이 있습니다.`;
     document.getElementById("diagYongsinDesc").textContent = s.yongsinDesc;
+
+    // 사주에 없는 오행(0% 결핍) 및 과다 오행 렌더링
+    const missingContainer = document.getElementById("missingElementsContainer");
+    if (missingContainer) {
+      missingContainer.innerHTML = "";
+      if (s.missingElements && s.missingElements.length > 0) {
+        s.missingElements.forEach(m => {
+          const card = document.createElement("div");
+          card.className = "p-3 rounded-xl bg-rose-950/20 border border-rose-500/30 space-y-1";
+          card.innerHTML = `
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-rose-300">⚠️ 없는 오행: ${m.name} (0% 결핍)</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300">보완 필요</span>
+            </div>
+            <p class="text-[11px] text-slate-300">• <strong>특징:</strong> ${m.lack}</p>
+            <p class="text-[11px] text-emerald-300">• <strong>개운 처방:</strong> ${m.remedy}</p>
+          `;
+          missingContainer.appendChild(card);
+        });
+      }
+
+      if (s.excessElements && s.excessElements.length > 0) {
+        s.excessElements.forEach(e => {
+          const card = document.createElement("div");
+          card.className = "p-3 rounded-xl bg-amber-950/20 border border-amber-500/30 space-y-1";
+          card.innerHTML = `
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-amber-300">🔥 과다한 오행: ${e.name} (${e.weight}%)</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">과유불급</span>
+            </div>
+            <p class="text-[11px] text-slate-300">해당 기운이 강하여 고집이나 편중이 생길 수 있으니, 에너지를 분산하는 취미나 대외 활동으로 완화하세요.</p>
+          `;
+          missingContainer.appendChild(card);
+        });
+      }
+
+      if ((!s.missingElements || s.missingElements.length === 0) && (!s.excessElements || s.excessElements.length === 0)) {
+        missingContainer.innerHTML = `
+          <div class="p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/30 col-span-2 text-center">
+            <span class="font-bold text-emerald-300 block mb-1">🎉 축복받은 오행구족(五行具足) 사주</span>
+            <p class="text-slate-300">목·화·토·금·수의 5대 에너지가 결핍 없이 골고루 갖추어져 있어, 인생의 굴곡이 적고 원만하게 복록을 누리는 사주입니다.</p>
+          </div>
+        `;
+      }
+    }
 
     // 5. 연애 & 궁합 탭
     document.getElementById("loveDnaDesc").textContent = `${s.userInfo.name} 님은 일지에 [${s.pillars.day.ji.element}] 오행의 기운을 품고 있어, ${s.iljuDetail.loveStyle}`;
@@ -464,8 +521,7 @@ const App = {
       if (document.getElementById(tenGodGanId)) document.getElementById(tenGodGanId).textContent = tenGodGan || "-";
       if (document.getElementById(tenGodJiId)) document.getElementById(tenGodJiId).textContent = tenGodJi || "-";
       if (document.getElementById(jijangganId) && jiChar) {
-        const jg = window.CalendarEngine.EARTHLY_BRANCHES.find(b => b.char === jiChar);
-        document.getElementById(jijangganId).textContent = `지장간: ${jg ? jg.animal : ""}`;
+        document.getElementById(jijangganId).textContent = `지장간: ${window.SajuEngine.formatJijanggan(jiChar)}`;
       }
     };
 

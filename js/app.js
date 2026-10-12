@@ -500,13 +500,16 @@ const App = {
     hourlyContainer.innerHTML = "";
     f.hourlyFlow.forEach(h => {
       const card = document.createElement("div");
-      card.className = "p-2.5 rounded-xl bg-slate-50 border border-slate-300";
+      card.className = "p-3 rounded-2xl bg-slate-50 border border-slate-300 flex flex-col justify-between space-y-2 overflow-hidden shadow-sm";
       card.innerHTML = `
-        <div class="flex items-center justify-between text-xs mb-0.5">
-          <span class="text-slate-700 text-xs font-bold">${h.time}</span>
-          <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300">${h.status}</span>
+        <div class="flex items-center justify-between text-xs flex-wrap gap-1">
+          <span class="text-slate-900 font-extrabold text-xs">${h.time}</span>
+          <div class="flex items-center space-x-1 shrink-0">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-50 text-indigo-900 border border-indigo-200">${h.tenGodBadge || '기운'}</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${h.statusBadgeClass || 'bg-amber-100 text-amber-900'}">${h.status}</span>
+          </div>
         </div>
-        <p class="text-xs text-slate-700 font-medium">${h.desc}</p>
+        <p class="text-xs text-slate-700 font-medium leading-relaxed" style="word-break: keep-all; overflow-wrap: break-word;">${h.desc}</p>
       `;
       hourlyContainer.appendChild(card);
     });

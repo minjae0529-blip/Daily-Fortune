@@ -116,23 +116,39 @@ function calculateSaju(params) {
     adjust30Min = true
   } = params;
 
-  let solarYear = parseInt(birthYear, 10);
-  let solarMonth = parseInt(birthMonth, 10);
-  let solarDay = parseInt(birthDay, 10);
+  const rawYear = parseInt(birthYear, 10);
+  const rawMonth = parseInt(birthMonth, 10);
+  const rawDay = parseInt(birthDay, 10);
+  const isLunar = calendarType === "lunar";
 
-  // 음력 입력인 경우 양력으로 변환
+  let solarYear = rawYear;
+  let solarMonth = rawMonth;
+  let solarDay = rawDay;
   let lunarInfo = null;
-  if (calendarType === "lunar") {
-    const converted = window.CalendarEngine.lunarToSolar(solarYear, solarMonth, solarDay, isLeap);
+
+  // 음력 입력인 경우: KASI 정본 천문 역법에 따라 양력 날짜로 정확히 변환
+  if (isLunar) {
+    let converted = null;
+    if (typeof window !== "undefined" && window.Manseryeok && typeof window.Manseryeok.lunarToSolar === "function") {
+      converted = window.Manseryeok.lunarToSolar(rawYear, rawMonth, rawDay, Boolean(isLeap));
+    } else if (window.CalendarEngine) {
+      converted = window.CalendarEngine.lunarToSolar(rawYear, rawMonth, rawDay, Boolean(isLeap));
+    }
     if (!converted) {
       throw new Error("음력 날짜 변환 범위를 벗어났습니다 (1900~2049 지원)");
     }
-    lunarInfo = { year: solarYear, month: solarMonth, day: solarDay, isLeap };
     solarYear = converted.year;
     solarMonth = converted.month;
     solarDay = converted.day;
+    lunarInfo = { year: rawYear, month: rawMonth, day: rawDay, isLeap: Boolean(isLeap) };
   } else {
-    lunarInfo = window.CalendarEngine.solarToLunar(solarYear, solarMonth, solarDay);
+    // 양력 입력인 경우: 음력 정보 산출
+    if (typeof window !== "undefined" && window.Manseryeok && typeof window.Manseryeok.solarToLunar === "function") {
+      const l = window.Manseryeok.solarToLunar(rawYear, rawMonth, rawDay);
+      lunarInfo = { year: l.year, month: l.month, day: l.day, isLeap: l.isLeapMonth };
+    } else if (window.CalendarEngine) {
+      lunarInfo = window.CalendarEngine.solarToLunar(rawYear, rawMonth, rawDay);
+    }
   }
 
   let yearGan = null, yearJi = null;
@@ -148,6 +164,11 @@ function calculateSaju(params) {
     try {
       const bHour = isUnknownHour ? 12 : (birthHour !== null ? birthHour : 12);
       const bMin = isUnknownHour ? 0 : (birthMinute !== null ? birthMinute : 0);
+
+      // ★ 핵심 수정: solarYear, solarMonth, solarDay는 이미 정확한 양력 기준일이므로
+      // isLunar: false로 넘겨 엔진 내부에서 이중 변환(Double Conversion)되는 치명적 버그 방지!
+      // 또한 applyEquationOfTime(균시차)은 시중 인터넷 만세력에서 일체 적용하지 않는 천문 변동치이므로
+      // false로 설정해야 원광만세력·사주링크·점신 등 상용 인터넷 만세력과 100% 동일하게 일치함.
       const fp = window.Manseryeok.calculateFourPillars({
         year: solarYear,
         month: solarMonth,
@@ -155,11 +176,11 @@ function calculateSaju(params) {
         hour: bHour,
         minute: bMin,
         gender: gender === "female" ? "female" : "male",
-        isLunar: calendarType === "lunar",
-        isLeapMonth: Boolean(isLeap),
+        isLunar: false,
+        isLeapMonth: false,
         trueSolarTime: adjust30Min ? {
           longitude: 127.5,
-          applyEquationOfTime: true,
+          applyEquationOfTime: false, // 균시차 배제하여 인터넷 만세력 표준(-30분)과 일치
           applyHistoricalDst: true
         } : undefined,
         dayBoundary: params.dayBoundary || "splitJasi"
@@ -187,7 +208,7 @@ function calculateSaju(params) {
     }
   }
 
-  // Fallback calculation
+  // Fallback calculation (만세력 라이브러리 예외 시 안전 백업)
   if (!yearGan || !yearJi || !dayGan || !dayJi) {
     const ipchun = window.CalendarEngine.getSolarTermDate(solarYear, 2);
     const birthDateObj = new Date(solarYear, solarMonth - 1, solarDay, birthHour || 12, birthMinute || 0);
@@ -223,7 +244,8 @@ function calculateSaju(params) {
 
     const tigerStartGanMap = { 0: 2, 5: 2, 1: 4, 6: 4, 2: 6, 7: 6, 3: 8, 8: 8, 4: 0, 9: 0 };
     const inWolGanStart = tigerStartGanMap[(yearGanIdx + 10) % 10];
-    const offsetFromIn = (monthJiIdx - 1 + 12) % 12;
+    // 인(寅, 지지 인덱스 2)월 기준 오프셋 보정 (-2)
+    const offsetFromIn = (monthJiIdx - 2 + 12) % 12;
     const monthGanIdx = (inWolGanStart + offsetFromIn) % 10;
     monthGan = window.CalendarEngine.HEAVENLY_STEMS[monthGanIdx];
     monthJi = window.CalendarEngine.EARTHLY_BRANCHES[monthJiIdx];

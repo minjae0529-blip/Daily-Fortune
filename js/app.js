@@ -188,9 +188,11 @@ const App = {
     const advFields = document.getElementById("advancedSajuFields");
     const partnerFields = document.getElementById("partnerSection");
     const submitBtnText = document.getElementById("submitBtnText");
+    const formBadgeText = document.getElementById("formBadgeText");
+    const formTitleText = document.getElementById("formTitleText");
 
-    const activeBtnClass = "py-3 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center space-x-1.5 bg-white text-slate-900 shadow-sm border border-slate-300";
-    const inactiveBtnClass = "py-3 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center justify-center space-x-1.5 text-slate-700 hover:text-slate-900";
+    const activeBtnClass = "py-3 px-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center space-x-1.5 bg-stone-900 text-amber-200 shadow-md border border-stone-800";
+    const inactiveBtnClass = "py-3 px-2 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center justify-center space-x-1.5 text-stone-700 hover:text-stone-950";
 
     if (btnDaily) btnDaily.className = (mode === "daily") ? activeBtnClass : inactiveBtnClass;
     if (btnSaju) btnSaju.className = (mode === "saju") ? activeBtnClass : inactiveBtnClass;
@@ -201,26 +203,30 @@ const App = {
       if (sajuFormCard) sajuFormCard.classList.add("hidden");
       if (tarotStandAloneCard) tarotStandAloneCard.classList.remove("hidden");
       if (heroTitle) heroTitle.textContent = "마음을 비추는 3-Card 타로";
-      if (heroSubtitle) heroSubtitle.textContent = "질문 주제를 선택하고, 펼쳐진 카드 중 3장을 직접 골라 과거·현재·미래의 해답을 확인하세요.";
+      if (heroSubtitle) heroSubtitle.textContent = "질문 주제를 선택하고, 펼쳐진 카드 중 3장을 직접 골라 과거·현재·미래의 현실적 조언을 확인하세요.";
       this.resetTarotSpread();
     } else if (mode === "daily") {
-      // 🔮 오늘의 운세 뷰 활성화
+      // ☀️ 오늘의 운세 뷰 활성화
       if (sajuFormCard) sajuFormCard.classList.remove("hidden");
       if (tarotStandAloneCard) tarotStandAloneCard.classList.add("hidden");
       if (advFields) advFields.classList.add("hidden");
       if (partnerFields) partnerFields.classList.remove("expanded");
-      if (heroTitle) heroTitle.textContent = "오늘 하루의 기운과 행운";
-      if (heroSubtitle) heroSubtitle.textContent = "오늘 일진과 시간대별 길흉, 행운의 컬러 & 방위를 간편하게 확인하세요.";
-      if (submitBtnText) submitBtnText.textContent = "🔮 오늘 하루 운세 확인하기";
+      if (heroTitle) heroTitle.textContent = "하늘의 기운과 오늘의 천기(天氣)";
+      if (heroSubtitle) heroSubtitle.textContent = "오늘 하루의 일진(日辰) 바이오리듬과 시간대별 길흉, 행운의 색상과 방위를 짚어드립니다.";
+      if (formBadgeText) formBadgeText.textContent = "☀️ 오늘의 운세 모드";
+      if (formTitleText) formTitleText.textContent = "오늘의 운세를 위한 생년월일시(四柱) 입력";
+      if (submitBtnText) submitBtnText.textContent = "오늘의 일진 & 운세 풀이 보기 ☀️";
     } else {
-      // 📜 사주 뷰 활성화 (연애운·앞으로 나아갈 방향·대운 포함)
+      // 📜 정통 사주 뷰 활성화 (연애운·앞으로 나아갈 방향·대운 포함)
       if (sajuFormCard) sajuFormCard.classList.remove("hidden");
       if (tarotStandAloneCard) tarotStandAloneCard.classList.add("hidden");
       if (advFields) advFields.classList.remove("hidden");
       if (partnerFields) partnerFields.classList.add("expanded");
-      if (heroTitle) heroTitle.textContent = "한국천문연구원 정통 사주 만세력";
-      if (heroSubtitle) heroSubtitle.textContent = "KASI 정본 역법으로 사주팔자 4주 8자, 연애운, 앞으로 나아갈 방향, 오행 밸런스를 정밀 분석합니다.";
-      if (submitBtnText) submitBtnText.textContent = "📜 정통 사주 4주 8자 분석하기";
+      if (heroTitle) heroTitle.textContent = "정통 만세력 사주팔자(四柱八字)";
+      if (heroSubtitle) heroSubtitle.textContent = "KASI 정본 역법으로 사주 4주 8자, 십신, 신강신약, 용신, 앞으로 나아갈 미래 로드맵을 심층 분석합니다.";
+      if (formBadgeText) formBadgeText.textContent = "📜 정통 사주팔자 모드";
+      if (formTitleText) formTitleText.textContent = "사주 원국 도출을 위한 생년월일시(四柱) 입력";
+      if (submitBtnText) submitBtnText.textContent = "정통 사주 4주 8자 & 미래 로드맵 풀기 📜";
     }
 
     if (window.lucide) window.lucide.createIcons();

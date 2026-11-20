@@ -50,6 +50,49 @@ const HADO_NUMBERS = {
   "토": [5, 10]
 };
 
+// 12운성 (十二運星) 정통 명리학 조견표 및 에너지 레벨 (포스텔러·점신 일진 핵심 지표)
+const TWELVE_STAGES_ORDER = ["장생", "목욕", "관대", "건록", "제왕", "쇠", "병", "사", "묘", "절", "태", "양"];
+const BRANCH_RING = ["자", "축", "인", "묘", "진", "사", "오", "미", "신", "유", "술", "해"];
+// 각 천간별 '장생(長生)'이 시작되는 지지와 순행(1)/역행(-1)
+const JANGSAENG_START = {
+  "갑": { start: "해", dir: 1 },
+  "을": { start: "오", dir: -1 },
+  "병": { start: "인", dir: 1 },
+  "정": { start: "유", dir: -1 },
+  "무": { start: "인", dir: 1 },
+  "기": { start: "유", dir: -1 },
+  "경": { start: "사", dir: 1 },
+  "신": { start: "자", dir: -1 },
+  "임": { start: "신", dir: 1 },
+  "계": { start: "묘", dir: -1 }
+};
+
+const TWELVE_STAGE_INFO = {
+  "장생": { hanja: "長生", power: 88, badge: "새출발·후원", desc: "갓 태어난 생명처럼 주변의 도움과 새로운 기회가 열리는 상쾌한 상승 에너지입니다." },
+  "목욕": { hanja: "沐浴", power: 78, badge: "매력·주목", desc: "사람들의 시선을 사로잡는 매력과 예술적 감수성이 빛나나 충동적 선택은 조심하세요." },
+  "관대": { hanja: "冠帶", power: 90, badge: "전진·명예", desc: "제복을 입고 세상에 나서는 청년처럼 의욕과 추진력이 넘쳐 승진·발표에 매우 유리합니다." },
+  "건록": { hanja: "建祿", power: 95, badge: "자립·안정", desc: "가장 탄탄하고 안정된 실력을 발휘하는 시기로 실무 성과와 재물 결실이 확실하게 따릅니다." },
+  "제왕": { hanja: "帝旺", power: 98, badge: "최전성기·리더", desc: "에너지가 정점에 달한 황제의 기운입니다. 주도권을 쥐고 과감하게 결단하되 겸손을 겸비하세요." },
+  "쇠":   { hanja: "衰",   power: 82, badge: "노련함·지혜", desc: "전성기를 지나 원숙한 지혜로 실속을 챙기는 날입니다. 무리한 확장보다 조율에 강합니다." },
+  "병":   { hanja: "病",   power: 72, badge: "배려·통찰", desc: "감수성과 공감 능력이 깊어지는 날입니다. 육체적 과로를 피하고 기획과 소통에 집중하세요." },
+  "사":   { hanja: "死",   power: 68, badge: "집중·학문", desc: "외부 활동보다 고도의 정신적 집중력과 연구, 공부, 내면 성찰에서 큰 깨달음을 얻습니다." },
+  "묘":   { hanja: "墓",   power: 74, badge: "저축·내실", desc: "자산을 갈무리하고 금고에 모으는 기운입니다. 불필요한 지출을 막고 실속을 다지기 좋습니다." },
+  "절":   { hanja: "絶",   power: 70, badge: "반전·환기", desc: "과거의 매듭을 끊고 새로운 국면으로 전환하는 시기입니다. 기분 전환과 발상의 전환이 길합니다." },
+  "태":   { hanja: "胎",   power: 76, badge: "구상·씨앗", desc: "새로운 아이디어나 계획이 잉태되는 날입니다. 시작 단계의 기획과 희망찬 설계를 세워보세요." },
+  "양":   { hanja: "養",   power: 84, badge: "축적·평온", desc: "따뜻한 보살핌 속에서 실력을 기르고 에너지를 차분히 축적하며 내실을 키우는 평화로운 날입니다." }
+};
+
+function getTwelveStage(dayGanChar, targetJiChar) {
+  const cfg = JANGSAENG_START[dayGanChar] || JANGSAENG_START["갑"];
+  const startIdx = BRANCH_RING.indexOf(cfg.start);
+  const targetIdx = BRANCH_RING.indexOf(targetJiChar);
+  if (startIdx === -1 || targetIdx === -1) return { name: "건록", ...TWELVE_STAGE_INFO["건록"] };
+  const diff = (targetIdx - startIdx) * cfg.dir;
+  const stageIdx = ((diff % 12) + 12) % 12;
+  const stageName = TWELVE_STAGES_ORDER[stageIdx];
+  return { name: stageName, ...TWELVE_STAGE_INFO[stageName] };
+}
+
 // 십신별 상세 일진 가이드
 const DAILY_TENGOD_GUIDE = {
   "비견(比肩)": {
@@ -383,6 +426,16 @@ function calculateDailyFortune(sajuResult, targetDate = new Date(), maybeMonth, 
     };
   });
 
+  const todayTwelveStage = getTwelveStage(userDayGan.char, todayIljin.ji.char);
+  const hapChungSignals = [];
+  if (hasGanHap) hapChungSignals.push({ type: "HAP", label: "천간합(天干合)", desc: ganHapDesc });
+  if (hasJiHap) hapChungSignals.push({ type: "HAP", label: "지지육합(地支六合)", desc: jiHapDesc });
+  if (hasGanChung) hapChungSignals.push({ type: "CHUNG", label: "천간충(天干沖)", desc: `${ganPair}충 - 생각의 전환과 언행 신중` });
+  if (hasJiChung) hapChungSignals.push({ type: "CHUNG", label: "지지충(地支沖)", desc: jiChungDesc });
+  if (hapChungSignals.length === 0) {
+    hapChungSignals.push({ type: "NEUTRAL", label: "평온상생(平穩)", desc: "원국과 일진이 큰 충돌 없이 조화롭게 순환하는 안정적인 날입니다." });
+  }
+
   return {
     dateString: `${tYear}년 ${tMonth}월 ${tDay}일`,
     todayIljin: {
@@ -393,6 +446,8 @@ function calculateDailyFortune(sajuResult, targetDate = new Date(), maybeMonth, 
     },
     totalScore,
     todayTenGod,
+    twelveStage: todayTwelveStage,
+    hapChungSignals,
     theme: guide.theme,
     summary: guide.summary,
     action: guide.action,

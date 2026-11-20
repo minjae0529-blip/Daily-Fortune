@@ -109,17 +109,414 @@ const App = {
   mascotQuoteIdx: 0,
   isBlessingOpen: false,
 
+  // 유료화 (500원 사주 간편결제 - 토스/카카오/네이버페이) 상태
+  isPremiumUnlocked: false,
+  selectedPayMethod: "TOSS_PAY",
+  lastSavedSajuId: null,
+  lastReceipt: null,
+
+  // 회원가입 · 보안 로그인 · SMS 휴면해제 상태
+  currentAccount: null,
+  latestDemoSmsCode: null,
+  latestSmsLoginId: null,
+
   init() {
     this.populateDateSelects();
     this.initRealtimeBanner();
     this.initTarotDeck();
     this.setMode("daily");
+    this.checkAuthSession();
 
     // 초기 수호동물 설정
     this.currentMascot = ZODIAC_MASCOTS["진"] || Object.values(ZODIAC_MASCOTS)[0];
 
     if (window.lucide) {
       window.lucide.createIcons();
+    }
+  },
+
+  // ==========================================================================
+  // 🛡️ 회원가입 · 보안 로그인 (5회 오류 SMS 발송 / 10회 오류 휴면화 / SQL 인젝션 방어)
+  // ==========================================================================
+  hasClientSqlInjection(str) {
+    if (!str) return false;
+    const pattern = /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|ALTER|CREATE|TRUNCATE|EXEC|SLEEP)\b)|(--|\/\*|\*\/|;)|('.*\b(OR|AND)\b.*=)|(\b(OR|AND)\b\s+\d+\s*=\s*\d+)/i;
+    return pattern.test(str);
+  },
+
+  async checkAuthSession() {
+    try {
+      const res = await fetch("/api/auth/me");
+      const result = await res.json();
+      if (result && result.success && result.data && result.data.authenticated) {
+        this.enterAuthenticatedService(result.data);
+      } else {
+        this.showAuthGateScreen();
+      }
+    } catch (e) {
+      this.showAuthGateScreen();
+    }
+  },
+
+  showAuthGateScreen() {
+    this.currentAccount = null;
+    const authSec = document.getElementById("authSection");
+    const inputSec = document.getElementById("inputSection");
+    const resultSec = document.getElementById("resultSection");
+    const userBox = document.getElementById("headerUserBox");
+    const vaultBtn = document.getElementById("headerVaultBtn");
+    const headerAiBtn = document.getElementById("headerAiChatBtn");
+    const aiFabBox = document.getElementById("aiChatbotFloatingContainer");
+    const aiDrawer = document.getElementById("aiChatbotDrawer");
+
+    if (authSec) authSec.classList.remove("hidden");
+    if (inputSec) inputSec.classList.add("hidden");
+    if (resultSec) resultSec.classList.add("hidden");
+    if (userBox) {
+      userBox.classList.add("hidden");
+      userBox.classList.remove("flex");
+    }
+    if (vaultBtn) {
+      vaultBtn.classList.add("hidden");
+      vaultBtn.classList.remove("flex");
+    }
+    // 로그인 전에는 AI 도사 챗봇 버튼 및 드로어를 전면 숨김
+    if (headerAiBtn) {
+      headerAiBtn.classList.add("hidden");
+      headerAiBtn.classList.remove("flex");
+    }
+    if (aiFabBox) {
+      aiFabBox.classList.add("hidden");
+      aiFabBox.classList.remove("flex");
+    }
+    if (aiDrawer) {
+      this.isAiChatOpen = false;
+      aiDrawer.classList.add("hidden", "hidden-drawer");
+    }
+  },
+
+  enterAuthenticatedService(accountData) {
+    this.currentAccount = accountData;
+    const authSec = document.getElementById("authSection");
+    const inputSec = document.getElementById("inputSection");
+    const resultSec = document.getElementById("resultSection");
+    const userBox = document.getElementById("headerUserBox");
+    const userNameText = document.getElementById("headerUserNameText");
+    const vaultBtn = document.getElementById("headerVaultBtn");
+    const headerAiBtn = document.getElementById("headerAiChatBtn");
+    const aiFabBox = document.getElementById("aiChatbotFloatingContainer");
+    const aiDrawer = document.getElementById("aiChatbotDrawer");
+
+    if (authSec) authSec.classList.add("hidden");
+    if (resultSec) resultSec.classList.add("hidden");
+    if (inputSec) inputSec.classList.remove("hidden");
+
+    if (userBox) {
+      userBox.classList.remove("hidden");
+      userBox.classList.add("flex");
+    }
+    if (userNameText) {
+      userNameText.textContent = `👤 ${accountData.name}(${accountData.loginId}) 님`;
+    }
+    if (vaultBtn) {
+      vaultBtn.classList.remove("hidden");
+      vaultBtn.classList.add("flex");
+    }
+    // 로그인 완료 시에만 AI 도사 챗봇 런처 버튼 및 드로어 활성화
+    if (headerAiBtn) {
+      headerAiBtn.classList.remove("hidden");
+      headerAiBtn.classList.add("flex");
+    }
+    if (aiFabBox) {
+      aiFabBox.classList.remove("hidden");
+      aiFabBox.classList.add("flex");
+    }
+    if (aiDrawer) {
+      aiDrawer.classList.remove("hidden");
+    }
+    this.updateAiContextStatus();
+
+    const userNameInput = document.getElementById("userName");
+    if (userNameInput && accountData.name) {
+      userNameInput.value = accountData.name;
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  },
+
+  async logoutAccount() {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch (e) {}
+    this.showAuthGateScreen();
+    this.switchAuthTab("login");
+    this.showAuthAlert("info", "로그아웃되었습니다. 다시 로그인해주세요.");
+  },
+
+  switchAuthTab(tabName, keepAlert = false) {
+    const tabs = ["login", "signup", "unlock"];
+    const titles = {
+      login: "회원 로그인 (號牌 認證)",
+      signup: "신규 회원가입 (名簿 登錄)",
+      unlock: "휴대폰 SMS 인증 휴면·잠금 해제"
+    };
+
+    const activeCls = "py-2.5 px-2 rounded-md font-bold bg-[#231710] text-[#f7d88c] shadow-sm border border-[#b48a4e] transition";
+    const inactiveCls = "py-2.5 px-2 rounded-md font-semibold text-[#36281c] hover:text-black transition";
+
+    tabs.forEach(t => {
+      const btn = document.getElementById(`authTabBtn-${t}`);
+      const pane = document.getElementById(`${t}FormPane`);
+      if (btn) btn.className = (t === tabName) ? activeCls : inactiveCls;
+      if (pane) {
+        if (t === tabName) pane.classList.remove("hidden");
+        else pane.classList.add("hidden");
+      }
+    });
+
+    const cardTitle = document.getElementById("authCardTitle");
+    if (cardTitle) cardTitle.textContent = titles[tabName] || titles.login;
+
+    if (!keepAlert) {
+      const alertBox = document.getElementById("authAlertBox");
+      if (alertBox) alertBox.classList.add("hidden");
+    }
+  },
+
+  showAuthAlert(type, message) {
+    const box = document.getElementById("authAlertBox");
+    if (!box) return;
+    box.classList.remove("hidden");
+
+    if (type === "success") {
+      box.className = "p-3.5 rounded-xl border-2 border-emerald-400 bg-emerald-50 text-emerald-950 text-xs font-bold leading-relaxed";
+    } else if (type === "dormant") {
+      box.className = "p-3.5 rounded-xl border-2 border-rose-600 bg-rose-950 text-amber-200 text-xs font-extrabold leading-relaxed shadow-md";
+    } else if (type === "warning") {
+      box.className = "p-3.5 rounded-xl border-2 border-amber-500 bg-amber-50 text-amber-950 text-xs font-bold leading-relaxed";
+    } else {
+      box.className = "p-3.5 rounded-xl border-2 border-rose-400 bg-rose-50 text-rose-950 text-xs font-bold leading-relaxed";
+    }
+    box.textContent = message;
+  },
+
+  showSmsBanner(maskedPhone, message, code, loginId) {
+    this.latestDemoSmsCode = code;
+    this.latestSmsLoginId = loginId;
+
+    const banner = document.getElementById("smsNotificationBanner");
+    const phoneEl = document.getElementById("smsPhoneTargetText");
+    const bodyEl = document.getElementById("smsMessageBodyText");
+    const codeEl = document.getElementById("smsCodeHighlight");
+
+    if (banner) banner.classList.remove("hidden");
+    if (phoneEl) phoneEl.textContent = `수신번호: ${maskedPhone || "010-****-****"}`;
+    if (bodyEl) bodyEl.textContent = message || "";
+    if (codeEl) codeEl.textContent = code || "------";
+  },
+
+  applyDemoSmsCodeToUnlock() {
+    this.switchAuthTab("unlock", true);
+    const unlockId = document.getElementById("unlockIdInput");
+    const unlockCode = document.getElementById("unlockCodeInput");
+    if (unlockId && this.latestSmsLoginId) unlockId.value = this.latestSmsLoginId;
+    if (unlockCode && this.latestDemoSmsCode) unlockCode.value = this.latestDemoSmsCode;
+    this.showAuthAlert("warning", "인증번호가 자동 입력되었습니다. 가입 시 등록한 휴대폰 번호를 입력하고 [SMS 인증번호 확인 및 계정 휴면·오류 초기화] 버튼을 눌러주세요.");
+  },
+
+  async checkDuplicateLoginId() {
+    const idInput = document.getElementById("signupIdInput");
+    const msgEl = document.getElementById("signupIdCheckMsg");
+    const loginId = idInput ? idInput.value.trim() : "";
+
+    if (this.hasClientSqlInjection(loginId)) {
+      this.showAuthAlert("error", "🚨 [SQL 인젝션 차단] 아이디에 허용되지 않는 SQL 예약어 또는 특수기호가 포함되어 있습니다.");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/auth/check-id?loginId=${encodeURIComponent(loginId)}`);
+      const result = await res.json();
+      if (result.success) {
+        if (msgEl) {
+          msgEl.textContent = "✅ " + result.message;
+          msgEl.className = "text-[11px] text-emerald-700 mt-1 font-extrabold";
+        }
+        this.showAuthAlert("success", "✅ " + result.message);
+      } else {
+        if (msgEl) {
+          msgEl.textContent = "⚠️ " + result.message;
+          msgEl.className = "text-[11px] text-rose-700 mt-1 font-extrabold";
+        }
+        this.showAuthAlert("error", "⚠️ " + result.message);
+      }
+    } catch (e) {
+      this.showAuthAlert("error", "중복 확인 중 서버 통신 오류가 발생했습니다.");
+    }
+  },
+
+  async handleSignupSubmit(e) {
+    e.preventDefault();
+    const loginId = document.getElementById("signupIdInput").value.trim();
+    const password = document.getElementById("signupPwInput").value;
+    const passwordConfirm = document.getElementById("signupPwConfirmInput").value;
+    const name = document.getElementById("signupNameInput").value.trim();
+    const phoneNumber = document.getElementById("signupPhoneInput").value.trim();
+
+    if (this.hasClientSqlInjection(loginId) || this.hasClientSqlInjection(name) || this.hasClientSqlInjection(phoneNumber)) {
+      this.showAuthAlert("error", "🚨 [SQL 인젝션 방어] 입력값에 SQL 공격 의심 구문(SELECT, DROP, OR 1=1, --, ; 등)이 감지되어 차단되었습니다.");
+      return;
+    }
+
+    if (password !== passwordConfirm) {
+      this.showAuthAlert("error", "⚠️ 비밀번호와 비밀번호 확인이 일치하지 않습니다.");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ loginId, password, name, phoneNumber, gender: "M", birthYear: 1996, birthMonth: 5, birthDay: 15 })
+      });
+      const result = await res.json();
+      if (result.success && result.data) {
+        this.enterAuthenticatedService(result.data);
+      } else {
+        this.showAuthAlert("error", result.message || "회원가입에 실패했습니다.");
+      }
+    } catch (err) {
+      this.showAuthAlert("error", "회원가입 처리 중 오류가 발생했습니다.");
+    }
+  },
+
+  async handleLoginSubmit(e) {
+    e.preventDefault();
+    const loginId = document.getElementById("loginIdInput").value.trim();
+    const password = document.getElementById("loginPwInput").value;
+
+    if (this.hasClientSqlInjection(loginId) || this.hasClientSqlInjection(password)) {
+      this.showAuthAlert("error", "🚨 [SQL 인젝션 방어] 로그인 입력값에 SQL 인젝션 공격 시그니처가 감지되어 즉시 차단되었습니다.");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ loginId, password })
+      });
+      const result = await res.json();
+      const status = result.data;
+
+      // 로그인 성공
+      if (result.success && status && status.authenticated) {
+        const banner = document.getElementById("smsNotificationBanner");
+        if (banner) banner.classList.add("hidden");
+        this.enterAuthenticatedService(status);
+        return;
+      }
+
+      // 로그인 실패 시 횟수 및 단계별 처리
+      if (status) {
+        const attempts = status.failedAttempts || 0;
+        const badge = document.getElementById("loginAttemptCounterBadge");
+        if (badge) {
+          badge.textContent = `오류 횟수: ${attempts}회 (5회 문자발송 / 10회 계정휴면)`;
+        }
+
+        // 5회 이상 실패 또는 10회 휴면화 시 휴대폰 SMS 문자 도착 시뮬레이션 배너 표출
+        if (status.smsSent && status.demoSmsCode) {
+          this.showSmsBanner(status.maskedPhone, status.smsPreviewMessage, status.demoSmsCode, status.loginId || loginId);
+        }
+
+        // 10회 이상 실패로 계정이 휴면화된 경우 -> 휴면 해제 탭으로 자동 전환
+        if (status.accountStatus === "DORMANT_LOCKED" || attempts >= 10) {
+          const unlockId = document.getElementById("unlockIdInput");
+          if (unlockId) unlockId.value = status.loginId || loginId;
+          this.switchAuthTab("unlock", true);
+          this.showAuthAlert("dormant", result.message);
+          return;
+        }
+
+        // 5~9회 실패 (휴대폰 문자 발송 + 경고)
+        if (attempts >= 5) {
+          this.showAuthAlert("error", result.message);
+          return;
+        }
+      }
+
+      // 1~4회 실패 (5회 미만 경고)
+      this.showAuthAlert("warning", result.message || "아이디 또는 비밀번호가 일치하지 않습니다.");
+    } catch (err) {
+      this.showAuthAlert("error", "로그인 서버 통신 중 오류가 발생했습니다.");
+    }
+  },
+
+  async requestUnlockSmsCode() {
+    const loginId = document.getElementById("unlockIdInput").value.trim();
+    const phoneNumber = document.getElementById("unlockPhoneInput").value.trim();
+
+    if (!loginId || !phoneNumber) {
+      this.showAuthAlert("warning", "휴면 해제할 아이디와 가입 시 등록한 휴대폰 번호를 모두 입력해주세요.");
+      return;
+    }
+
+    if (this.hasClientSqlInjection(loginId) || this.hasClientSqlInjection(phoneNumber)) {
+      this.showAuthAlert("error", "🚨 [SQL 인젝션 방어] 허용되지 않는 문자열이 감지되었습니다.");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/auth/sms/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ loginId, phoneNumber })
+      });
+      const result = await res.json();
+      if (result.success && result.data) {
+        this.showSmsBanner(result.data.maskedPhone, result.data.smsPreviewMessage, result.data.demoSmsCode, loginId);
+        this.showAuthAlert("success", result.message + " 상단 SMS 도착 알림에서 인증번호를 확인하세요.");
+      } else {
+        this.showAuthAlert("error", result.message || "인증번호 발송에 실패했습니다.");
+      }
+    } catch (e) {
+      this.showAuthAlert("error", "SMS 발송 요청 중 오류가 발생했습니다.");
+    }
+  },
+
+  async handleSmsUnlockSubmit(e) {
+    e.preventDefault();
+    const loginId = document.getElementById("unlockIdInput").value.trim();
+    const phoneNumber = document.getElementById("unlockPhoneInput").value.trim();
+    const verificationCode = document.getElementById("unlockCodeInput").value.trim();
+    const newPassword = document.getElementById("unlockNewPwInput").value;
+
+    if (this.hasClientSqlInjection(loginId) || this.hasClientSqlInjection(phoneNumber) || this.hasClientSqlInjection(verificationCode)) {
+      this.showAuthAlert("error", "🚨 [SQL 인젝션 방어] 허용되지 않는 문자열이 감지되었습니다.");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/auth/sms/unlock", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ loginId, phoneNumber, verificationCode, newPassword })
+      });
+      const result = await res.json();
+      if (result.success) {
+        const banner = document.getElementById("smsNotificationBanner");
+        if (banner) banner.classList.add("hidden");
+        const badge = document.getElementById("loginAttemptCounterBadge");
+        if (badge) badge.textContent = "오류 횟수: 0 / 5회 (초기화 완료)";
+        const loginIdEl = document.getElementById("loginIdInput");
+        if (loginIdEl) loginIdEl.value = loginId;
+        this.switchAuthTab("login", true);
+        this.showAuthAlert("success", result.message);
+      } else {
+        this.showAuthAlert("error", result.message || "인증번호 검증에 실패했습니다.");
+      }
+    } catch (err) {
+      this.showAuthAlert("error", "휴면 해제 처리 중 오류가 발생했습니다.");
     }
   },
 
@@ -191,8 +588,8 @@ const App = {
     const formBadgeText = document.getElementById("formBadgeText");
     const formTitleText = document.getElementById("formTitleText");
 
-    const activeBtnClass = "py-3 px-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center space-x-1.5 bg-stone-900 text-amber-200 shadow-md border border-stone-800";
-    const inactiveBtnClass = "py-3 px-2 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center justify-center space-x-1.5 text-stone-700 hover:text-stone-950";
+    const activeBtnClass = "py-3 px-2 rounded-md text-xs sm:text-sm font-bold transition flex items-center justify-center space-x-1.5 bg-[#231710] text-[#f7d88c] shadow-md border border-[#b48a4e]";
+    const inactiveBtnClass = "py-3 px-2 rounded-md text-xs sm:text-sm font-semibold transition flex items-center justify-center space-x-1.5 text-[#36281c] hover:text-black";
 
     if (btnDaily) btnDaily.className = (mode === "daily") ? activeBtnClass : inactiveBtnClass;
     if (btnSaju) btnSaju.className = (mode === "saju") ? activeBtnClass : inactiveBtnClass;
@@ -213,9 +610,9 @@ const App = {
       if (partnerFields) partnerFields.classList.remove("expanded");
       if (heroTitle) heroTitle.textContent = "하늘의 기운과 오늘의 천기(天氣)";
       if (heroSubtitle) heroSubtitle.textContent = "오늘 하루의 일진(日辰) 바이오리듬과 시간대별 길흉, 행운의 색상과 방위를 짚어드립니다.";
-      if (formBadgeText) formBadgeText.textContent = "☀️ 오늘의 운세 모드";
+      if (formBadgeText) formBadgeText.textContent = "☀️ 오늘의 운세 모드 (무료 FREE)";
       if (formTitleText) formTitleText.textContent = "오늘의 운세를 위한 생년월일시(四柱) 입력";
-      if (submitBtnText) submitBtnText.textContent = "오늘의 일진 & 운세 풀이 보기 ☀️";
+      if (submitBtnText) submitBtnText.textContent = "오늘의 일진 & 운세 무료 풀이 보기 ☀️";
     } else {
       // 📜 정통 사주 뷰 활성화 (연애운·앞으로 나아갈 방향·대운 포함)
       if (sajuFormCard) sajuFormCard.classList.remove("hidden");
@@ -223,10 +620,10 @@ const App = {
       if (advFields) advFields.classList.remove("hidden");
       if (partnerFields) partnerFields.classList.add("expanded");
       if (heroTitle) heroTitle.textContent = "정통 만세력 사주팔자(四柱八字)";
-      if (heroSubtitle) heroSubtitle.textContent = "KASI 정본 역법으로 사주 4주 8자, 십신, 신강신약, 용신, 앞으로 나아갈 미래 로드맵을 심층 분석합니다.";
-      if (formBadgeText) formBadgeText.textContent = "📜 정통 사주팔자 모드";
+      if (heroSubtitle) heroSubtitle.textContent = "KASI 정본 역법으로 사주 4주 8자(무료 프리뷰)와 60갑자 일주론·신살·대운·재물 심층 리포트(500원)를 분석합니다.";
+      if (formBadgeText) formBadgeText.textContent = "📜 정통 사주팔자 모드 (원국 무료 · 심층 500원)";
       if (formTitleText) formTitleText.textContent = "사주 원국 도출을 위한 생년월일시(四柱) 입력";
-      if (submitBtnText) submitBtnText.textContent = "정통 사주 4주 8자 & 미래 로드맵 풀기 📜";
+      if (submitBtnText) submitBtnText.textContent = "사주 4주 8자 원국 & 심층 리포트 조회하기 📜";
     }
 
     if (window.lucide) window.lucide.createIcons();
@@ -340,20 +737,21 @@ const App = {
       this.compatResult = null;
     }
 
-    // 결과 렌더링 및 화면 전환
+    // 결과 데이터 미리 계산 및 렌더링 준비
     this.renderResults();
-    this.saveToDatabase();
 
+    // [유료 게이트키핑] 정통 사주팔자(500원) 모드일 때는 결제를 완료해야만 결과 화면으로 넘어감!
+    if (this.currentMode === "saju") {
+      this.openPaymentModal("TOSS_PAY");
+      return;
+    }
+
+    // [무료 모드] 오늘의 운세는 결제 없이 즉시 DB 저장 및 결과 화면으로 전환
+    this.saveToDatabase();
     document.getElementById("inputSection").classList.add("hidden");
     document.getElementById("resultSection").classList.remove("hidden");
     window.scrollTo({ top: 0, behavior: "smooth" });
-
-    // 기본 탭 설정
-    if (this.currentMode === "saju") {
-      this.switchResultTab("saju");
-    } else {
-      this.switchResultTab("daily");
-    }
+    this.switchResultTab("daily");
 
     setTimeout(() => {
       this.interactMascot();
@@ -414,6 +812,7 @@ const App = {
       });
       const result = await res.json();
       if (result.success) {
+        this.lastSavedSajuId = result.data;
         console.log("💾 [천명 DB] 사주 정보가 MySQL에 성공적으로 저장되었습니다 (ID: " + result.data + ")");
       }
 
@@ -475,6 +874,10 @@ const App = {
   },
 
   resetToHome() {
+    if (!this.currentAccount) {
+      this.showAuthGateScreen();
+      return;
+    }
     document.getElementById("resultSection").classList.add("hidden");
     document.getElementById("inputSection").classList.remove("hidden");
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -611,6 +1014,37 @@ const App = {
     document.getElementById("idxLoveScore").textContent = `${f.scores.love}%`;
     document.getElementById("idxHealthScore").textContent = `${f.scores.health}%`;
     document.getElementById("idxCareerScore").textContent = `${f.scores.career}%`;
+
+    // 12운성 및 합·충 신호등 렌더링
+    const tsBadge = document.getElementById("dailyTwelveStageBadge");
+    const tsDesc = document.getElementById("dailyTwelveStageDesc");
+    if (f.twelveStage && tsBadge && tsDesc) {
+      tsBadge.textContent = `${f.twelveStage.name}(${f.twelveStage.hanja}) · ${f.twelveStage.badge} (${f.twelveStage.power}점)`;
+      tsDesc.textContent = f.twelveStage.desc;
+    }
+
+    const hcList = document.getElementById("dailyHapChungList");
+    if (hcList && f.hapChungSignals) {
+      hcList.innerHTML = "";
+      f.hapChungSignals.forEach(sig => {
+        const badgeCls = sig.type === "HAP"
+          ? "bg-emerald-100 text-emerald-900 border-emerald-300"
+          : sig.type === "CHUNG"
+            ? "bg-rose-100 text-rose-900 border-rose-300"
+            : "bg-slate-100 text-slate-800 border-slate-300";
+        const row = document.createElement("div");
+        row.className = "flex items-start space-x-1.5 text-xs";
+        row.innerHTML = `
+          <span class="px-2 py-0.5 rounded-md border text-[10px] font-black shrink-0 ${badgeCls}">${sig.label}</span>
+          <span class="text-stone-800 font-medium leading-snug">${sig.desc}</span>
+        `;
+        hcList.appendChild(row);
+      });
+    }
+
+    // 유료 사주 500원 잠금 초기화 (결제 전 잠금 상태 적용)
+    this.applyPaywallState(false, null);
+    this.updateAiContextStatus();
 
     document.getElementById("luckyColor").textContent = f.lucky.color;
     document.getElementById("luckyNumbers").textContent = f.lucky.numbers;
@@ -965,6 +1399,12 @@ const App = {
   },
 
   switchResultTab(tabName) {
+    // 사주 심층 탭(미래 전략 / 오행 밸런스 / 재물 커리어)은 500원 결제 전 클릭 시 결제 모달 호출
+    if ((tabName === "future" || tabName === "element" || tabName === "wealth") && !this.isPremiumUnlocked) {
+      this.openPaymentModal("TOSS_PAY");
+      return;
+    }
+
     this.activeTab = tabName;
     const tabBtns = document.querySelectorAll(".result-tab-btn");
     tabBtns.forEach(btn => {
@@ -985,6 +1425,474 @@ const App = {
     }
 
     if (window.lucide) window.lucide.createIcons();
+  },
+
+  // ==========================================================================
+  // 💳 500원 유료 사주 간편결제 (토스페이 · 카카오페이 · 네이버페이) & MySQL 보관함
+  // ==========================================================================
+  goToPaidSajuFromDaily() {
+    // 결제를 완료해야만 사주팔자 화면으로 넘어가도록 먼저 결제 모달을 호출
+    this.openPaymentModal("TOSS_PAY");
+  },
+
+  applyPaywallState(unlocked, receipt) {
+    this.isPremiumUnlocked = Boolean(unlocked);
+    this.lastReceipt = receipt || null;
+
+    const container = document.getElementById("sajuPaywallContainer");
+    const overlay = document.getElementById("sajuPaywallOverlay");
+    const banner = document.getElementById("sajuPaidReceiptBanner");
+    const meta = document.getElementById("sajuPaidReceiptMeta");
+
+    if (container) {
+      if (this.isPremiumUnlocked) {
+        container.classList.add("paywall-unlocked");
+      } else {
+        container.classList.remove("paywall-unlocked");
+      }
+    }
+
+    if (overlay) {
+      if (this.isPremiumUnlocked) {
+        overlay.classList.add("hidden");
+      } else {
+        overlay.classList.remove("hidden");
+      }
+    }
+
+    if (banner) {
+      if (this.isPremiumUnlocked) {
+        banner.classList.remove("hidden");
+        if (meta && receipt) {
+          meta.textContent = `결제수단: ${receipt.paymentMethodKr || "간편결제"} · 결제금액: ${receipt.amount || 500}원 · 주문번호: ${receipt.merchantUid || "-"}`;
+        }
+      } else {
+        banner.classList.add("hidden");
+      }
+    }
+  },
+
+  openPaymentModal(defaultMethod = "TOSS_PAY") {
+    const dialog = document.getElementById("paymentDialog");
+    if (!dialog) return;
+
+    const targetUserEl = document.getElementById("payModalTargetUser");
+    if (targetUserEl && this.userSaju) {
+      targetUserEl.textContent = `${this.userSaju.userInfo.name} 님 (${this.userSaju.userInfo.solarDateString})`;
+    }
+
+    this.cancelFinalConfirmStep();
+    this.selectPaymentMethod(defaultMethod);
+    if (typeof dialog.showModal === "function") {
+      dialog.showModal();
+    } else {
+      dialog.setAttribute("open", "");
+    }
+  },
+
+  closePaymentModal() {
+    const dialog = document.getElementById("paymentDialog");
+    if (!dialog) return;
+    if (typeof dialog.close === "function") {
+      dialog.close();
+    } else {
+      dialog.removeAttribute("open");
+    }
+  },
+
+  selectPaymentMethod(method) {
+    this.selectedPayMethod = method;
+    const methods = [
+      { key: "TOSS_PAY", nameKr: "토스페이", activeBorder: "border-2 border-[#0064FF] bg-blue-50/70", activeText: "text-[#0064FF]", btnBg: "bg-[#0064FF] text-white" },
+      { key: "KAKAO_PAY", nameKr: "카카오페이", activeBorder: "border-2 border-yellow-400 bg-yellow-50/80", activeText: "text-amber-900", btnBg: "bg-[#FEE500] text-[#191919]" },
+      { key: "NAVER_PAY", nameKr: "네이버페이", activeBorder: "border-2 border-[#03C75A] bg-emerald-50/70", activeText: "text-[#03C75A]", btnBg: "bg-[#03C75A] text-white" }
+    ];
+
+    methods.forEach(m => {
+      const btn = document.getElementById(`payMethodBtn-${m.key}`);
+      const chk = document.getElementById(`payCheck-${m.key}`);
+      if (!btn || !chk) return;
+
+      if (m.key === method) {
+        btn.className = `w-full p-3 rounded-2xl ${m.activeBorder} flex items-center justify-between transition text-left shadow-xs`;
+        chk.className = `text-xs font-black ${m.activeText}`;
+        chk.textContent = "● 선택됨";
+
+        const submitBtn = document.getElementById("confirmPaySubmitBtn");
+        const submitTxt = document.getElementById("confirmPayBtnText");
+        if (submitBtn) {
+          submitBtn.className = `w-full py-3.5 rounded-2xl font-black text-sm ${m.btnBg} hover:opacity-95 transition shadow-lg flex items-center justify-center space-x-2`;
+        }
+        if (submitTxt) {
+          submitTxt.textContent = `${m.nameKr}로 500원 결제하고 결과 화면으로 이동`;
+        }
+        const qEl = document.getElementById("payFinalConfirmQuestion");
+        if (qEl) {
+          qEl.textContent = `선택하신 [${m.nameKr}]로 500원을 결제하시겠습니까?`;
+        }
+      } else {
+        btn.className = "w-full p-3 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-between transition text-left";
+        chk.className = "text-xs font-bold text-slate-400";
+        chk.textContent = "○ 선택";
+      }
+    });
+  },
+
+  executePaymentCheckout() {
+    const methodKr = this.selectedPayMethod === "KAKAO_PAY"
+      ? "카카오페이"
+      : this.selectedPayMethod === "NAVER_PAY"
+        ? "네이버페이"
+        : "토스페이";
+    const qEl = document.getElementById("payFinalConfirmQuestion");
+    if (qEl) {
+      qEl.textContent = `선택하신 [${methodKr}]로 500원을 결제하시겠습니까?`;
+    }
+    const confirmBox = document.getElementById("payFinalConfirmBox");
+    const initGroup = document.getElementById("payInitialBtnGroup");
+    if (confirmBox) confirmBox.classList.remove("hidden");
+    if (initGroup) initGroup.classList.add("hidden");
+  },
+
+  cancelFinalConfirmStep() {
+    const confirmBox = document.getElementById("payFinalConfirmBox");
+    const initGroup = document.getElementById("payInitialBtnGroup");
+    if (confirmBox) confirmBox.classList.add("hidden");
+    if (initGroup) initGroup.classList.remove("hidden");
+  },
+
+  async approveFinalPayment() {
+    const approveBtn = document.getElementById("realCheckoutApproveBtn");
+    if (approveBtn) {
+      approveBtn.disabled = true;
+      approveBtn.textContent = "승인 처리 중...";
+    }
+
+    try {
+      const s = this.userSaju;
+      const payload = {
+        name: s ? s.userInfo.name : "홍길동",
+        gender: (s && (s.userInfo.gender === "female" || s.userInfo.gender === "F")) ? "F" : "M",
+        birthYear: s ? s.userInfo.birthYear : 1996,
+        birthMonth: s ? s.userInfo.birthMonth : 5,
+        birthDay: s ? s.userInfo.birthDay : 15,
+        sajuRecordId: this.lastSavedSajuId,
+        productType: "SAJU_FULL_REPORT",
+        productName: "천명(天命) 정통 사주팔자 · 대운 · 심층 리포트 열람권",
+        paymentMethod: this.selectedPayMethod,
+        amount: 500
+      };
+
+      const res = await fetch("/api/payment/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const result = await res.json();
+
+      if (result && result.success && result.data) {
+        // 1. 결제 성공 시 사주 원장 데이터를 MySQL DB에 저장
+        await this.saveToDatabase();
+
+        // 2. 사주 모드로 전환 및 결과 렌더링
+        this.currentMode = "saju";
+        this.renderResults();
+        this.applyPaywallState(true, result.data);
+
+        // 3. 결제 모달 닫기 및 입력 화면 -> 사주 결과 화면으로 전환!
+        this.closePaymentModal();
+        document.getElementById("inputSection").classList.add("hidden");
+        document.getElementById("resultSection").classList.remove("hidden");
+        this.switchResultTab("saju");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+
+        if (window.confetti) {
+          window.confetti({
+            particleCount: 65,
+            spread: 70,
+            origin: { y: 0.4 }
+          });
+        }
+      } else {
+        alert("결제 처리에 실패했습니다.");
+      }
+    } catch (err) {
+      console.error("결제 처리 오류:", err);
+      alert("결제 서버 통신 중 오류가 발생했습니다.");
+    } finally {
+      if (approveBtn) {
+        approveBtn.disabled = false;
+        approveBtn.textContent = "네, 500원 결제 승인";
+      }
+      this.cancelFinalConfirmStep();
+      this.selectPaymentMethod(this.selectedPayMethod);
+    }
+  },
+
+  async openHistoryModal() {
+    const dialog = document.getElementById("historyDialog");
+    if (!dialog) return;
+    if (typeof dialog.showModal === "function") {
+      dialog.showModal();
+    } else {
+      dialog.setAttribute("open", "");
+    }
+
+    const payBox = document.getElementById("paymentHistoryListBox");
+    const sajuBox = document.getElementById("sajuHistoryListBox");
+
+    try {
+      const [payRes, sajuRes] = await Promise.all([
+        fetch("/api/payment/history?limit=10").then(r => r.json()),
+        fetch("/api/history/recent?limit=10").then(r => r.json())
+      ]);
+
+      if (payBox) {
+        const list = (payRes && payRes.data) || [];
+        if (list.length === 0) {
+          payBox.innerHTML = `<div class="p-3 rounded-xl bg-stone-50 text-center text-stone-500">아직 500원 결제 내역이 없습니다.</div>`;
+        } else {
+          payBox.innerHTML = list.map(p => {
+            const badge = p.payment_method === "KAKAO_PAY"
+              ? `<span class="px-2 py-0.5 rounded bg-[#FEE500] text-[#191919] font-black text-[10px]">카카오페이</span>`
+              : p.payment_method === "NAVER_PAY"
+                ? `<span class="px-2 py-0.5 rounded bg-[#03C75A] text-white font-black text-[10px]">네이버페이</span>`
+                : `<span class="px-2 py-0.5 rounded bg-[#0064FF] text-white font-black text-[10px]">토스페이</span>`;
+            return `
+              <div class="p-3 rounded-xl bg-[#faf8f5] border border-[#e8ded2] flex items-center justify-between">
+                <div>
+                  <div class="flex items-center space-x-1.5 mb-0.5">
+                    ${badge}
+                    <span class="font-extrabold text-stone-900">${p.user_name} 님 (${p.ilju_name || "사주리포트"})</span>
+                  </div>
+                  <div class="text-[11px] text-stone-500">주문번호: ${p.merchant_uid} · ${String(p.paid_at || "").replace("T", " ").slice(0, 19)}</div>
+                </div>
+                <div class="text-right">
+                  <span class="text-sm font-black text-emerald-700">${p.amount}원</span>
+                  <span class="block text-[10px] font-bold text-emerald-800">결제완료(PAID)</span>
+                </div>
+              </div>
+            `;
+          }).join("");
+        }
+      }
+
+      if (sajuBox) {
+        const sList = (sajuRes && sajuRes.data) || [];
+        if (sList.length === 0) {
+          sajuBox.innerHTML = `<div class="p-3 rounded-xl bg-stone-50 text-center text-stone-500">저장된 사주 기록이 없습니다.</div>`;
+        } else {
+          sajuBox.innerHTML = sList.map(s => `
+            <div class="p-3 rounded-xl bg-white border border-stone-200 flex items-center justify-between">
+              <div>
+                <span class="font-extrabold text-stone-900">${s.name} (${s.birth_year}.${s.birth_month}.${s.birth_day})</span>
+                <span class="ml-1.5 px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold text-[10px]">${s.ilju_name} · ${s.zodiac_animal}</span>
+                <div class="text-[11px] text-stone-600 mt-0.5">
+                  4주: ${s.year_cheongan}${s.year_jiji}년 ${s.month_cheongan}${s.month_jiji}월 ${s.day_cheongan}${s.day_jiji}일 ${s.time_cheongan || "-"}${s.time_jiji || "-"}시 · 체질: ${s.strength_status || "-"} (용신: ${s.yongsin || "-"})
+                </div>
+              </div>
+              <span class="text-[10px] text-stone-400 font-mono">#${s.saju_id}</span>
+            </div>
+          `).join("");
+        }
+      }
+    } catch (e) {
+      if (payBox) payBox.innerHTML = `<div class="p-3 rounded-xl bg-rose-50 text-rose-800">DB 내역 조회 실패</div>`;
+    }
+  },
+
+  closeHistoryModal() {
+    const dialog = document.getElementById("historyDialog");
+    if (!dialog) return;
+    if (typeof dialog.close === "function") {
+      dialog.close();
+    } else {
+      dialog.removeAttribute("open");
+    }
+  },
+
+  // ==========================================================================
+  // 🧙‍♂️ 내장 AI 명리 도사 챗봇 컨트롤러 (사주·일진·오행 연동 & 실시간 타이핑 효과)
+  // ==========================================================================
+  isAiChatOpen: false,
+
+  toggleAiChatbot(forceState) {
+    if (!this.currentAccount && forceState !== false) return;
+    const drawer = document.getElementById("aiChatbotDrawer");
+    const hint = document.getElementById("aiChatbotHintBubble");
+    if (!drawer) return;
+
+    this.isAiChatOpen = typeof forceState === "boolean" ? forceState : !this.isAiChatOpen;
+    if (this.isAiChatOpen) {
+      drawer.classList.remove("hidden-drawer");
+      if (hint) hint.classList.add("hidden");
+      this.updateAiContextStatus();
+      const input = document.getElementById("aiChatInput");
+      if (input) setTimeout(() => input.focus(), 150);
+    } else {
+      drawer.classList.add("hidden-drawer");
+      if (hint) hint.classList.remove("hidden");
+    }
+  },
+
+  updateAiContextStatus() {
+    const statusEl = document.getElementById("aiChatContextStatus");
+    if (!statusEl) return;
+    if (this.userSaju) {
+      const s = this.userSaju;
+      const f = this.dailyFortune;
+      const iljuName = s.iljuDetail ? s.iljuDetail.name : `${s.pillars.day.gan.char}${s.pillars.day.ji.char}`;
+      statusEl.textContent = `📜 ${s.userInfo.name} 님 (${iljuName} · 용신 ${s.yongsin || "-"} · 오늘 ${f ? f.totalScore : 85}점) 연동 중`;
+    } else if (this.currentAccount) {
+      statusEl.textContent = `👤 ${this.currentAccount.name} 님 로그인됨 · 사주 입력 시 정밀 연동`;
+    } else {
+      statusEl.textContent = "사주·일진·오행 실시간 연동 AI 상담";
+    }
+  },
+
+  askAiQuickQuestion(questionText) {
+    if (!this.isAiChatOpen) {
+      this.toggleAiChatbot(true);
+    }
+    this.sendAiChatMessage(questionText);
+  },
+
+  handleAiChatSubmit(e) {
+    e.preventDefault();
+    const input = document.getElementById("aiChatInput");
+    if (!input) return;
+    const msg = input.value.trim();
+    if (!msg) return;
+    input.value = "";
+    this.sendAiChatMessage(msg);
+  },
+
+  async sendAiChatMessage(userText) {
+    const listEl = document.getElementById("aiChatMessageList");
+    if (!listEl) return;
+
+    if (this.hasClientSqlInjection(userText)) {
+      this.appendAiMessageBubble("🛡️ 보안 알림", "허용되지 않는 SQL 인젝션 의심 구문이 포함되어 요청이 차단되었습니다.", null, false);
+      return;
+    }
+
+    // 1. 사용자 질문 말풍선 추가
+    const userRow = document.createElement("div");
+    userRow.className = "flex justify-end animate-slide-up";
+    const safeUserDiv = document.createElement("div");
+    safeUserDiv.className = "p-3 rounded-2xl rounded-tr-xs bg-[#8c1d1d] text-[#fff6df] border border-[#d4a359] shadow-xs max-w-[82%] font-medium leading-relaxed";
+    safeUserDiv.textContent = userText;
+    userRow.appendChild(safeUserDiv);
+    listEl.appendChild(userRow);
+    listEl.scrollTop = listEl.scrollHeight;
+
+    // 2. AI 도사 생각 중(로딩 점 3개) 말풍선 추가
+    const loadingRow = document.createElement("div");
+    loadingRow.className = "flex items-start space-x-2 animate-slide-up";
+    loadingRow.innerHTML = `
+      <div class="w-7 h-7 rounded-lg bg-[#8c1d1d] text-[#fff6df] border border-[#d4a359] flex items-center justify-center text-sm shrink-0">🧙‍♂️</div>
+      <div class="p-3 rounded-2xl rounded-tl-xs bg-[#fffdf9] border border-[#c8b08a] flex items-center space-x-1.5">
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+        <span class="text-[11px] text-[#5c4d3c] font-bold ml-1">천기(天氣)를 읽는 중...</span>
+      </div>
+    `;
+    listEl.appendChild(loadingRow);
+    listEl.scrollTop = listEl.scrollHeight;
+
+    // 3. 백엔드 AI 명리 도사 API 호출
+    const s = this.userSaju;
+    const f = this.dailyFortune;
+    const payload = {
+      message: userText,
+      userName: s ? s.userInfo.name : (this.currentAccount ? this.currentAccount.name : "도반"),
+      gender: s ? s.userInfo.gender : "M",
+      iljuName: s && s.iljuDetail ? s.iljuDetail.name : null,
+      dayMaster: s ? s.pillars.day.gan.char : null,
+      zodiacAnimal: s && s.iljuDetail ? s.iljuDetail.symbol : null,
+      strengthStatus: s ? s.strengthStatus : null,
+      yongsin: s ? s.yongsin : null,
+      deficientElement: s && s.missingElements && s.missingElements.length > 0 ? s.missingElements.map(m => m.name).join(", ") : null,
+      todayTenGod: f ? f.todayTenGod : null,
+      todayTwelveStage: f && f.twelveStage ? `${f.twelveStage.name}(${f.twelveStage.hanja})` : null,
+      todayScore: f ? f.totalScore : null,
+      luckyColor: f && f.lucky ? f.lucky.color : null,
+      luckyFood: f && f.lucky ? f.lucky.food : null,
+      luckyDirection: f && f.lucky ? f.lucky.direction : null,
+      sinsalNames: s && s.sinsals && s.sinsals.length > 0 ? s.sinsals.map(x => x.name).join("·") : null
+    };
+
+    try {
+      const res = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const result = await res.json();
+      loadingRow.remove();
+
+      if (result && result.success && result.data) {
+        const d = result.data;
+        this.appendAiMessageBubble(d.intentBadge || "🧙‍♂️ AI 명리 도사", d.reply, d.followUpTip, true);
+      } else {
+        this.appendAiMessageBubble("🧙‍♂️ AI 명리 도사", (result && result.message) || "잠시 천기를 읽는 중 혼선이 있었습니다. 다시 질문해 주세요.", null, false);
+      }
+    } catch (err) {
+      loadingRow.remove();
+      this.appendAiMessageBubble("🧙‍♂️ AI 명리 도사", "서버와 통신 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.", null, false);
+    }
+  },
+
+  appendAiMessageBubble(badgeTitle, replyText, followUpTip, useTypewriter = true) {
+    const listEl = document.getElementById("aiChatMessageList");
+    if (!listEl) return;
+
+    const row = document.createElement("div");
+    row.className = "flex items-start space-x-2 animate-slide-up";
+
+    const formattedHtml = String(replyText || "")
+      .replace(/\*\*(.*?)\*\*/g, "<strong class='text-[#8c1d1d] font-black'>$1</strong>")
+      .replace(/\n/g, "<br/>");
+
+    row.innerHTML = `
+      <div class="w-7 h-7 rounded-lg bg-[#8c1d1d] text-[#fff6df] border border-[#d4a359] flex items-center justify-center text-sm shrink-0 shadow-xs">🧙‍♂️</div>
+      <div class="p-3 rounded-2xl rounded-tl-xs bg-[#fffdf9] border border-[#c8b08a] text-[#2c2219] shadow-xs space-y-1.5 max-w-[86%]">
+        <div class="inline-block px-2 py-0.5 rounded bg-[#f5e4c3] text-[#5c2d0c] border border-[#b48a4e] text-[10px] font-black">${badgeTitle}</div>
+        <div class="ai-reply-body leading-relaxed font-medium text-xs"></div>
+        ${followUpTip ? `<div class="pt-1.5 border-t border-[#e8dcc8] text-[11px] text-[#6b563e] font-bold">${followUpTip}</div>` : ""}
+      </div>
+    `;
+    listEl.appendChild(row);
+
+    const bodyEl = row.querySelector(".ai-reply-body");
+    if (!useTypewriter || !bodyEl) {
+      if (bodyEl) bodyEl.innerHTML = formattedHtml;
+      listEl.scrollTop = listEl.scrollHeight;
+      return;
+    }
+
+    // 동적 타이핑 스트리밍 효과
+    let idx = 0;
+    const step = 4;
+    const plainLen = formattedHtml.length;
+    const timer = setInterval(() => {
+      idx += step;
+      if (idx >= plainLen) {
+        bodyEl.innerHTML = formattedHtml;
+        clearInterval(timer);
+      } else {
+        // HTML 태그 중간이 잘리지 않도록 태그 보정
+        let slice = formattedHtml.slice(0, idx);
+        const lastOpen = slice.lastIndexOf("<");
+        const lastClose = slice.lastIndexOf(">");
+        if (lastOpen > lastClose) {
+          slice = formattedHtml.slice(0, lastOpen);
+        }
+        bodyEl.innerHTML = slice;
+      }
+      listEl.scrollTop = listEl.scrollHeight;
+    }, 16);
   },
 
   // 🐾 마스코트 상호작용
@@ -1084,20 +1992,31 @@ const App = {
   setTarotCategory(cat) {
     this.tarotCategory = cat;
     const cats = ["love", "career", "money", "mind"];
+    const catLabels = {
+      love: "💖 연애 & 사랑",
+      career: "💼 진로 & 이직",
+      money: "💰 금전 & 사업",
+      mind: "🕊️ 마음 치유 & 조언"
+    };
+
     cats.forEach(c => {
       const btn = document.getElementById(`tarotCat-${c}`);
       if (btn) {
         if (c === cat) {
-          btn.className = "px-3.5 py-1.5 rounded-full font-bold bg-indigo-600 text-white shadow-sm transition";
+          btn.className = "px-3.5 py-1.5 rounded-full font-bold bg-[#8c1d1d] text-[#fff6df] border border-[#d4a359] shadow-sm transition";
         } else {
-          btn.className = "px-3.5 py-1.5 rounded-full font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300 transition";
+          btn.className = "px-3.5 py-1.5 rounded-full font-bold bg-[#efe5d4] text-[#36281c] hover:bg-[#e3d3b9] border border-[#c2aa84] transition";
         }
       }
     });
 
-    // 이미 3장이 뒤집혀있는 상태라면 카테고리별 조언 갱신
-    if (this.tarotPickedCards.length === 3) {
-      this.populateRevealedTarotCards();
+    // 카테고리가 바뀌면 기존에 뽑았던 카드를 초기화하고 덱을 새로 셔플하여 다시 3장을 뽑게 함
+    this.resetTarotSpread();
+
+    const promptText = document.getElementById("tarotPickPromptText");
+    if (promptText) {
+      promptText.textContent = `👇 [${catLabels[cat] || "새로운 고민"}] 주제로 카드가 새로 셔플되었습니다! 카드를 3장 다시 골라주세요 (0/3)`;
+      promptText.className = "text-xs font-bold text-[#8c1d1d] animate-pulse";
     }
   },
 
@@ -1171,6 +2090,7 @@ const App = {
     if (revealSec) revealSec.classList.remove("hidden");
 
     this.populateRevealedTarotCards();
+    this.saveTarotReadingToDb();
 
     // 3장의 카드 순차적 3D 플립 애니메이션
     for (let i = 0; i < 3; i++) {
@@ -1190,6 +2110,31 @@ const App = {
     }
 
     if (window.lucide) window.lucide.createIcons();
+  },
+
+  async saveTarotReadingToDb() {
+    try {
+      if (this.tarotPickedCards.length < 3) return;
+      const c2 = this.tarotPickedCards[1].card;
+      const cat = this.tarotCategory || "love";
+      const payload = {
+        userId: null,
+        cardNumber: typeof c2.id === "number" ? c2.id : 0,
+        cardNameKr: String(c2.nameKr || c2.name || "타로 카드").slice(0, 48),
+        cardNameEn: String(c2.nameEn || cat.toUpperCase()).slice(0, 48),
+        isReversed: false,
+        keyword: String(Array.isArray(c2.keywords) ? c2.keywords.join(", ") : (c2.keyword || "타로 3장 리딩")).slice(0, 95),
+        interpretation: c2.summary || "3-Card 타로 점괘",
+        advice: c2.generalAdvice || c2.loveAdvice || "현실을 직시하고 실천하세요."
+      };
+      await fetch("/api/tarot/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+    } catch (e) {
+      console.warn("타로 DB 저장 알림:", e);
+    }
   },
 
   populateRevealedTarotCards() {

@@ -101,4 +101,32 @@ public class SajuJdbcRepository {
         """;
         return jdbcTemplate.queryForList(sql);
     }
+
+    /**
+     * JDBC를 이용한 최근 500원 유료 사주 간편결제(토스/카카오/네이버페이) 내역 조회
+     */
+    public List<Map<String, Object>> findRecentPayments(int limit) {
+        String sql = """
+            SELECT
+                p.id AS payment_id,
+                p.merchant_uid,
+                p.product_name,
+                p.payment_method,
+                p.amount,
+                p.payment_status,
+                p.pg_tid,
+                p.paid_at,
+                u.name AS user_name,
+                u.birth_year,
+                u.birth_month,
+                u.birth_day,
+                s.ilju_name
+            FROM payments p
+            INNER JOIN users u ON p.user_id = u.id
+            LEFT JOIN saju_records s ON p.saju_record_id = s.id
+            ORDER BY p.paid_at DESC
+            LIMIT ?
+        """;
+        return jdbcTemplate.queryForList(sql, limit);
+    }
 }

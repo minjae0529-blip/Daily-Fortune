@@ -1,12 +1,13 @@
-# 🌟 천명(天命) - 정통 사주 만세력 · 오늘의 운세 · 타로 풀스택 웹 서비스
+# 🌟 천명(天命) - 한국 정통 사주 만세력 · 오늘의 운세 · 타로 · AI 명리/꿈해몽 풀스택 웹 서비스
 
-> **한국천문연구원(KASI) 역법 데이터와 정통 명리학 기반 만세력 엔진 + Spring Boot 4.x & MySQL 8.x (JPA / JDBC) 백엔드 데이터베이스 연동 프로젝트**
+> **한국천문연구원(KASI) 24절기 역법 기반 만세력 엔진 + 내장형 AI 명리·꿈해몽 도사 챗봇 + 보안 로그인(PBKDF2·SQL 인젝션 방어·SMS 휴면해제) + 500원 간편결제(토스·카카오·네이버페이) + Spring Boot 4.x & MySQL 8.x (JPA / JDBC) 연동 프로젝트**
 
 ![Java](https://img.shields.io/badge/Java-21%20LTS-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.2-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-8.x-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
 ![JDBC & JPA](https://img.shields.io/badge/Persistence-Spring%20JDBC%20%7C%20JPA-59666C?style=for-the-badge&logo=hibernate&logoColor=white)
-![Frontend](https://img.shields.io/badge/Frontend-HTML5%20%7C%20TailwindCSS%20%7C%20ES6+-38B2AC?style=for-the-badge&logo=tailwindcss&logoColor=white)
+![Security](https://img.shields.io/badge/Security-PBKDF2%20%7C%20SQLi%20Guard%20%7C%20SMS%20Auth-991B1B?style=for-the-badge&logo=springsecurity&logoColor=white)
+![AI Counselor](https://img.shields.io/badge/Built--in%20AI-사주%20%C2%B7%20꿈해몽%20도사%20챗봇-D97706?style=for-the-badge)
 ![Swagger](https://img.shields.io/badge/Swagger-OpenAPI%203.0-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)
 
 ---
@@ -17,7 +18,7 @@
 2. [기술 스택 (Tech Stack)](#-2-기술-스택-tech-stack)
 3. [핵심 구현 아키텍처 및 세부 구현 방법](#-3-핵심-구현-아키텍처-및-세부-구현-방법)
 4. [요청-응답 처리 시퀀스 다이어그램](#-4-요청-응답-처리-시퀀스-다이어그램)
-5. [데이터베이스 ERD 및 7대 정규화 엔티티 명세](#-5-데이터베이스-erd-및-7대-정규화-엔티티-명세)
+5. [데이터베이스 ERD 및 11대 정규화 엔티티 명세](#-5-데이터베이스-erd-및-11대-정규화-엔티티-명세)
 6. [API별 상세 요청(Request) & 응답(Response) 명세](#-6-api별-상세-요청request--응답response-명세)
 7. [프로젝트 디렉토리 구조](#-7-프로젝트-디렉토리-구조)
 8. [IntelliJ IDEA & MySQL JDBC 연동 가이드](#-8-intellij-idea--mysql-jdbc-연동-가이드)
@@ -27,9 +28,9 @@
 
 ## 📖 1. 프로젝트 개요
 
-**천명(天命)**은 사용자의 생년월일시(四柱)를 바탕으로 **사주팔자 4주 8자 원국, 오행(木·火·土·金·水) 에너지 밸런스, 신강/신약 및 용신(用神), 8대 신살, 오늘의 일진 운세, 2인 궁합, 3-Card 타로 점괘**를 분석하는 웹 애플리케이션입니다.
+**천명(天命) 欽定萬歲曆**은 조선 왕실 규장각 만세력 고서(古書)와 궁중 단청(丹靑)·오방색(五方色) 전통 미학을 현대 웹으로 재해석한 **정통 사주팔자 · 오늘의 운세 · 3-Card 타로 · 내장 AI 명리/꿈해몽 도사 챗봇 풀스택 웹 서비스**입니다.
 
-단순히 화면에 일회성으로 결과를 출력하거나 파일에 저장하는 방식에서 벗어나, **Spring Boot 프레임워크와 MySQL 데이터베이스를 JDBC 및 JPA로 연동**하여 도메인별 데이터를 **7개의 정규화된 엔티티 테이블**로 세분화해 영구 저장·조회하도록 구현했습니다.
+단순 정적 페이지나 파일 저장 방식이 아니라 **Spring Boot 4.1.2 백엔드와 MySQL 8.x 데이터베이스를 Spring Data JPA 및 Spring JDBC(`JdbcTemplate`)로 연동**하여 회원 보안 계정, SMS 인증 이력, 사주 4주 8자 원장, 오행 밸런스, 8대 신살, 일일 운세, 2인 궁합, 타로 점괘, 500원 간편결제 원장, AI 상담 로그까지 **총 11개의 정규화 엔티티 테이블**로 세분화해 저장·관리합니다.
 
 ---
 
@@ -37,251 +38,279 @@
 
 | 영역 | 기술 / 라이브러리 | 버전 | 적용 및 구현 역할 |
 | :---: | :--- | :---: | :--- |
-| **Language** | Java (OpenJDK) | `21 LTS` | 백엔드 핵심 비즈니스 로직, 엔티티, DTO, 레포지토리 구현 |
-| **Framework** | Spring Boot | `4.1.2` | 내장 Tomcat 웹 서버(`8085`), DI/IoC 컨테이너, REST API 구성 |
-| **Database** | MySQL | `8.x` | `utf8mb4` 인코딩 기반 7대 정규화 사주/운세 테이블 영구 저장 |
-| **ORM / JPA** | Spring Data JPA (Hibernate) | `7.4.x` | 엔티티 매핑, `@OneToOne`/`@OneToMany` 영속성 전이(`Cascade`), 더티 체킹 |
-| **JDBC** | Spring JDBC (`JdbcTemplate`) | `7.0.x` | `DataSource` 커넥션 메타데이터 진단, 3중 JOIN 조회 및 집계 SQL 직접 실행 |
-| **DB Pool** | HikariCP | `7.0.x` | 데이터베이스 커넥션 풀링 (`maximum-pool-size: 10`, `minimum-idle: 5`) |
-| **API Docs** | SpringDoc OpenAPI (Swagger) | `3.2.0` | `/swagger-ui.html` 기반 REST API 명세 시각화 및 테스트 도구 제공 |
-| **Frontend** | HTML5 / Tailwind CSS / ES6+ | `Standard` | KASI 24절기 만세력 계산 엔진, 12지신 수호동물 UI, `fetch` 비동기 API 통신 |
-| **Build Tool** | Apache Maven (`mvnw`) | `3.9+` | 프로젝트 빌드, 의존성 관리 및 Lombok 애노테이션 프로세싱 |
+| **Language** | Java (OpenJDK) | `21 LTS` | 백엔드 비즈니스 로직, 보안 암호화, AI 명리·꿈해몽 추론 엔진 구현 |
+| **Framework** | Spring Boot | `4.1.2` | 내장 Tomcat 웹 서버(`8085`), RESTful API, `HttpSession` 인증 관리 |
+| **Database** | MySQL | `8.x` | `utf8mb4` 기반 11대 정규화 엔티티 테이블 영구 저장 및 트랜잭션 관리 |
+| **ORM / JPA** | Spring Data JPA (Hibernate) | `7.4.x` | 엔티티 매핑, `@OneToOne`/`@OneToMany` 영속성 전이(`CascadeType.ALL`) |
+| **JDBC** | Spring JDBC (`JdbcTemplate`) | `7.0.x` | `DataSource` 커넥션 메타데이터 진단, 다중 테이블 SQL JOIN 직접 쿼리 |
+| **Security** | `PBKDF2WithHmacSHA256` & `SecurityUtils` | `Custom` | 16바이트 랜덤 Salt 해싱, SQL 인젝션 시그니처 차단, XSS 정화, SMS 휴면해제 |
+| **Payment BM** | 토스페이 · 카카오페이 · 네이버페이 모달 | `500 KRW` | 오늘의 운세 무료 / 정통 사주 500원 결제 승인 후 화면 전환 게이트키핑 |
+| **Built-in AI** | `AiCounselorService` (명리·꿈해몽 AI) | `Built-in` | 사주·일진·용신 실시간 컨텍스트 결합 1:1 상담 및 동양 정통 주공해몽(꿈해몽) |
+| **Frontend** | HTML5 / Tailwind CSS / ES6+ | `Standard` | 한국 전통 단청·한지·창살·낙관 디자인, 실시간 천기 전광판, 타이핑 스트리밍 UI |
+| **API Docs** | SpringDoc OpenAPI (Swagger) | `3.2.0` | `/swagger-ui.html` 기반 전체 REST API 명세 시각화 및 즉시 호출 테스트 |
 
 ---
 
 ## 🏗 3. 핵심 구현 아키텍처 및 세부 구현 방법
 
-### 3-1. 계층형 아키텍처 (Layered Architecture)
+### 3-1. 전체 시스템 계층형 아키텍처 (Layered Architecture)
 
 ```mermaid
 flowchart LR
-    subgraph Client ["🌐 프론트엔드 (Browser)"]
-        UI["index.html / style.css"]
-        Engine["만세력·운세 엔진<br/>(calendar.js, saju.js, fortune.js)"]
-        ControllerJS["API 연동 컨트롤러<br/>(app.js - fetch API)"]
-        UI --> Engine --> ControllerJS
+    subgraph Client ["🏯 한국 전통 한지·단청 프론트엔드 (Browser)"]
+        AuthUI["회원가입 · 보안 로그인 게이트<br/>(5회 SMS 경고 / 10회 휴면해제)"]
+        MainUI["오늘의 운세(무료) · 사주(500원) · 타로<br/>(index.html / style.css / app.js)"]
+        PayUI["500원 간편결제 게이트 모달<br/>(토스페이 · 카카오페이 · 네이버페이)"]
+        AiUI["내장 AI 명리·꿈해몽 도사 챗봇<br/>(로그인 후 활성화 · 실시간 타이핑)"]
+        AuthUI --> MainUI
+        MainUI --> PayUI
+        MainUI --> AiUI
     end
 
-    subgraph SpringBoot ["🍃 Spring Boot 백엔드 (Port: 8085)"]
-        API["SajuApiController<br/>(@RestController)"]
-        SVC["SajuService<br/>(@Service, @Transactional)"]
-        JPA["JPA Repositories<br/>(User, Saju, Fortune, Compat, Tarot)"]
-        JDBC["SajuJdbcRepository<br/>(JdbcTemplate / DataSource)"]
-        API --> SVC
-        SVC --> JPA
-        SVC --> JDBC
+    subgraph SpringBoot ["🍃 Spring Boot 4.1.2 백엔드 (Port: 8085)"]
+        SecGuard["SecurityUtils<br/>(SQLi 차단 · PBKDF2+Salt · XSS 방어)"]
+        Controllers["REST Controllers<br/>(AuthApi / SajuApi / AiChat)"]
+        Services["Transactional Services<br/>(AuthService / SajuService / AiCounselorService)"]
+        Repos["Persistence Layer<br/>(JPA Repositories 9종 + SajuJdbcRepository)"]
+        SecGuard --> Controllers --> Services --> Repos
     end
 
-    subgraph Database ["🐬 MySQL 8.x (chunmyung_saju)"]
-        T1[("users")]
-        T2[("saju_records")]
-        T3[("five_elements_balances")]
-        T4[("sinsal_records")]
-        T5[("daily_fortunes")]
-        T6[("compatibility_records")]
-        T7[("tarot_readings")]
+    subgraph Database ["🐬 MySQL 8.x (chunmyung_saju - 11대 테이블)"]
+        DB1[("accounts / sms_verifications")]
+        DB2[("users / saju_records")]
+        DB3[("five_elements / sinsal_records")]
+        DB4[("daily_fortunes / compatibility / tarot")]
+        DB5[("payments / ai_chat_logs")]
     end
 
-    ControllerJS -- "HTTP JSON 요청<br/>(POST / GET)" --> API
-    API -- "ApiResponseDto<T><br/>JSON 응답" --> ControllerJS
-    JPA -- "Hibernate SQL" --> Database
-    JDBC -- "Direct SQL JOIN" --> Database
+    Client -- "HTTP JSON Request" --> SecGuard
+    Controllers -- "ApiResponseDto<T> JSON" --> Client
+    Repos -- "PreparedStatement SQL" --> Database
 ```
 
-### 3-2. 계층별 세부 구현 내용
+### 3-2. 6대 핵심 도메인별 세부 구현 내용
 
-| 계층 (Layer) | 구현 클래스 | 세부 구현 방법 및 핵심 로직 |
+| 구분 | 담당 클래스 / 파일 | 세부 구현 메커니즘 및 핵심 로직 |
 | :---: | :--- | :--- |
-| **1. 프론트엔드 연산 및 비동기 전송** | `app.js`<br/>`saju.js`<br/>`fortune.js` | • 사용자가 생년월일시를 입력하면 KASI 24절기 데이터와 율리우스 적일(JDN) 알고리즘으로 사주 4주 8자·오행·신살·운세를 즉시 계산합니다.<br/>• 화면 렌더링 직후 `App.saveToDatabase()`가 호출되어 계산된 결과 객체를 백엔드 DTO 규격의 JSON으로 직렬화한 뒤 `fetch("/api/saju/save")`, `fetch("/api/fortune/save")`, `fetch("/api/compatibility/save")`로 비동기 전송합니다. |
-| **2. 프레젠테이션 계층 (Controller)** | `SajuApiController` | • `@RestController`와 `@RequestMapping("/api")`를 통해 모든 REST 엔드포인트를 제공합니다.<br/>• 클라이언트로부터 전달받은 JSON 바디를 `@RequestBody` DTO로 역직렬화하고, 처리 결과를 공통 응답 래퍼인 `ApiResponseDto<T>`(`success`, `message`, `data`) 규격으로 일관되게 반환합니다. |
-| **3. 비즈니스/트랜잭션 계층 (Service)** | `SajuService` | • 클래스 레벨에 `@Transactional(readOnly = true)`를 선언하고, 쓰기 메서드에 `@Transactional`을 부여해 트랜잭션 원자성을 보장합니다.<br/>• **사용자 Upsert 로직 (`findOrCreateUser`)**: `이름 + 생년 + 생월 + 생일`로 기존 회원을 조회하여, 이미 존재하면 성별·출생시각·보정 여부를 더티 체킹(Dirty Checking)으로 갱신하고, 없으면 신규 `UserEntity`를 INSERT합니다.<br/>• **연관 엔티티 일괄 저장 (`saveSajuRecord`)**: `SajuRecordEntity`를 생성하면서 `FiveElementsEntity`(1:1)와 `List<SinsalEntity>`(1:N)의 양방향 참조를 연결한 뒤 `CascadeType.ALL`을 통해 단 한 번의 `sajuRecordRepository.save()`로 3개 테이블에 동시 저장합니다. |
-| **4. 영속성 계층 (JPA & JDBC 이원화)** | `UserRepository` 외 4종<br/>`SajuJdbcRepository` | • **Spring Data JPA**: 엔티티 단위의 CRUD와 메서드 이름 기반 쿼리(`findByNameAndBirthYear...`, `findByUserIdAndFortuneDate`)로 객체지향적인 데이터 저장을 담당합니다.<br/>• **Spring JDBC (`JdbcTemplate`)**: `DataSource.getConnection()`을 통한 실제 MySQL JDBC 드라이버 메타데이터 검증(`checkJdbcConnection`)과, `users` + `saju_records` + `five_elements_balances` 3개 테이블을 `INNER/LEFT JOIN`하여 최근 분석 내역을 한 번에 가져오는 고성능 조회 쿼리(`findRecentSajuHistory`)를 담당합니다. |
+| **1. 회원가입 · 로그인 게이트 및 단계별 계정 보호** | `AuthApiController`<br/>`AuthService`<br/>`SecurityUtils` | • **초기 접속 게이트**: 비로그인 상태로 접속 시 사주 입력창과 AI 도사 챗봇을 숨기고 **로그인/회원가입 화면(`#authSection`)**을 먼저 띄웁니다.<br/>• **비밀번호 암호화**: 평문 저장 없이 계정별 16바이트 `SecureRandom` Salt + `PBKDF2WithHmacSHA256`(65,536회 반복) 단방향 해시와 상수 시간 비교(`verifyPassword`)를 적용했습니다.<br/>• **1~4회 오류 (5회 미만)**: `failed_attempts`를 증가시키고 남은 시도 횟수 경고 메시지를 반환합니다.<br/>• **5~9회 오류 (5회 이상)**: 계정 상태를 `WARNING_SMS_SENT`로 전환하고, 가입된 휴대폰 번호로 **6자리 본인확인 인증번호 문자(SMS)**를 발송(`sms_verifications` 테이블 저장 및 화면 상단 SMS 도착 배너 표출)합니다.<br/>• **10회 이상 오류**: 계정을 즉시 **`DORMANT_LOCKED`(휴면·잠금)** 처리하여 이후 비밀번호가 맞아도 로그인을 차단하고, **[🔓 휴면·잠금 해제]** 탭에서 휴대폰 SMS 인증번호 6자리를 검증해야만 `ACTIVE` 및 실패 횟수 `0`으로 초기화합니다. |
+| **2. SQL 인젝션 2중 방어 및 웹 보안** | `SecurityUtils`<br/>`SajuJdbcRepository` | • **1차 방어 (`PreparedStatement`)**: 모든 JPA 및 `JdbcTemplate` 쿼리에서 문자열 결합을 배제하고 `?` 파라미터 바인딩만 사용합니다.<br/>• **2차 방어 (`validateNoSqlInjection`)**: `SELECT`, `UNION`, `DROP`, `DELETE`, `OR 1=1`, `--`, `/* */`, `;` 등 SQL 인젝션 공격 시그니처 정규식을 클라이언트와 서버 양단에서 검사하여 탐지 즉시 `400 Bad Request`로 차단합니다.<br/>• **XSS 방어 (`sanitizeXss`)**: `<`, `>`, `&`, `"`, `'` 특수문자를 이스케이프 처리합니다. |
+| **3. 오늘의 운세 작동 메커니즘 (100% 무료)** | `fortune.js`<br/>`calendar.js`<br/>`saju.js` | • 상용 운세 플랫폼(포스텔러·점신)의 일진 알고리즘을 반영하여 **[사용자 본원 일간·일지·용신]**과 **[당일 60갑자 일진]**을 매칭합니다.<br/>• **① 십신(十神) 작용**, **② 12운성(十二運星: 장생·관대·건록·제왕 등 12단계 에너지 바이오리듬)**, **③ 천간합·지지육합·천간충·지지충 실시간 신호등 트리거**, **④ 시두법(時頭法) 4대 시간대별 흐름**, **⑤ 결핍 오행/용신 기반 개운 음식·컬러·하도 수리 숫자·방위**를 결정론적 알고리즘으로 산출합니다. |
+| **4. 사주팔자 500원 유료화 게이트 & 3사 간편결제** | `SajuApiController`<br/>`SajuService`<br/>`PaymentEntity` | • **무료/유료 분리**: 오늘의 운세와 타로는 무료(`FREE`)로 즉시 열람되며, 정통 사주팔자는 **500원 유료(`500원`)** 서비스로 운영됩니다.<br/>• **결제 후 화면 전환 게이트키핑**: 사주팔자 모드에서 조회 버튼을 누르면 결과 화면으로 넘어가지 않고 입력 화면 위에서 **`"💳 500원 결제를 진행하시겠습니까?"`** 모달이 먼저 팝업됩니다. 결제 취소 시 입력 화면에 머무르며, **토스페이(`TOSS_PAY`) · 카카오페이(`KAKAO_PAY`) · 네이버페이(`NAVER_PAY`)** 중 하나를 선택해 최종 결제 승인(`POST /api/payment/checkout`)을 완료해야만 MySQL `payments` 테이블에 영수증(`ORD-YYYYMMDD-XXXXXX`)이 기록되면서 사주 결과 화면으로 전환됩니다. |
+| **5. 내장형 AI 명리 · 꿈해몽 도사 챗봇** | `AiChatController`<br/>`AiCounselorService`<br/>`AiChatLogEntity` | • **로그인 후 전용 노출**: 로그인 전에는 챗봇 버튼과 드로어가 완전히 숨겨지며, 로그인 완료 후에만 우측 하단 플로팅 도사 버튼과 상단 헤더 버튼이 활성화됩니다.<br/>• **사주 컨텍스트 실시간 연동**: 사용자의 일주, 수호동물, 신강/신약, 용신, 오늘의 십신·12운성·점수를 실시간으로 결합하여 재물·연애·이직·오늘의 비책·용신 개운법을 1:1로 상담합니다.<br/>• **동양 정통 꿈해몽(周公解夢)**: 돼지·똥·황금(`대대길몽 98점`), 용·호랑이·태양(`제왕길몽 97점`), 활활 타는 불(`번창길몽 94점`), 죽음·시체·피(`역몽 대길조 93점`), 조상님(`음덕예지몽 92점`), 뱀·맑은 물·잉어(`지혜·재원 길몽 90점`), 치아 빠짐·쫓기는 꿈(`신중경고몽·심몽`)을 내 사주 일진과 대조해 해몽하고 MySQL `ai_chat_logs` 테이블에 저장합니다. |
+| **6. 한국 전통 단청·한지 디자인 & 타로 카테고리 재셔플** | `index.html`<br/>`style.css`<br/>`app.js` | • **한국 전통 미학**: 궁중 단청 5색 상·하단 띠(`.dancheong-bar`), 조선 왕실 규장각 현판 헤더, 사괘(`☰ ☲ ☵ ☷`) 및 오방색(`靑·赤·黃·白·黑`) 장식, 한지 고서 이중 창살 테두리, 주칠 낙관 인장(`天命`, `四柱命式`), 실시간 천기 마퀴 전광판을 적용했습니다.<br/>• **타로 카테고리 전환 재셔플**: 타로에서 카테고리(`연애`, `진로`, `금전`, `치유`)를 바꾸면 이전 선택 카드를 재사용하지 않고 `resetTarotSpread()`를 호출해 12장 덱을 즉시 새로 셔플하고 3장을 다시 뽑게 합니다. |
 
 ---
 
 ## 🔄 4. 요청-응답 처리 시퀀스 다이어그램
 
-사용자가 웹 화면에서 **[사주 & 운세 풀이 보기]** 버튼을 클릭했을 때 프론트엔드, 스프링부트 백엔드, MySQL 데이터베이스 간에 일어나는 실제 요청·응답 흐름입니다.
-
 ```mermaid
 sequenceDiagram
     autonumber
     actor User as 👤 사용자
-    participant FE as 🌐 프론트엔드 (app.js)
-    participant CTRL as 🎮 SajuApiController
-    participant SVC as ⚙️ SajuService (@Transactional)
-    participant REPO as 🗄️ JPA & JDBC Repository
+    participant FE as 🏯 프론트엔드 (app.js)
+    participant AUTH as 🛡️ AuthApiController
+    participant SAJU as 🎮 SajuApiController
+    participant AI as 🧙‍♂️ AiChatController
     participant DB as 🐬 MySQL (chunmyung_saju)
 
-    User->>FE: 생년월일시 입력 후 [풀이 보기] 클릭
-    FE->>FE: KASI 만세력·오행·신살·오늘의 운세 계산 및 화면 렌더링
+    rect rgb(253, 245, 230)
+        Note over User,DB: [Phase 1] 회원가입 · 보안 로그인 · 단계별 오류 보호 (5회 SMS / 10회 휴면)
+        User->>FE: 아이디 / 비밀번호 입력 후 로그인 요청
+        FE->>AUTH: POST /api/auth/login (LoginRequest JSON)
+        AUTH->>DB: SELECT * FROM accounts WHERE login_id = ?
+        alt 비밀번호 불일치 (5~9회 연속 오류 시)
+            AUTH->>DB: UPDATE accounts SET failed_attempts=?, account_status='WARNING_SMS_SENT'
+            AUTH->>DB: INSERT INTO sms_verifications (verification_code, purpose='FAILED_5_ALERT')
+            AUTH-->>FE: 200 OK (success: false, smsSent: true, demoSmsCode: "6자리")
+            FE-->>User: 📱 상단 휴대폰 SMS 보안 경고 문자 도착 배너 표시
+        else 비밀번호 10회 이상 오류 시 (계정 휴면화)
+            AUTH->>DB: UPDATE accounts SET account_status='DORMANT_LOCKED'
+            AUTH-->>FE: 200 OK (accountStatus: "DORMANT_LOCKED")
+            User->>FE: [🔓 휴면·잠금 해제] 탭에서 6자리 SMS 인증번호 입력
+            FE->>AUTH: POST /api/auth/sms/unlock (SmsUnlockRequest JSON)
+            AUTH->>DB: UPDATE accounts SET failed_attempts=0, account_status='ACTIVE'
+            AUTH-->>FE: 200 OK (휴면 해제 완료)
+        else 비밀번호 일치 (정상 로그인)
+            AUTH->>DB: UPDATE accounts SET failed_attempts=0, last_login_at=NOW()
+            AUTH-->>FE: 200 OK (authenticated: true, HttpSession 발급)
+            FE-->>User: 사주·운세 메인 화면 진입 & 🧙‍♂️ AI 도사 챗봇 버튼 활성화
+        end
+    end
 
     rect rgb(240, 248, 255)
-        Note over FE,DB: [Step 1] 사주팔자 원국 + 오행 밸런스 + 신살 통합 저장
-        FE->>CTRL: POST /api/saju/save (SajuSaveRequestDto JSON)
-        CTRL->>SVC: saveSajuRecord(req)
-        SVC->>REPO: findByNameAndBirthYearAndBirthMonthAndBirthDay(...)
-        REPO->>DB: SELECT * FROM users WHERE name=? AND birth_year=? ...
-        alt 기존 사용자 존재 시
-            DB-->>SVC: 기존 UserEntity 반환 (Dirty Checking 업데이트)
-        else 신규 사용자일 시
-            SVC->>REPO: userRepository.save(newUser)
-            REPO->>DB: INSERT INTO users (...)
-            DB-->>SVC: 생성된 user_id 반환
-        end
-        SVC->>REPO: sajuRecordRepository.save(sajuRecord) [CascadeType.ALL]
-        REPO->>DB: INSERT INTO saju_records (...)
-        REPO->>DB: INSERT INTO five_elements_balances (...)
-        REPO->>DB: INSERT INTO sinsal_records (...) [배치 저장]
-        DB-->>SVC: 저장된 saju_record_id 반환
-        SVC-->>CTRL: sajuId (Long)
-        CTRL-->>FE: 200 OK {"success": true, "message": "...", "data": 1}
+        Note over User,DB: [Phase 2] 정통 사주팔자 500원 간편결제 게이트키핑 (토스 · 카카오 · 네이버페이)
+        User->>FE: 사주팔자 모드(500원) 생년월일시 입력 후 조회 클릭
+        FE-->>User: 화면 전환 전 "💳 500원 결제를 진행하시겠습니까?" 모달 팝업
+        User->>FE: 결제수단(토스/카카오/네이버페이) 선택 및 [네, 500원 결제 승인] 클릭
+        FE->>SAJU: POST /api/payment/checkout (PaymentRequestDto JSON)
+        SAJU->>DB: INSERT INTO payments (merchant_uid, payment_method, amount=500, status='PAID')
+        SAJU-->>FE: 200 OK (PaymentResponseDto 영수증 반환)
+        FE->>SAJU: POST /api/saju/save (4주 8자 + 오행 + 신살 통합 저장)
+        SAJU->>DB: INSERT INTO users, saju_records, five_elements_balances, sinsal_records
+        SAJU-->>FE: 200 OK (sajuId 반환)
+        FE-->>User: 🔓 사주 결과 화면으로 전환 및 전체 심층 리포트 잠금 해제
     end
 
     rect rgb(245, 255, 245)
-        Note over FE,DB: [Step 2] 오늘의 일일 운세 Upsert 저장
-        FE->>CTRL: POST /api/fortune/save (DailyFortuneSaveRequestDto JSON)
-        CTRL->>SVC: saveDailyFortune(req)
-        SVC->>REPO: findByUserIdAndFortuneDate(userId, today)
-        REPO->>DB: SELECT * FROM daily_fortunes WHERE user_id=? AND fortune_date=?
-        SVC->>REPO: dailyFortuneRepository.save(fortune)
-        REPO->>DB: INSERT or UPDATE daily_fortunes
-        DB-->>SVC: fortuneId 반환
-        CTRL-->>FE: 200 OK {"success": true, "message": "...", "data": 1}
+        Note over User,DB: [Phase 3] 내장 AI 명리·꿈해몽 도사 챗봇 실시간 문답
+        User->>FE: 🧙‍♂️ AI 도사 챗봇에서 "어젯밤 돼지꿈 해몽해줘" 또는 "내 재물운 알려줘" 전송
+        FE->>AI: POST /api/ai/chat (질문 + 현재 사용자 사주·일주·용신·일진 컨텍스트)
+        AI->>DB: INSERT INTO ai_chat_logs (intent_category, user_message, ai_response)
+        AI-->>FE: 200 OK (ChatResponse JSON)
+        FE-->>User: 실시간 타이핑 스트리밍 애니메이션으로 맞춤형 해몽·명리 처방 출력
     end
 ```
 
 ---
 
-## 🗄 5. 데이터베이스 ERD 및 7대 정규화 엔티티 명세
+## 🗄 5. 데이터베이스 ERD 및 11대 정규화 엔티티 명세
 
 ### 5-1. MySQL 데이터베이스 ERD (`chunmyung_saju`)
 
 ```mermaid
 erDiagram
+    ACCOUNTS ||--o{ SMS_VERIFICATIONS : "1:N SMS 보안인증"
     USERS ||--o{ SAJU_RECORDS : "1:N 사주 원장"
     USERS ||--o{ DAILY_FORTUNES : "1:N 일일 운세"
     USERS ||--o{ COMPATIBILITY_RECORDS : "1:N 2인 궁합"
     USERS ||--o{ TAROT_READINGS : "1:N 타로 점괘"
+    USERS ||--o{ PAYMENTS : "1:N 500원 간편결제"
     SAJU_RECORDS ||--|| FIVE_ELEMENTS_BALANCES : "1:1 오행/용신"
     SAJU_RECORDS ||--o{ SINSAL_RECORDS : "1:N 8대 신살"
+    SAJU_RECORDS ||--o{ PAYMENTS : "1:N 리포트 결제연동"
+
+    ACCOUNTS {
+        BIGINT id PK
+        VARCHAR login_id UK
+        VARCHAR password_hash
+        VARCHAR password_salt
+        VARCHAR name
+        VARCHAR phone_number
+        INT failed_attempts
+        VARCHAR account_status
+        DATETIME last_login_at
+    }
+
+    SMS_VERIFICATIONS {
+        BIGINT id PK
+        VARCHAR login_id
+        VARCHAR phone_number
+        VARCHAR verification_code
+        VARCHAR purpose
+        BOOLEAN is_verified
+        DATETIME expires_at
+    }
 
     USERS {
-        BIGINT id PK "자동 증가 식별자"
-        VARCHAR(50) name "이름/닉네임"
-        ENUM gender "M(남성) / F(여성)"
-        ENUM birth_type "SOLAR / LUNAR / LEAP_LUNAR"
-        INT birth_year "출생년도"
-        INT birth_month "출생월 (1~12)"
-        INT birth_day "출생일 (1~31)"
-        INT birth_hour "출생시 (0~23, nullable)"
-        INT birth_minute "출생분 (0~59, nullable)"
-        BOOLEAN is_time_unknown "출생시간 모름 여부"
-        BOOLEAN time_correction_applied "서울 30분 시차보정 여부"
-        DATETIME created_at "생성 일시"
-        DATETIME updated_at "수정 일시"
+        BIGINT id PK
+        VARCHAR name
+        ENUM gender
+        ENUM birth_type
+        INT birth_year
+        INT birth_month
+        INT birth_day
+        INT birth_hour
+        INT birth_minute
     }
 
     SAJU_RECORDS {
-        BIGINT id PK "사주 원장 식별자"
-        BIGINT user_id FK "users.id 참조"
-        VARCHAR(10) year_cheongan "년주 천간"
-        VARCHAR(10) year_jiji "년주 지지"
-        VARCHAR(10) month_cheongan "월주 천간"
-        VARCHAR(10) month_jiji "월주 지지"
-        VARCHAR(10) day_cheongan "일주 천간 (본원)"
-        VARCHAR(10) day_jiji "일주 지지"
-        VARCHAR(10) time_cheongan "시주 천간 (nullable)"
-        VARCHAR(10) time_jiji "시주 지지 (nullable)"
-        VARCHAR(10) day_master "일간 (Day Master)"
-        VARCHAR(20) ilju_name "60갑자 일주명"
-        VARCHAR(20) zodiac_animal "일주 상징 동물"
-        TEXT ilju_description "일주론 상세 해설"
-        DATETIME created_at "분석 일시"
+        BIGINT id PK
+        BIGINT user_id FK
+        VARCHAR year_cheongan
+        VARCHAR year_jiji
+        VARCHAR month_cheongan
+        VARCHAR month_jiji
+        VARCHAR day_cheongan
+        VARCHAR day_jiji
+        VARCHAR time_cheongan
+        VARCHAR time_jiji
+        VARCHAR ilju_name
     }
 
     FIVE_ELEMENTS_BALANCES {
-        BIGINT id PK "오행 밸런스 식별자"
-        BIGINT saju_record_id FK "saju_records.id 참조"
-        DECIMAL(5_2) wood_ratio "목(木) 비율(%)"
-        DECIMAL(5_2) fire_ratio "화(火) 비율(%)"
-        DECIMAL(5_2) earth_ratio "토(土) 비율(%)"
-        DECIMAL(5_2) metal_ratio "금(金) 비율(%)"
-        DECIMAL(5_2) water_ratio "수(水) 비율(%)"
-        VARCHAR(20) dominant_element "최강 오행"
-        VARCHAR(20) deficient_element "결핍 오행"
-        VARCHAR(30) strength_status "신강/신약/중화 판정"
-        VARCHAR(30) yongsin "억부/조후 추천 용신"
-        TEXT analysis_text "오행 체질 종합 소견"
-        DATETIME created_at "생성 일시"
+        BIGINT id PK
+        BIGINT saju_record_id FK
+        DECIMAL wood_ratio
+        DECIMAL fire_ratio
+        DECIMAL earth_ratio
+        DECIMAL metal_ratio
+        DECIMAL water_ratio
+        VARCHAR strength_status
+        VARCHAR yongsin
     }
 
     SINSAL_RECORDS {
-        BIGINT id PK "신살 식별자"
-        BIGINT saju_record_id FK "saju_records.id 참조"
-        ENUM pillar_type "YEAR / MONTH / DAY / TIME / GENERAL"
-        VARCHAR(50) sinsal_name "신살 명칭 (천을귀인 등)"
-        ENUM sinsal_type "AUSPICIOUS / INAUSPICIOUS / NEUTRAL"
-        TEXT description "현대적 신살 해석 및 조언"
-        DATETIME created_at "생성 일시"
+        BIGINT id PK
+        BIGINT saju_record_id FK
+        ENUM pillar_type
+        VARCHAR sinsal_name
+        ENUM sinsal_type
     }
 
     DAILY_FORTUNES {
-        BIGINT id PK "일일 운세 식별자"
-        BIGINT user_id FK "users.id 참조"
-        DATE fortune_date "운세 기준 날짜"
-        VARCHAR(20) today_gapja "오늘의 일진 간지"
-        INT total_score "종합운 점수 (0~100)"
-        INT wealth_score "재물운 점수 (0~100)"
-        INT love_score "애정운 점수 (0~100)"
-        INT career_score "직업/학업운 점수 (0~100)"
-        INT health_score "건강운 점수 (0~100)"
-        VARCHAR(30) lucky_color "행운의 색상"
-        VARCHAR(20) lucky_number "행운의 숫자"
-        VARCHAR(30) lucky_direction "행운의 방위"
-        TEXT overall_advice "오늘의 총평 및 조언"
-        DATETIME created_at "기록 일시"
+        BIGINT id PK
+        BIGINT user_id FK
+        DATE fortune_date
+        VARCHAR today_gapja
+        INT total_score
+        VARCHAR lucky_color
     }
 
     COMPATIBILITY_RECORDS {
-        BIGINT id PK "궁합 식별자"
-        BIGINT user1_id FK "본인 users.id 참조"
-        BIGINT user2_id FK "상대방 users.id 참조"
-        INT score "궁합 점수 (0~100)"
-        VARCHAR(30) grade "궁합 등급"
-        TEXT cheongan_harmony "천간 합충 분석"
-        TEXT jiji_harmony "지지 삼합/육합/원진 분석"
-        TEXT relationship_advice "관계 조언"
-        DATETIME created_at "생성 일시"
+        BIGINT id PK
+        BIGINT user1_id FK
+        BIGINT user2_id FK
+        INT score
+        VARCHAR grade
     }
 
     TAROT_READINGS {
-        BIGINT id PK "타로 식별자"
-        BIGINT user_id FK "users.id 참조 (nullable)"
-        INT card_number "메이저 아르카나 번호 (0~21)"
-        VARCHAR(50) card_name_kr "카드 한글명"
-        VARCHAR(50) card_name_en "카드 영문명"
-        BOOLEAN is_reversed "정/역방향 여부"
-        VARCHAR(100) keyword "핵심 키워드"
-        TEXT interpretation "점괘 해석"
-        TEXT advice "실천 조언"
-        DATETIME created_at "뽑은 일시"
+        BIGINT id PK
+        BIGINT user_id FK
+        INT card_number
+        VARCHAR card_name_kr
+        VARCHAR keyword
+    }
+
+    PAYMENTS {
+        BIGINT id PK
+        BIGINT user_id FK
+        BIGINT saju_record_id FK
+        VARCHAR merchant_uid UK
+        ENUM payment_method
+        INT amount
+        ENUM payment_status
+        VARCHAR pg_tid
+    }
+
+    AI_CHAT_LOGS {
+        BIGINT id PK
+        VARCHAR user_name
+        VARCHAR ilju_name
+        VARCHAR yongsin
+        VARCHAR intent_category
+        TEXT user_message
+        TEXT ai_response
     }
 ```
 
-### 5-2. 7대 엔티티 클래스 및 테이블 매핑 요약
+### 5-2. 11대 엔티티 클래스 및 테이블 매핑 요약
 
 > 패키지 경로: `com.chunmyung.saju.entity`
 
 | No. | 엔티티 클래스 | DB 테이블명 | 연관 관계 | 핵심 저장 항목 |
 | :-: | :--- | :--- | :---: | :--- |
-| **1** | `UserEntity` | `users` | `1 : N` (Root) | 이름, 성별, 생년월일시, 양·음력, 30분 시차보정 |
-| **2** | `SajuRecordEntity` | `saju_records` | `N : 1` (`users`) | 4주 8자(천간·지지), 본원 일간, 60갑자 일주론 |
-| **3** | `FiveElementsEntity` | `five_elements_balances` | `1 : 1` (`saju_records`) | 5오행 비율(%), 과다·결핍 오행, 신강약, 추천 용신 |
-| **4** | `SinsalEntity` | `sinsal_records` | `N : 1` (`saju_records`) | 기둥별 8대 신살(천을귀인·도화살 등) 및 상세 해설 |
-| **5** | `DailyFortuneEntity` | `daily_fortunes` | `N : 1` (`users`) | 일진 간지, 5대 운세 점수, 행운의 색·숫자·방위 |
-| **6** | `CompatibilityEntity` | `compatibility_records` | `N : 2` (`users`) | 본인·상대방 궁합 점수, 등급, 천간·지지 합충 분석 |
-| **7** | `TarotEntity` | `tarot_readings` | `N : 1` (`users`) | 타로 카드 번호(0~21), 정·역방향, 키워드·리딩 조언 |
+| **1** | `AccountEntity` | `accounts` | `1 : N` (Auth) | 로그인 ID, PBKDF2 해시·Salt, 휴대폰 번호, 실패 횟수, 휴면 상태 |
+| **2** | `SmsVerificationEntity` | `sms_verifications` | `N : 1` (`accounts`) | 수신 휴대폰 번호, 6자리 인증번호, 발송 목적, 만료 일시, 인증 여부 |
+| **3** | `UserEntity` | `users` | `1 : N` (Root) | 이름, 성별, 생년월일시, 양·음력·윤달, 30분 시차보정 여부 |
+| **4** | `SajuRecordEntity` | `saju_records` | `N : 1` (`users`) | 4주 8자(천간·지지), 본원 일간, 60갑자 일주명, 수호동물, 일주론 |
+| **5** | `FiveElementsEntity` | `five_elements_balances` | `1 : 1` (`saju_records`) | 5오행 비율(%), 과다·결핍 오행, 신강·신약 판정, 추천 용신 |
+| **6** | `SinsalEntity` | `sinsal_records` | `N : 1` (`saju_records`) | 기둥별 8대 신살(천을귀인·도화살·역마살 등), 길흉 구분 및 해설 |
+| **7** | `DailyFortuneEntity` | `daily_fortunes` | `N : 1` (`users`) | 운세 날짜, 일진 간지, 5대 운세 점수, 행운의 색·숫자·방위·총평 |
+| **8** | `CompatibilityEntity` | `compatibility_records` | `N : 2` (`users`) | 본인·상대방 궁합 점수, 등급, 천간·지지 합충 분석 및 조언 |
+| **9** | `TarotEntity` | `tarot_readings` | `N : 1` (`users`) | 타로 카드 번호(0~21), 한글·영문 카드명, 정·역방향, 키워드·해석 |
+| **10** | `PaymentEntity` | `payments` | `N : 1` (`users`) | 주문번호(`ORD-...`), 토스·카카오·네이버페이 수단, 500원, 승인번호 |
+| **11** | `AiChatLogEntity` | `ai_chat_logs` | `Independent` | 사용자명, 연동 일주·용신, 질문 의도(`DREAM` 등), 질문 및 AI 답변 |
 
 ---
 
@@ -292,308 +321,297 @@ erDiagram
 | 응답 필드명 | 데이터 타입 | 설명 |
 | :---: | :---: | :--- |
 | `success` | `boolean` | 요청 처리 성공 여부 (`true` / `false`) |
-| `message` | `String` | 처리 결과 안내 메시지 |
-| `data` | `T` (Generic) | 실제 반환 데이터 (저장된 PK ID, 조회 리스트, 상태값 등) |
+| `message` | `String` | 처리 결과 또는 단계별 보안 경고 안내 메시지 |
+| `data` | `T` (Generic) | 실제 반환 데이터 객체 (인증 상태, 영수증, AI 답변, 저장된 PK ID 등) |
 
 ---
 
-### ① JDBC 데이터베이스 연결 상태 진단 API
+### ① 회원가입 API (`POST /api/auth/signup`)
 
 | 항목 | 상세 내용 |
 | :---: | :--- |
-| **HTTP Method & URI** | `GET /api/jdbc/check` |
-| **담당 메서드** | `SajuApiController.checkJdbc()` ➔ `SajuJdbcRepository.checkJdbcConnection()` |
-| **구현 동작** | `DataSource.getConnection()`으로 커넥션을 획득하여 MySQL JDBC 드라이버명, 접속 URL, DB 엔진 메타데이터를 검증합니다. |
+| **HTTP Method & URI** | `POST /api/auth/signup` |
+| **담당 메서드** | `AuthApiController.signup()` ➔ `AuthService.registerAccount()` |
+| **구현 동작** | 입력값 SQL 인젝션 검사를 수행한 후, 16바이트 랜덤 Salt와 `PBKDF2WithHmacSHA256`으로 비밀번호를 단방향 암호화하여 `accounts` 테이블에 저장하고 로그인 세션을 발급합니다. |
 
-#### 📥 요청 (Request)
-```http
-GET /api/jdbc/check HTTP/1.1
-Host: localhost:8085
-Accept: application/json
-```
-
-#### 📤 응답 (Response - 200 OK)
+#### 📥 요청 예시 (Request Body JSON)
 ```json
 {
-  "success": true,
-  "message": "MySQL JDBC 연결이 정상입니다.",
-  "data": true
+  "loginId": "hong1234",
+  "password": "mySecretPassword!",
+  "name": "홍길동",
+  "phoneNumber": "010-1234-5678",
+  "gender": "M",
+  "birthYear": 1995,
+  "birthMonth": 5,
+  "birthDay": 15
 }
 ```
 
-#### 📤 응답 (Response - 500 Internal Server Error, DB 연결 실패 시)
+#### 📤 응답 예시 (Response - 200 OK)
+```json
+{
+  "success": true,
+  "message": "홍길동 님, 천명(天命) 회원가입이 완료되었습니다!",
+  "data": {
+    "authenticated": true,
+    "accountId": 1,
+    "loginId": "hong1234",
+    "name": "홍길동",
+    "maskedPhone": "010-****-5678",
+    "gender": "M",
+    "birthYear": 1995,
+    "birthMonth": 5,
+    "birthDay": 15,
+    "failedAttempts": 0,
+    "accountStatus": "ACTIVE",
+    "smsSent": false,
+    "smsPreviewMessage": null,
+    "demoSmsCode": null
+  }
+}
+```
+
+---
+
+### ② 보안 로그인 API (`POST /api/auth/login`) — 5회 오류 SMS 발송 & 10회 휴면화
+
+| 항목 | 상세 내용 |
+| :---: | :--- |
+| **HTTP Method & URI** | `POST /api/auth/login` |
+| **담당 메서드** | `AuthApiController.login()` ➔ `AuthService.loginAccount()` |
+| **구현 동작** | • **1~4회 실패**: 실패 횟수 증가 및 경고 메시지 반환<br/>• **5~9회 실패**: `account_status = 'WARNING_SMS_SENT'` 전환 및 등록된 휴대폰으로 6자리 본인확인 SMS 문자 자동 발송 (`sms_verifications` 저장)<br/>• **10회 이상 실패**: `account_status = 'DORMANT_LOCKED'`(계정 휴면화) 전환 및 로그인 전면 차단 |
+
+#### 📥 요청 예시 (Request Body JSON)
+```json
+{
+  "loginId": "hong1234",
+  "password": "wrongPassword"
+}
+```
+
+#### 📤 응답 예시 A (1~4회 비밀번호 오류 시 경고)
 ```json
 {
   "success": false,
-  "message": "MySQL JDBC 연결에 실패했습니다.",
-  "data": null
+  "message": "⚠️ 비밀번호가 일치하지 않습니다. (현재 3회 실패 / 5회 이상 오류 시 휴대폰 문자 발송, 10회 이상 오류 시 계정 휴면화)",
+  "data": {
+    "authenticated": false,
+    "accountId": 1,
+    "loginId": "hong1234",
+    "name": "홍길동",
+    "maskedPhone": "010-****-5678",
+    "failedAttempts": 3,
+    "accountStatus": "ACTIVE",
+    "smsSent": false
+  }
+}
+```
+
+#### 📤 응답 예시 B (5회 이상 비밀번호 오류 시 — 휴대폰 SMS 문자 즉시 발송)
+```json
+{
+  "success": false,
+  "message": "🚨 비밀번호 5회 연속 오류! 등록된 휴대폰(010-****-5678)으로 보안 경고 문자가 발송되었습니다. (10회 이상 실패 시 계정이 휴면화됩니다. 남은 기회: 5회)",
+  "data": {
+    "authenticated": false,
+    "accountId": 1,
+    "loginId": "hong1234",
+    "name": "홍길동",
+    "maskedPhone": "010-****-5678",
+    "failedAttempts": 5,
+    "accountStatus": "WARNING_SMS_SENT",
+    "smsSent": true,
+    "smsPreviewMessage": "[천명(天命) 보안경고] 비밀번호 5회 연속 오류 감지! 본인확인 인증번호는 [482915] 입니다. (10회 오류 시 계정 휴면화)",
+    "demoSmsCode": "482915"
+  }
+}
+```
+
+#### 📤 응답 예시 C (10회 이상 비밀번호 오류 시 — 계정 휴면화 잠금)
+```json
+{
+  "success": false,
+  "message": "🔒 비밀번호를 10회 이상 잘못 입력하여 계정이 휴면화(잠금)되었습니다! 휴대폰(010-****-5678)으로 발송된 SMS 인증번호를 입력해야 잠금이 해제됩니다.",
+  "data": {
+    "authenticated": false,
+    "accountId": 1,
+    "loginId": "hong1234",
+    "name": "홍길동",
+    "maskedPhone": "010-****-5678",
+    "failedAttempts": 10,
+    "accountStatus": "DORMANT_LOCKED",
+    "smsSent": true,
+    "smsPreviewMessage": "[천명(天命) 긴급보안] 비밀번호 10회 연속 오류로 계정이 휴면화(잠금) 처리되었습니다. 해제 인증번호는 [739104] 입니다.",
+    "demoSmsCode": "739104"
+  }
 }
 ```
 
 ---
 
-### ② 사주팔자 4주 8자 · 오행 · 신살 통합 저장 API
+### ③ 휴대폰 SMS 인증번호 검증 및 휴면 계정 해제 API (`POST /api/auth/sms/unlock`)
 
 | 항목 | 상세 내용 |
 | :---: | :--- |
-| **HTTP Method & URI** | `POST /api/saju/save` |
-| **Content-Type** | `application/json` |
-| **요청 DTO** | `SajuSaveRequestDto` |
-| **구현 동작** | 1) `users` 테이블에 사용자 조회 또는 신규 등록(Upsert)<br/>2) `saju_records` 테이블에 4주 8자 및 일주론 저장<br/>3) `five_elements_balances` 테이블에 5오행 비율·신강약·용신 저장<br/>4) `sinsal_records` 테이블에 기둥별 신살 리스트 일괄 저장 |
+| **HTTP Method & URI** | `POST /api/auth/sms/unlock` |
+| **담당 메서드** | `AuthApiController.unlockWithSms()` ➔ `AuthService.unlockAccountWithSms()` |
+| **구현 동작** | 아이디, 휴대폰 번호, 6자리 SMS 인증번호(유효시간 5분)를 검증하여 일치하면 `account_status = 'ACTIVE'`, `failed_attempts = 0`으로 초기화하고, 새 비밀번호 입력 시 새 Salt+해시로 변경합니다. |
 
-#### 📋 Request Body 필드 명세
+#### 📥 요청 예시 (Request Body JSON)
+```json
+{
+  "loginId": "hong1234",
+  "phoneNumber": "010-1234-5678",
+  "verificationCode": "739104",
+  "newPassword": "newSafePassword123!"
+}
+```
+
+#### 📤 응답 예시 (Response - 200 OK)
+```json
+{
+  "success": true,
+  "message": "✅ 휴대폰 SMS 인증이 완료되어 계정 휴면(잠금) 및 오류 횟수가 모두 초기화되었습니다! 이제 로그인하실 수 있습니다.",
+  "data": {
+    "authenticated": false,
+    "accountId": 1,
+    "loginId": "hong1234",
+    "name": "홍길동",
+    "maskedPhone": "010-****-5678",
+    "failedAttempts": 0,
+    "accountStatus": "ACTIVE",
+    "smsSent": false
+  }
+}
+```
+
+---
+
+### ④ 유료 사주 500원 간편결제 승인 API (`POST /api/payment/checkout`)
+
+| 항목 | 상세 내용 |
+| :---: | :--- |
+| **HTTP Method & URI** | `POST /api/payment/checkout` |
+| **결제 수단 코드** | `TOSS_PAY` (토스페이), `KAKAO_PAY` (카카오페이), `NAVER_PAY` (네이버페이) |
+| **구현 동작** | 사주팔자 모드(500원)에서 사용자가 선택한 간편결제 수단으로 500원 결제를 승인하고, 고유 주문번호(`ORD-YYYYMMDD-XXXXXX`)와 PG 승인번호를 발급하여 MySQL `payments` 테이블에 저장합니다. |
+
+#### 📥 요청 예시 (Request Body JSON)
+```json
+{
+  "name": "홍길동",
+  "gender": "M",
+  "birthYear": 1995,
+  "birthMonth": 5,
+  "birthDay": 15,
+  "sajuRecordId": 1,
+  "productType": "SAJU_FULL_REPORT",
+  "productName": "천명(天命) 정통 사주팔자 · 대운 · 심층 리포트 열람권",
+  "paymentMethod": "TOSS_PAY",
+  "amount": 500
+}
+```
+
+#### 📤 응답 예시 (Response - 200 OK)
+```json
+{
+  "success": true,
+  "message": "토스페이 500원 결제가 완료되었습니다. (주문번호: ORD-20261120-841920)",
+  "data": {
+    "paymentId": 1,
+    "userId": 1,
+    "userName": "홍길동",
+    "merchantUid": "ORD-20261120-841920",
+    "productType": "SAJU_FULL_REPORT",
+    "productName": "천명(天命) 정통 사주팔자 · 대운 · 심층 리포트 열람권",
+    "paymentMethod": "TOSS_PAY",
+    "paymentMethodKr": "토스페이",
+    "amount": 500,
+    "paymentStatus": "PAID",
+    "pgTid": "TOSS_TID_1795180841920",
+    "paidAt": "2026-11-20T22:15:30"
+  }
+}
+```
+
+---
+
+### ⑤ 내장형 AI 명리 · 꿈해몽 도사 챗봇 문답 API (`POST /api/ai/chat`)
+
+| 항목 | 상세 내용 |
+| :---: | :--- |
+| **HTTP Method & URI** | `POST /api/ai/chat` |
+| **담당 메서드** | `AiChatController.chat()` ➔ `AiCounselorService.generateCounselReply()` |
+| **구현 동작** | 사용자의 질문 의도(`DREAM_INTERPRETATION`, `WEALTH`, `LOVE`, `CAREER`, `TODAY`, `ELEMENT_YONGSIN`, `SINSAL_DAEUN`)를 분류하고, 연동된 사용자의 일주·용신·십신·12운성 컨텍스트와 결합해 맞춤형 명리 상담 및 동양 정통 꿈해몽 답변을 생성한 뒤 MySQL `ai_chat_logs` 테이블에 저장합니다. |
+
+#### 📥 요청 예시 (Request Body JSON — 꿈해몽 질문 시)
+```json
+{
+  "message": "어젯밤 꿈에 돼지와 황금을 본 꿈을 꿨는데 해몽해줘!",
+  "userName": "홍길동",
+  "gender": "M",
+  "iljuName": "병인(丙寅)",
+  "dayMaster": "丙",
+  "zodiacAnimal": "붉은 호랑이",
+  "strengthStatus": "신강(身强)",
+  "yongsin": "금(金) / 수(水)",
+  "deficientElement": "수(水)",
+  "todayTenGod": "식신(食神)",
+  "todayTwelveStage": "건록(建祿)",
+  "todayScore": 88,
+  "luckyColor": "순백의 화이트, 실버",
+  "luckyFood": "정갈한 생선구이, 배 도라지차",
+  "luckyDirection": "서쪽 (West)",
+  "sinsalNames": "천을귀인·홍염살"
+}
+```
+
+#### 📤 응답 예시 (Response - 200 OK)
+```json
+{
+  "success": true,
+  "message": "AI 명리 도사 응답이 생성되었습니다.",
+  "data": {
+    "chatLogId": 1,
+    "intentCategory": "DREAM_INTERPRETATION",
+    "intentBadge": "🌙 동양 정통 꿈해몽(夢兆) 처방",
+    "reply": "🌙 **홍길동** 님의 꿈자리와 사주 일진을 대조하여 해몽해 드립니다.\n\n• **[해몽 판정]**: **🌟 대대길몽(大大吉夢) — 재물·횡재 지수 98점**\n• **[동양 해몽 원전 풀이]**: 동양 해몽에서 **돼지·황금·대변(똥)**은 오행상 비옥한 **토(土)와 금(金)의 결실**을 뜻하는 최고 으뜸의 재물 길몽입니다...\n• **[사주·일진 결합 행동 지침]**: 오늘 귀하의 일진(**식신(食神) · 건록(建祿)**)과 맞물려 재물복이 크게 열려 있으니...",
+    "followUpTip": "💡 다른 꿈도 해몽해 드립니다! 예: '돼지꿈 꿨어', '불이 활활 타는 꿈 해몽해줘', '뱀이 나오는 꿈', '이빨 빠지는 꿈' 등 구체적으로 적어보세요."
+  }
+}
+```
+
+---
+
+### ⑥ 사주팔자 4주 8자 · 오행 · 신살 통합 저장 API (`POST /api/saju/save`)
 
 | 구분 | 필드명 | 타입 | 필수 | 설명 |
 | :-: | :--- | :---: | :-: | :--- |
-| **사용자** | `name` | `String` | Y | 사용자 이름 또는 닉네임 |
-| **사용자** | `gender` | `String` | Y | 성별 (`"M"` 또는 `"F"`) |
-| **사용자** | `birthType` | `String` | Y | 역법 구분 (`"SOLAR"`, `"LUNAR"`, `"LEAP_LUNAR"`) |
+| **사용자** | `name`, `gender`, `birthType` | `String` | Y | 이름, 성별(`"M"`/`"F"`), 역법(`"SOLAR"`/`"LUNAR"`) |
 | **사용자** | `birthYear`, `birthMonth`, `birthDay` | `Integer` | Y | 출생 연·월·일 |
 | **사용자** | `birthHour`, `birthMinute` | `Integer` | N | 출생 시·분 (시간 모름일 경우 `null`) |
-| **사용자** | `isTimeUnknown` | `Boolean` | Y | 출생시간 모름 여부 (`true` / `false`) |
-| **사용자** | `timeCorrectionApplied` | `Boolean` | Y | 동경 127.5° 기준 30분 시차보정 적용 여부 |
-| **사주원장** | `yearCheongan`, `yearJiji` | `String` | Y | 년주(年柱) 천간·지지 (예: `"乙"`, `"亥"`) |
-| **사주원장** | `monthCheongan`, `monthJiji` | `String` | Y | 월주(月柱) 천간·지지 (예: `"辛"`, `"巳"`) |
-| **사주원장** | `dayCheongan`, `dayJiji` | `String` | Y | 일주(日柱) 천간·지지 (예: `"丙"`, `"寅"`) |
-| **사주원장** | `timeCheongan`, `timeJiji` | `String` | N | 시주(時柱) 천간·지지 (예: `"乙"`, `"未"`) |
-| **사주원장** | `dayMaster`, `iljuName`, `zodiacAnimal` | `String` | Y | 본원 일간, 60갑자 일주명, 상징 동물 |
+| **사주원장** | `yearCheongan` ~ `timeJiji` | `String` | Y | 년·월·일·시주 천간(天干) 및 지지(地支) 8글자 |
+| **사주원장** | `dayMaster`, `iljuName`, `zodiacAnimal` | `String` | Y | 본원 일간, 60갑자 일주명, 수호동물 |
 | **오행밸런스** | `woodRatio` ~ `waterRatio` | `BigDecimal` | Y | 목·화·토·금·수 오행 비율 (`0.00` ~ `100.00`) |
-| **오행밸런스** | `dominantElement`, `deficientElement` | `String` | Y | 가장 강한 오행 / 가장 부족한 오행 |
 | **오행밸런스** | `strengthStatus`, `yongsin` | `String` | Y | 신강·신약 판정 및 추천 용신 |
 | **신살목록** | `sinsals` | `List<SinsalDto>` | N | 기둥(`pillarType`), 신살명(`sinsalName`), 길흉, 해설 배열 |
 
-#### 📥 요청 예시 (Request Body JSON)
-```json
-{
-  "name": "홍길동",
-  "gender": "M",
-  "birthType": "SOLAR",
-  "birthYear": 1995,
-  "birthMonth": 5,
-  "birthDay": 15,
-  "birthHour": 14,
-  "birthMinute": 30,
-  "isTimeUnknown": false,
-  "timeCorrectionApplied": true,
-  "yearCheongan": "乙",
-  "yearJiji": "亥",
-  "monthCheongan": "辛",
-  "monthJiji": "巳",
-  "dayCheongan": "丙",
-  "dayJiji": "寅",
-  "timeCheongan": "乙",
-  "timeJiji": "未",
-  "dayMaster": "丙",
-  "iljuName": "병인(丙寅)",
-  "zodiacAnimal": "붉은 호랑이",
-  "iljuDescription": "병인일주는 태양과 같은 열정과 진취적인 기상을 가집니다.",
-  "woodRatio": 35.00,
-  "fireRatio": 40.00,
-  "earthRatio": 10.00,
-  "metalRatio": 10.00,
-  "waterRatio": 5.00,
-  "dominantElement": "화(火)",
-  "deficientElement": "수(水)",
-  "strengthStatus": "신강(身强)",
-  "yongsin": "금(金) / 수(水)",
-  "analysisText": "화(火)와 목(木)의 기운이 왕성하여 추진력과 리더십이 뛰어납니다.",
-  "sinsals": [
-    {
-      "pillarType": "DAY",
-      "sinsalName": "홍염살",
-      "sinsalType": "NEUTRAL",
-      "description": "사람을 끄는 다정한 매력과 예술적 감각이 돋보입니다."
-    },
-    {
-      "pillarType": "YEAR",
-      "sinsalName": "천을귀인",
-      "sinsalType": "AUSPICIOUS",
-      "description": "위기 상황에서 뜻밖의 조력자를 만나는 최고의 길신입니다."
-    }
-  ]
-}
-```
-
-#### 📤 응답 예시 (Response - 200 OK)
-```json
-{
-  "success": true,
-  "message": "사주 분석 결과가 MySQL 데이터베이스에 성공적으로 저장되었습니다. (ID: 1)",
-  "data": 1
-}
-```
-
 ---
 
-### ③ 오늘의 일일 운세 저장 API
+### ⑦ 기타 조회 및 저장 엔드포인트 요약
 
-| 항목 | 상세 내용 |
-| :---: | :--- |
-| **HTTP Method & URI** | `POST /api/fortune/save` |
-| **Content-Type** | `application/json` |
-| **요청 DTO** | `DailyFortuneSaveRequestDto` |
-| **구현 동작** | 사용자 정보를 확인한 후, `user_id`와 `fortune_date`(오늘 날짜)로 `daily_fortunes` 테이블을 조회하여 기존 기록이 있으면 점수와 조언을 업데이트(Update)하고, 없으면 새로 삽입(Insert)합니다. |
-
-#### 📥 요청 예시 (Request Body JSON)
-```json
-{
-  "name": "홍길동",
-  "gender": "M",
-  "birthYear": 1995,
-  "birthMonth": 5,
-  "birthDay": 15,
-  "fortuneDate": "2026-11-20",
-  "todayGapja": "무술(戊戌)",
-  "totalScore": 88,
-  "wealthScore": 85,
-  "loveScore": 90,
-  "careerScore": 92,
-  "healthScore": 80,
-  "luckyColor": "로열 골드",
-  "luckyNumber": "3, 8",
-  "luckyDirection": "남동쪽",
-  "overallAdvice": "식신생재의 기운이 강하게 들어와 노력한 만큼 실질적인 성과와 재물이 따르는 길일입니다."
-}
-```
-
-#### 📤 응답 예시 (Response - 200 OK)
-```json
-{
-  "success": true,
-  "message": "오늘의 운세가 MySQL 데이터베이스에 성공적으로 저장되었습니다.",
-  "data": 1
-}
-```
-
----
-
-### ④ 2인 사주 궁합 분석 결과 저장 API
-
-| 항목 | 상세 내용 |
-| :---: | :--- |
-| **HTTP Method & URI** | `POST /api/compatibility/save` |
-| **Content-Type** | `application/json` |
-| **요청 DTO** | `CompatibilitySaveRequestDto` |
-| **구현 동작** | 본인(`user1`)과 상대방(`user2`)을 각각 `users` 테이블에 Upsert 처리한 뒤, 두 사용자의 외래키(`user1_id`, `user2_id`)와 궁합 점수, 천간·지지 합충 분석 결과를 `compatibility_records` 테이블에 저장합니다. |
-
-#### 📥 요청 예시 (Request Body JSON)
-```json
-{
-  "user1Name": "홍길동",
-  "user1Gender": "M",
-  "user1BirthYear": 1995,
-  "user1BirthMonth": 5,
-  "user1BirthDay": 15,
-  "user2Name": "성춘향",
-  "user2Gender": "F",
-  "user2BirthYear": 1997,
-  "user2BirthMonth": 8,
-  "user2BirthDay": 20,
-  "score": 94,
-  "grade": "천생연분",
-  "cheonganHarmony": "병신합수(丙辛合水)로 서로의 부족한 오행을 채워주는 최상의 천간 배합입니다.",
-  "jijiHarmony": "인오술(寅午戌) 삼합의 기운이 작용하여 가치관과 생활 리듬이 안정적으로 조화를 이룹니다.",
-  "relationshipAdvice": "서로의 추진력과 세심함이 시너지를 내므로 장기적인 미래를 함께 설계하기에 매우 좋습니다."
-}
-```
-
-#### 📤 응답 예시 (Response - 200 OK)
-```json
-{
-  "success": true,
-  "message": "궁합 분석 결과가 MySQL 데이터베이스에 성공적으로 저장되었습니다.",
-  "data": 1
-}
-```
-
----
-
-### ⑤ 타로 카드 점괘 결과 저장 API
-
-| 항목 | 상세 내용 |
-| :---: | :--- |
-| **HTTP Method & URI** | `POST /api/tarot/save` |
-| **Content-Type** | `application/json` |
-| **요청 DTO** | `TarotSaveRequestDto` |
-| **구현 동작** | 사용자가 선택한 메이저 아르카나 카드 번호(0~21), 한글/영문명, 정·역방향 여부, 키워드와 리딩 조언을 `tarot_readings` 테이블에 저장합니다. |
-
-#### 📥 요청 예시 (Request Body JSON)
-```json
-{
-  "userId": 1,
-  "cardNumber": 19,
-  "cardNameKr": "19. 태양",
-  "cardNameEn": "The Sun",
-  "isReversed": false,
-  "keyword": "성공, 활력, 명쾌한 해결, 긍정적 결실",
-  "interpretation": "어두웠던 고민이 걷히고 모든 상황이 투명하고 밝게 드러나는 시기입니다.",
-  "advice": "망설이던 프로젝트나 고백이 있다면 자신감을 가지고 지금 실행에 옮기세요."
-}
-```
-
-#### 📤 응답 예시 (Response - 200 OK)
-```json
-{
-  "success": true,
-  "message": "타로 카드 점괘가 MySQL 데이터베이스에 성공적으로 저장되었습니다.",
-  "data": 1
-}
-```
-
----
-
-### ⑥ 최근 사주 분석 이력 조회 API (Spring JDBC 3중 JOIN)
-
-| 항목 | 상세 내용 |
-| :---: | :--- |
-| **HTTP Method & URI** | `GET /api/history/recent?limit=10` |
-| **Query Parameter** | `limit` (기본값 `10`, 조회할 최근 건수) |
-| **담당 메서드** | `SajuApiController.getRecentHistory()` ➔ `SajuJdbcRepository.findRecentSajuHistory(limit)` |
-| **구현 동작** | `JdbcTemplate`을 사용하여 `saju_records`, `users`, `five_elements_balances` 3개 테이블을 직접 SQL `JOIN`하여 최신순으로 반환합니다. |
-
-#### 📥 요청 (Request)
-```http
-GET /api/history/recent?limit=5 HTTP/1.1
-Host: localhost:8085
-Accept: application/json
-```
-
-#### 📤 응답 예시 (Response - 200 OK)
-```json
-{
-  "success": true,
-  "message": "최근 1건의 기록을 조회했습니다.",
-  "data": [
-    {
-      "user_id": 1,
-      "name": "홍길동",
-      "gender": "M",
-      "birth_year": 1995,
-      "birth_month": 5,
-      "birth_day": 15,
-      "saju_id": 1,
-      "year_cheongan": "乙",
-      "year_jiji": "亥",
-      "month_cheongan": "辛",
-      "month_jiji": "巳",
-      "day_cheongan": "丙",
-      "day_jiji": "寅",
-      "time_cheongan": "乙",
-      "time_jiji": "未",
-      "ilju_name": "병인(丙寅)",
-      "zodiac_animal": "붉은 호랑이",
-      "wood_ratio": 35.00,
-      "fire_ratio": 40.00,
-      "earth_ratio": 10.00,
-      "metal_ratio": 10.00,
-      "water_ratio": 5.00,
-      "strength_status": "신강(身强)",
-      "yongsin": "금(金) / 수(水)",
-      "created_at": "2026-11-20T10:55:19"
-    }
-  ]
-}
-```
+| HTTP Method | Endpoint | 설명 | 사용 기술 |
+| :---: | :--- | :--- | :--- |
+| `GET` | `/api/auth/check-id?loginId=...` | 회원가입 아이디 중복 여부 및 SQL 인젝션 안전성 검사 | `Spring Data JPA` |
+| `POST` | `/api/auth/sms/send` | 휴면·잠금 해제용 6자리 휴대폰 SMS 인증번호 발송 | `Spring Data JPA` |
+| `GET` | `/api/auth/me` | 현재 브라우저 `HttpSession` 로그인 세션 상태 확인 | `HttpSession` |
+| `POST` | `/api/auth/logout` | 세션 무효화 및 로그아웃 처리 | `HttpSession` |
+| `POST` | `/api/fortune/save` | 오늘의 일일 운세 점수 및 행운 아이템 Upsert 저장 | `Spring Data JPA` |
+| `POST` | `/api/compatibility/save` | 2인 사주 궁합 점수 및 천간·지지 합충 결과 저장 | `Spring Data JPA` |
+| `POST` | `/api/tarot/save` | 3-Card 타로 점괘 결과 저장 | `Spring Data JPA` |
+| `GET` | `/api/payment/history?limit=10` | `payments` + `users` + `saju_records` JOIN 최근 500원 결제 내역 조회 | `Spring JDBC (JdbcTemplate)` |
+| `GET` | `/api/history/recent?limit=10` | `saju_records` + `users` + `five_elements_balances` 3중 JOIN 조회 | `Spring JDBC (JdbcTemplate)` |
+| `GET` | `/api/jdbc/check` | MySQL JDBC 커넥션 및 드라이버 메타데이터 상태 진단 | `DataSource` / `JDBC` |
 
 ---
 
@@ -610,27 +628,45 @@ Daily Fortune/
         │   ├── SajuApplication.java
         │   ├── config/
         │   │   └── WebConfig.java
+        │   ├── security/
+        │   │   └── SecurityUtils.java
         │   ├── controller/
-        │   │   └── SajuApiController.java
+        │   │   ├── AuthApiController.java
+        │   │   ├── SajuApiController.java
+        │   │   └── AiChatController.java
         │   ├── service/
-        │   │   └── SajuService.java
+        │   │   ├── AuthService.java
+        │   │   ├── SajuService.java
+        │   │   └── AiCounselorService.java
         │   ├── repository/
-        │   │   ├── SajuJdbcRepository.java
+        │   │   ├── AccountRepository.java
+        │   │   ├── SmsVerificationRepository.java
         │   │   ├── UserRepository.java
         │   │   ├── SajuRecordRepository.java
         │   │   ├── DailyFortuneRepository.java
         │   │   ├── CompatibilityRepository.java
-        │   │   └── TarotRepository.java
+        │   │   ├── TarotRepository.java
+        │   │   ├── PaymentRepository.java
+        │   │   ├── AiChatLogRepository.java
+        │   │   └── SajuJdbcRepository.java
         │   ├── entity/
+        │   │   ├── AccountEntity.java
+        │   │   ├── SmsVerificationEntity.java
         │   │   ├── UserEntity.java
         │   │   ├── SajuRecordEntity.java
         │   │   ├── FiveElementsEntity.java
         │   │   ├── SinsalEntity.java
         │   │   ├── DailyFortuneEntity.java
         │   │   ├── CompatibilityEntity.java
-        │   │   └── TarotEntity.java
+        │   │   ├── TarotEntity.java
+        │   │   ├── PaymentEntity.java
+        │   │   └── AiChatLogEntity.java
         │   └── dto/
         │       ├── ApiResponseDto.java
+        │       ├── AuthDtos.java
+        │       ├── AiChatDtos.java
+        │       ├── PaymentRequestDto.java
+        │       ├── PaymentResponseDto.java
         │       ├── SajuSaveRequestDto.java
         │       ├── DailyFortuneSaveRequestDto.java
         │       ├── CompatibilitySaveRequestDto.java
@@ -654,26 +690,16 @@ Daily Fortune/
                         └── fortune.js
 ```
 
-| 패키지 / 폴더 경로 | 주요 파일 | 설명 |
-| :--- | :--- | :--- |
-| `com.chunmyung.saju.controller` | `SajuApiController.java` | 클라이언트의 HTTP 요청을 받아 DTO로 매핑하고 JSON 응답을 반환하는 REST 컨트롤러 |
-| `com.chunmyung.saju.service` | `SajuService.java` | `@Transactional` 기반 사용자 Upsert 및 7대 엔티티 영속화 비즈니스 로직 |
-| `com.chunmyung.saju.repository` | `SajuJdbcRepository.java` 외 5종 | Spring JDBC(`JdbcTemplate`) 직접 쿼리 및 Spring Data JPA 인터페이스 |
-| `com.chunmyung.saju.entity` | `UserEntity.java` 외 6종 | MySQL 7대 테이블과 1:1 매핑되는 JPA 엔티티 클래스 |
-| `com.chunmyung.saju.dto` | `SajuSaveRequestDto.java` 외 4종 | 계층 간 데이터 교환을 위한 Request / Response DTO |
-| `src/main/resources` | `application.yml`, `schema.sql` | MySQL DataSource/HikariCP 설정 및 데이터베이스 DDL 스크립트 |
-| `src/main/resources/static` | `index.html`, `css/`, `js/` | KASI 만세력 연산 엔진, 반응형 UI, 백엔드 API 자동 연동 프론트엔드 리소스 |
-
 ---
 
 ## 💻 8. IntelliJ IDEA & MySQL JDBC 연동 가이드
 
-| 단계 | 설정 위치 | 설정 값 및 실행 방법 |
-| :---: | :--- | :--- |
+| 단계 | 설정 항목 | 설정 값 및 실행 방법 |
+| :-: | :--- | :--- |
 | **Step 1** | **프로젝트 열기** | IntelliJ IDEA 실행 ➔ `Open` ➔ `Daily Fortune` 폴더 선택 ➔ `Load Maven Project` 클릭 |
 | **Step 2** | **Java SDK 설정** | `File` ➔ `Project Structure` (`Cmd + ;`) ➔ **Project SDK: Java 21** 선택 |
 | **Step 3** | **Database 탭 연결** | 우측 `Database` 탭 ➔ `+` ➔ `Data Source` ➔ **MySQL** 클릭 |
-| **Step 4** | **JDBC 접속 정보** | • **Host**: `localhost` / **Port**: `3306`<br/>• **Database**: `chunmyung_saju`<br/>• **User**: `root` / **Password**: 로컬 MySQL 비밀번호 입력<br/>• **URL**: `jdbc:mysql://localhost:3306/chunmyung_saju` |
+| **Step 4** | **JDBC 접속 정보** | **Host**: `localhost` · **Port**: `3306` · **Database**: `chunmyung_saju` · **User**: `root` |
 | **Step 5** | **커넥션 테스트** | `Test Connection` 클릭 ➔ `Succeeded` 확인 후 `OK` 클릭 |
 
 ---
@@ -695,7 +721,8 @@ mysql -u root -p chunmyung_saju < src/main/resources/schema.sql
 
 | 서비스 항목 | 접속 주소 (URL) | 비고 |
 | :--- | :--- | :--- |
-| **사주 & 운세 메인 웹 화면** | `http://localhost:8085/` | 분석 시 MySQL 자동 저장 연동 |
+| **천명(天命) 메인 웹 서비스** | `http://localhost:8085/` | 최초 접속 시 로그인/회원가입 게이트 노출 |
 | **Swagger OpenAPI 문서** | `http://localhost:8085/swagger-ui.html` | 전체 API 명세 조회 및 즉시 호출 테스트 |
 | **JDBC 연결 진단 API** | `http://localhost:8085/api/jdbc/check` | MySQL JDBC 커넥션 상태 확인 |
-| **최근 사주 기록 조회 API** | `http://localhost:8085/api/history/recent` | JDBC 3중 JOIN 쿼리 결과 JSON 확인 |
+| **최근 500원 결제 내역 조회 API** | `http://localhost:8085/api/payment/history` | 토스·카카오·네이버페이 결제 원장 조회 |
+| **최근 AI 도사 상담 로그 조회 API** | `http://localhost:8085/api/ai/history` | 사주 상담 및 꿈해몽 문답 이력 조회 |

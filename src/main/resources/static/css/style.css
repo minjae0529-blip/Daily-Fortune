@@ -1,29 +1,33 @@
 /* ==========================================================================
-   Daily Fortune & Saju - Modern Oriental Elegance Theme
-   전통 한지(韓紙)와 단청, 먹색(墨色), 황금빛 기운이 깃든 고품격 사주·운세 디자인
+   천명(天命) - 한국 정통 궁중 단청(丹靑) · 한지 고서(韓紙 古書) · 오방색(五方色) 테마
+   조선 왕실 규장각 만세력 서책과 전통 창살(亞자살)·주칠 낙관 인장 미학
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&family=Noto+Serif+KR:wght@500;600;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Serif+KR:wght@500;600;700;900&family=Pretendard:wght@400;500;600;700;800;900&display=swap');
 
 :root {
   --font-sans: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
-  --font-serif: 'Noto Serif KR', serif;
+  --font-serif: 'Noto Serif KR', 'Gowun Batang', serif;
 
-  /* 전통 한지와 정갈한 미색 바탕 */
-  --bg-main: #faf7f2;
-  --bg-card: #ffffff;
-  --border-card: #e8ded2;
-  --border-focus: #b45309;
+  /* 전통 닥나무 한지(韓紙)와 고서(古書) 바탕색 */
+  --bg-main: #f4ecde;
+  --bg-card: #fcf9f2;
+  --border-card: #c5ad89;
+  --border-inner: #dfd1b8;
+  --border-focus: #8c1d1d;
 
-  /* 먹색(墨色)과 고풍스러운 텍스트 */
-  --text-title: #1c1917;
-  --text-body: #292524;
-  --text-muted: #57534e;
+  /* 먹색(墨色)과 고풍스러운 서체 색상 */
+  --text-title: #1b140e;
+  --text-body: #2c2219;
+  --text-muted: #5c4d3c;
 
-  /* 단청과 전통 오방색 포인트 */
-  --seal-red: #b91c1c;
-  --imperial-gold: #b45309;
-  --jade-green: #047857;
+  /* 한국 전통 오방색(五方色) 및 궁중 단청 색상 */
+  --obang-blue: #164e63;   /* 청(靑) - 동방 청룡 */
+  --obang-red: #991b1b;    /* 적(赤) - 남방 주작 / 주칠 낙관 */
+  --obang-yellow: #b45309; /* 황(黃) - 중앙 황제 */
+  --obang-white: #faf6ee;  /* 백(白) - 서방 백호 */
+  --obang-black: #1c1613;  /* 흑(黑) - 북방 현무 / 진먹 */
+  --dancheong-jade: #0f5132; /* 뇌록(磊綠) - 궁중 단청 비취색 */
 }
 
 *, *::before, *::after {
@@ -36,91 +40,148 @@ p, span, div, h1, h2, h3, h4, h5, h6, label, button {
 }
 
 body {
-  font-family: var(--font-sans);
+  font-family: var(--font-serif);
   background-color: var(--bg-main);
   color: var(--text-body);
   min-height: 100vh;
   overflow-x: hidden;
   max-width: 100vw;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.01em;
 }
 
 .font-serif-kr {
   font-family: var(--font-serif);
 }
 
-/* 전통 한지(韓紙) 질감과 음양오행의 부드러운 기운이 스며든 앰비언트 배경 */
+/* 전통 한지(韓紙) 결 + 은은한 전통 창살(격자) 워터마크 배경 */
 .bg-ambient {
-  background: 
-    radial-gradient(ellipse 75% 45% at 50% -2%, rgba(180, 83, 9, 0.08), transparent),
-    radial-gradient(ellipse 65% 40% at 95% 20%, rgba(185, 28, 28, 0.05), transparent),
-    radial-gradient(ellipse 70% 45% at 5% 85%, rgba(4, 120, 87, 0.05), transparent),
-    #faf7f2;
+  background-color: #f3ead8;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(153, 27, 27, 0.08), transparent),
+    radial-gradient(ellipse 70% 45% at 95% 25%, rgba(180, 83, 9, 0.08), transparent),
+    radial-gradient(ellipse 70% 45% at 5% 85%, rgba(15, 81, 50, 0.07), transparent),
+    linear-gradient(90deg, rgba(168, 140, 102, 0.07) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(168, 140, 102, 0.07) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 36px 36px, 36px 36px;
   background-attachment: fixed;
 }
 
-/* 전통 낙관(落款) 도장 인장 스타일 */
+/* 궁중 단청(丹靑) 오방색 상단 장식 띠 */
+.dancheong-bar {
+  height: 6px;
+  width: 100%;
+  background: repeating-linear-gradient(
+    90deg,
+    #0f5132 0px, #0f5132 28px,
+    #d97706 28px, #d97706 34px,
+    #991b1b 34px, #991b1b 62px,
+    #f5efe6 62px, #f5efe6 66px,
+    #164e63 66px, #164e63 94px,
+    #d97706 94px, #d97706 100px
+  );
+  box-shadow: 0 1px 3px rgba(28, 22, 19, 0.25);
+}
+
+/* 궁중 현판(懸板) 스타일 배너 */
+.korean-plaque {
+  background: linear-gradient(180deg, #231812 0%, #17100c 100%);
+  border: 2px solid #b48a4e;
+  box-shadow:
+    inset 0 0 0 2px #3b281c,
+    0 8px 20px rgba(27, 20, 14, 0.25);
+  color: #f7e6c4;
+}
+
+/* 전통 주칠 낙관(落款) 도장 인장 스타일 */
 .oriental-seal {
-  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
-  color: #ffffff !important;
-  border: 1.5px solid #7f1d1d;
-  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.3), 0 2px 6px rgba(153, 27, 27, 0.25);
+  background: linear-gradient(135deg, #a81c1c 0%, #7f1d1d 100%);
+  color: #fff8eb !important;
+  border: 2px solid #5c1111;
+  outline: 1px solid rgba(255, 235, 200, 0.55);
+  outline-offset: -3px;
+  box-shadow: 0 3px 8px rgba(127, 29, 29, 0.35);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-serif);
   font-weight: 900;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
 }
 
-/* 정갈한 한지 서책 느낌의 모던 카드 */
+/* 전통 고서(古書) & 창살 이중 테두리 한지 카드 */
 .modern-card {
-  background: #ffffff;
-  border: 1.5px solid #e8ded2;
-  border-radius: 1.5rem;
-  box-shadow: 
-    0 10px 30px -5px rgba(41, 37, 36, 0.05),
-    0 4px 6px -2px rgba(41, 37, 36, 0.02);
-  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+  background: linear-gradient(180deg, #fffdf8 0%, #faf4e8 100%) !important;
+  border: 2px solid #bda27e !important;
+  border-radius: 0.75rem !important;
+  outline: 1px solid rgba(189, 162, 126, 0.45);
+  outline-offset: -6px;
+  box-shadow:
+    0 10px 26px -6px rgba(44, 34, 25, 0.12),
+    0 2px 6px -1px rgba(44, 34, 25, 0.06);
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
   position: relative;
 }
 
-.modern-card:hover {
-  border-color: #d6c7b2;
-  box-shadow: 
-    0 18px 36px -5px rgba(41, 37, 36, 0.08),
-    0 6px 12px -2px rgba(41, 37, 36, 0.03);
+/* 전통 창살 귀갑문(龜甲紋) 모서리 장식 */
+.modern-card::before,
+.modern-card::after {
+  content: '❖';
+  position: absolute;
+  font-size: 10px;
+  color: #a67c52;
+  opacity: 0.55;
+  pointer-events: none;
+  line-height: 1;
+}
+.modern-card::before {
+  top: 7px;
+  left: 9px;
+}
+.modern-card::after {
+  bottom: 7px;
+  right: 9px;
 }
 
-/* 귀여운 12지신 수호동물 마스코트 카드 (황금빛 복채 느낌) */
+.modern-card:hover {
+  border-color: #9e7b4f !important;
+  box-shadow:
+    0 16px 34px -6px rgba(44, 34, 25, 0.16),
+    0 4px 10px -2px rgba(44, 34, 25, 0.08);
+}
+
+/* 12지신 수호신령 카드 (전통 민화·호패 감성) */
 .mascot-card {
-  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 60%, #fff7ed 100%);
-  border: 1.5px solid #f59e0b;
-  border-radius: 1.5rem;
-  box-shadow: 
-    0 10px 25px -4px rgba(217, 119, 6, 0.15),
-    0 2px 6px -1px rgba(0, 0, 0, 0.03);
-  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background: linear-gradient(135deg, #fdf8ec 0%, #f7ebd2 55%, #faeed7 100%);
+  border: 2px solid #b47b32;
+  border-radius: 0.75rem;
+  outline: 1px solid rgba(180, 123, 50, 0.4);
+  outline-offset: -6px;
+  box-shadow:
+    0 10px 25px -4px rgba(146, 92, 24, 0.18),
+    0 2px 6px -1px rgba(0, 0, 0, 0.05);
+  transition: all 0.25s ease;
   position: relative;
 }
 
 .mascot-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 16px 35px -5px rgba(217, 119, 6, 0.22);
+  box-shadow: 0 16px 35px -5px rgba(146, 92, 24, 0.24);
 }
 
 .mascot-avatar-container {
-  background: #ffffff;
-  border: 2px solid #f59e0b;
-  box-shadow: 0 6px 16px rgba(217, 119, 6, 0.18);
+  background: #fffdf7;
+  border: 2px solid #991b1b;
+  outline: 1px solid #d97706;
+  outline-offset: -4px;
+  box-shadow: 0 6px 16px rgba(153, 27, 27, 0.18);
   transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* 말풍선 스타일 */
+/* 한지 두루마리 말풍선 스타일 */
 .speech-bubble {
-  background: #ffffff;
-  border: 1.5px solid #f59e0b;
-  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.08);
+  background: #fffdf9;
+  border: 1.5px solid #b48a4e;
+  box-shadow: 0 4px 12px rgba(92, 77, 60, 0.1);
   transition: all 0.25s ease;
 }
 
@@ -129,41 +190,44 @@ body {
 }
 
 @keyframes quotePulse {
-  0% { transform: scale(0.98); background-color: #fef3c7; }
-  100% { transform: scale(1); background-color: #ffffff; }
+  0% { transform: scale(0.98); background-color: #f5e6c8; }
+  100% { transform: scale(1); background-color: #fffdf9; }
 }
 
-/* 선명한 칩 버튼 */
+/* 서책 목패(木牌) 칩 버튼 */
 .modern-chip {
-  background: #e2e8f0;
-  border: 1.5px solid #cbd5e1;
-  color: #0f172a;
-  border-radius: 0.85rem;
-  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background: #efe5d4;
+  border: 1.5px solid #c2aa84;
+  color: #261c14;
+  border-radius: 0.5rem;
+  font-family: var(--font-serif);
+  transition: all 0.2s ease;
 }
 
 .modern-chip:hover {
-  background: #cbd5e1;
-  border-color: #94a3b8;
+  background: #e3d3b9;
+  border-color: #9e7b4f;
   transform: translateY(-1px);
 }
 
 .modern-chip:active {
-  transform: scale(0.96);
+  transform: scale(0.97);
 }
 
-/* 탭 버튼 스타일 */
+/* 탭 버튼 (전통 서책 갈피 스타일) */
 .tab-btn {
-  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.25s ease;
+  font-family: var(--font-serif);
 }
 .tab-btn.active-tab {
-  background: #0f172a !important;
-  color: #ffffff !important;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+  background: linear-gradient(135deg, #261a13 0%, #170f0a 100%) !important;
+  color: #f6d58e !important;
+  border: 1.5px solid #b48a4e !important;
+  box-shadow: 0 4px 12px rgba(27, 20, 14, 0.28);
   transform: translateY(-1px);
 }
 
-/* 젤리 오행 게이지 바 */
+/* 오방색(五方色) 게이지 바 */
 .jelly-bar {
   transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
   position: relative;
@@ -176,8 +240,8 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
-  animation: shineSweep 2.5s infinite;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: shineSweep 2.8s infinite;
 }
 
 @keyframes shineSweep {
@@ -185,35 +249,45 @@ body {
   100% { transform: translateX(100%); }
 }
 
-/* 고대비 오행 뱃지 (선명한 테두리와 짙은 폰트) */
+/* 한국 전통 오방색(五方色) 만세력 명패 뱃지 */
 .element-wood {
-  color: #064e3b !important;
-  background: #d1fae5 !important;
-  border: 2px solid #34d399 !important;
+  /* 청(靑) / 동방 목(木) - 궁중 뇌록·비취색 */
+  color: #0b3b24 !important;
+  background: linear-gradient(180deg, #e3f4ea 0%, #c6e7d4 100%) !important;
+  border: 2px solid #166534 !important;
+  box-shadow: inset 0 0 0 1px rgba(22, 101, 52, 0.2);
 }
 .element-fire {
-  color: #881337 !important;
-  background: #ffe4e6 !important;
-  border: 2px solid #fb7185 !important;
+  /* 적(赤) / 남방 화(火) - 단청 주홍·주칠색 */
+  color: #691010 !important;
+  background: linear-gradient(180deg, #fce8e6 0%, #f7cfc9 100%) !important;
+  border: 2px solid #991b1b !important;
+  box-shadow: inset 0 0 0 1px rgba(153, 27, 27, 0.2);
 }
 .element-earth {
-  color: #78350f !important;
-  background: #fef3c7 !important;
-  border: 2px solid #f59e0b !important;
+  /* 황(黃) / 중앙 토(土) - 황실 황금·황토색 */
+  color: #5c3206 !important;
+  background: linear-gradient(180deg, #fdf3d7 0%, #f7e0a3 100%) !important;
+  border: 2px solid #b45309 !important;
+  box-shadow: inset 0 0 0 1px rgba(180, 83, 9, 0.2);
 }
 .element-metal {
-  color: #0f172a !important;
-  background: #e2e8f0 !important;
-  border: 2px solid #94a3b8 !important;
+  /* 백(白) / 서방 금(金) - 백옥·은백색 */
+  color: #1e242b !important;
+  background: linear-gradient(180deg, #ffffff 0%, #ebe7df 100%) !important;
+  border: 2px solid #78716c !important;
+  box-shadow: inset 0 0 0 1px rgba(120, 113, 108, 0.25);
 }
 .element-water {
-  color: #0c4a6e !important;
-  background: #e0f2fe !important;
-  border: 2px solid #38bdf8 !important;
+  /* 흑·현(黑·玄) / 북방 수(水) - 현무 쪽빛·감청색 */
+  color: #0d2b45 !important;
+  background: linear-gradient(180deg, #e3eff8 0%, #c5dced 100%) !important;
+  border: 2px solid #1e40af !important;
+  box-shadow: inset 0 0 0 1px rgba(30, 64, 175, 0.2);
 }
 
 /* ==========================================================================
-   귀여운 애니메이션 & 마스코트 상호작용
+   수호신령 애니메이션 & 인터랙션
    ========================================================================== */
 
 @keyframes mascotBounce {
@@ -221,10 +295,10 @@ body {
     transform: translateY(0) scale(1) rotate(0deg);
   }
   30% {
-    transform: translateY(-8px) scale(1.05) rotate(2deg);
+    transform: translateY(-7px) scale(1.04) rotate(2deg);
   }
   60% {
-    transform: translateY(-4px) scale(1.02) rotate(-2deg);
+    transform: translateY(-3px) scale(1.02) rotate(-2deg);
   }
 }
 
@@ -297,10 +371,9 @@ body {
 }
 
 /* ==========================================================================
-   🃏 타로 3장 스프레드 (과거·현재·미래) 인터랙티브 시스템
+   🃏 타로 3장 스프레드 (전통 금박 문양 서책 카드 스타일)
    ========================================================================== */
 
-/* 12장 선택 덱 펼침 */
 .tarot-pickable-deck {
   display: flex;
   flex-wrap: wrap;
@@ -312,10 +385,12 @@ body {
 .tarot-pickable-card {
   width: 68px;
   height: 110px;
-  border-radius: 0.85rem;
-  background: linear-gradient(135deg, #312e81 0%, #4338ca 50%, #4c1d95 100%);
-  border: 2px solid #a5b4fc;
-  box-shadow: 0 4px 12px rgba(49, 46, 129, 0.25);
+  border-radius: 0.5rem;
+  background: linear-gradient(135deg, #2b1810 0%, #4a1c1c 50%, #1c130e 100%);
+  border: 2px solid #c89d54;
+  outline: 1px solid rgba(200, 157, 84, 0.45);
+  outline-offset: -4px;
+  box-shadow: 0 4px 12px rgba(27, 20, 14, 0.3);
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
   position: relative;
@@ -325,7 +400,7 @@ body {
 .tarot-pickable-card:hover {
   transform: translateY(-8px) scale(1.08) !important;
   border-color: #f59e0b;
-  box-shadow: 0 10px 20px rgba(245, 158, 11, 0.35);
+  box-shadow: 0 10px 20px rgba(180, 83, 9, 0.4);
   z-index: 10;
 }
 
@@ -337,14 +412,14 @@ body {
 }
 
 .tarot-pickable-card::before {
-  content: '✦';
+  content: '☯';
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 1.3rem;
-  color: #fde68a;
-  opacity: 0.85;
+  font-size: 1.4rem;
+  color: #f3d08a;
+  opacity: 0.9;
 }
 
 @media (min-width: 640px) {
@@ -354,7 +429,6 @@ body {
   }
 }
 
-/* 3장 선택 슬롯 컨테이너 - 모바일 1열 세로 스택, 태블릿/PC 3열 그리드 */
 .tarot-3slots-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -370,7 +444,7 @@ body {
 }
 
 .tarot-slot-box {
-  border-radius: 1.25rem;
+  border-radius: 0.75rem;
   perspective: 1000px;
   min-height: 270px;
   width: 100%;
@@ -398,14 +472,16 @@ body {
   left: 0;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
-  border-radius: 1.25rem;
+  border-radius: 0.75rem;
   box-sizing: border-box;
 }
 
 .tarot-slot-front {
-  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
-  border: 2px solid #a5b4fc;
-  box-shadow: 0 8px 20px rgba(49, 46, 129, 0.25);
+  background: linear-gradient(135deg, #23150f 0%, #5c1919 50%, #1c120d 100%);
+  border: 2px solid #c89d54;
+  outline: 1px solid rgba(200, 157, 84, 0.45);
+  outline-offset: -5px;
+  box-shadow: 0 8px 20px rgba(27, 20, 14, 0.28);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -415,9 +491,11 @@ body {
 
 .tarot-slot-back {
   transform: rotateY(180deg);
-  background: #ffffff;
-  border: 2px solid #4f46e5;
-  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.18);
+  background: #fffdf7;
+  border: 2px solid #991b1b;
+  outline: 1px solid #c89d54;
+  outline-offset: -5px;
+  box-shadow: 0 8px 24px rgba(153, 27, 27, 0.16);
   padding: 1rem;
   display: flex;
   flex-direction: column;
@@ -435,12 +513,154 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #e2e8f0;
+  background: #e6dac6;
 }
 ::-webkit-scrollbar-thumb {
-  background: #94a3b8;
+  background: #a88d68;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
+  background: #856b48;
 }
+
+/* ==========================================
+   프리미엄 500원 사주 페이월(Paywall) & 전통 고서 간편결제 모달 스타일
+   ========================================== */
+.paywall-locked-area {
+  position: relative;
+}
+
+.paywall-blurred-content {
+  filter: blur(7px);
+  -webkit-filter: blur(7px);
+  user-select: none;
+  pointer-events: none;
+  max-height: 460px;
+  overflow: hidden;
+  opacity: 0.55;
+  transition: filter 0.35s ease, opacity 0.35s ease;
+}
+
+.paywall-unlocked .paywall-blurred-content {
+  filter: none;
+  -webkit-filter: none;
+  user-select: auto;
+  pointer-events: auto;
+  max-height: none;
+  overflow: visible;
+  opacity: 1;
+}
+
+.paywall-overlay-card {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: linear-gradient(180deg, rgba(244, 236, 222, 0.25) 0%, rgba(244, 236, 222, 0.92) 35%, rgba(244, 236, 222, 0.98) 100%);
+}
+
+.paywall-unlocked .paywall-overlay-card {
+  display: none !important;
+}
+
+dialog.custom-modal {
+  border: none;
+  padding: 0;
+  border-radius: 0.85rem;
+  background: transparent;
+  max-width: 28rem;
+  width: calc(100% - 2rem);
+  box-shadow: 0 25px 50px -12px rgba(27, 20, 14, 0.55);
+}
+
+dialog.custom-modal::backdrop {
+  background: rgba(24, 17, 12, 0.68);
+  backdrop-filter: blur(4px);
+}
+
+/* ==========================================
+   동적 천기(天氣) 실시간 티커 & 내장 AI 명리 도사 챗봇 위젯 스타일
+   ========================================== */
+@keyframes slowSpinTaegeuk {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: slowSpinTaegeuk 18s linear infinite;
+  display: inline-block;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(180, 83, 9, 0.55), 0 10px 25px rgba(127, 29, 29, 0.45);
+    transform: translateY(0);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(180, 83, 9, 0), 0 14px 30px rgba(127, 29, 29, 0.6);
+    transform: translateY(-3px);
+  }
+}
+
+.ai-fab-pulse {
+  animation: pulseGlow 2.4s ease-in-out infinite;
+}
+
+@keyframes marqueeScroll {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.ticker-track {
+  display: flex;
+  width: max-content;
+  animation: marqueeScroll 32s linear infinite;
+}
+.ticker-track:hover {
+  animation-play-state: paused;
+}
+
+.ai-chat-drawer {
+  position: fixed;
+  bottom: 5.5rem;
+  right: 1.25rem;
+  width: calc(100vw - 2.5rem);
+  max-width: 25rem;
+  height: 34rem;
+  max-height: calc(100vh - 8rem);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  background: #fcf9f2;
+  border: 2px solid #b48a4e;
+  border-radius: 1rem;
+  box-shadow: 0 25px 50px -12px rgba(27, 20, 14, 0.5);
+  overflow: hidden;
+  transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.ai-chat-drawer.hidden-drawer {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(20px) scale(0.95);
+}
+
+@keyframes dotBlink {
+  0%, 80%, 100% { opacity: 0.25; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1.15); }
+}
+
+.typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: #8c1d1d;
+  display: inline-block;
+  animation: dotBlink 1.3s infinite ease-in-out;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+

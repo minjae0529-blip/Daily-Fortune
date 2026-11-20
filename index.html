@@ -28,31 +28,65 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
   <!-- Custom High-Contrast Comfortable Styles with Cache Buster -->
-  <link rel="stylesheet" href="css/style.css?v=20261016_1">
+  <link rel="stylesheet" href="css/style.css?v=20261120_5">
 </head>
 <body class="bg-ambient text-slate-900 flex flex-col min-h-screen selection:bg-amber-200 selection:text-amber-900">
 
-  <!-- Header -->
-  <header class="border-b border-[#e8ded2] sticky top-0 z-50 bg-[#faf7f2]/95 backdrop-blur-md shadow-xs">
-    <div class="max-w-4xl mx-auto px-4 h-15 flex items-center justify-between">
-      <div class="flex items-center space-x-2.5 cursor-pointer" onclick="App.resetToHome()">
-        <span class="w-8.5 h-8.5 rounded-lg oriental-seal text-sm">
-          命
+  <!-- 궁중 단청(丹靑) 오방색 상단 장식 띠 -->
+  <div class="dancheong-bar sticky top-0 z-50"></div>
+
+  <!-- Header (조선 왕실 규장각 현판 스타일) -->
+  <header class="border-b-2 border-[#b48a4e] sticky top-[6px] z-50 bg-[#1e1510]/95 backdrop-blur-md shadow-md text-[#f7e6c4]">
+    <div class="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3 cursor-pointer" onclick="App.resetToHome()">
+        <span class="w-9 h-9 rounded-md oriental-seal text-sm">
+          天命
         </span>
         <div class="flex flex-col">
-          <div class="flex items-center space-x-1.5">
-            <span class="font-serif-kr text-base font-black tracking-tight text-stone-900">천명(天命)</span>
-            <span class="text-[10px] px-1.5 py-0.2 rounded font-serif-kr bg-amber-100 text-amber-900 border border-amber-300 font-bold hidden sm:inline-block">萬歲曆</span>
+          <div class="flex items-center space-x-2">
+            <span class="font-serif-kr text-lg font-black tracking-wider text-[#f9e5b4]">천명(天命)</span>
+            <span class="text-[10px] px-2 py-0.5 rounded-sm font-serif-kr bg-[#8c1d1d] text-[#fff4d6] border border-[#d4a359] font-bold hidden sm:inline-block">欽定萬歲曆</span>
           </div>
-          <span class="text-[11px] text-stone-500 font-medium hidden sm:inline-block -mt-0.5">정통 사주팔자 · 오늘의 운세 · 타로</span>
+          <span class="text-[11px] text-[#d5c19e] font-serif-kr hidden sm:inline-block -mt-0.5">조선 정통 명리학 · 일진 천기(天氣) · AI 도사 문답</span>
         </div>
       </div>
 
-      <!-- Realtime Iljin Banner (만세력 일진 패) -->
-      <div id="todayBanner" class="text-xs text-stone-700 flex items-center space-x-2 font-medium bg-white/80 px-3 py-1.5 rounded-xl border border-[#e8ded2] shadow-2xs">
-        <span id="bannerDate" class="text-stone-500 text-[11px]"></span>
-        <span class="w-px h-3 bg-stone-300"></span>
-        <span class="text-amber-900 font-extrabold flex items-center space-x-1" id="bannerIljin"></span>
+      <!-- Realtime Iljin Banner, AI Chatbot Button, Logged-in User Info & Payment Vault Button -->
+      <div class="flex items-center space-x-2">
+        <div id="todayBanner" class="text-xs text-[#f7e6c4] hidden md:flex items-center space-x-2 font-serif-kr bg-[#2c1e16] px-3 py-1.5 rounded-md border border-[#b48a4e] shadow-inner">
+          <span id="bannerDate" class="text-[#d5c19e] text-[11px]"></span>
+          <span class="w-px h-3 bg-[#8c6b3f]"></span>
+          <span class="text-[#facc15] font-extrabold flex items-center space-x-1" id="bannerIljin"></span>
+        </div>
+
+        <!-- 상단 AI 도사 챗봇 호출 버튼 (로그인 후 노출) -->
+        <button type="button" id="headerAiChatBtn" onclick="App.toggleAiChatbot()" class="hidden text-xs font-extrabold px-2.5 py-1.5 rounded-md bg-gradient-to-b from-[#d97706] to-[#b45309] text-[#1e1510] hover:from-[#f59e0b] hover:to-[#d97706] transition items-center space-x-1 shadow-sm border border-[#fde68a] font-serif-kr">
+          <span>🧙‍♂️</span>
+          <span>AI 도사·꿈해몽</span>
+        </button>
+
+        <!-- 로그인된 회원 표시 배지 -->
+        <div id="headerUserBox" class="hidden items-center space-x-1.5 bg-[#2c1e16] px-2.5 py-1.5 rounded-md border border-[#b48a4e] text-xs font-serif-kr">
+          <span class="text-[#facc15] font-bold" id="headerUserNameText">홍길동 님</span>
+          <button type="button" onclick="App.logoutAccount()" class="ml-1 px-2 py-0.5 rounded bg-[#4a3525] hover:bg-[#694b35] text-[#f7e6c4] text-[10px] font-bold transition">
+            로그아웃
+          </button>
+        </div>
+
+        <button type="button" id="headerVaultBtn" onclick="App.openHistoryModal()" class="hidden text-xs font-extrabold px-3 py-1.5 rounded-md bg-gradient-to-b from-[#991b1b] to-[#7f1d1d] text-[#fff6df] hover:from-[#b91c1c] hover:to-[#8c1d1d] transition items-center space-x-1.5 shadow-sm border border-[#d4a359] font-serif-kr">
+          <span>📜</span>
+          <span>내 결제·서책 보관함</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 🌟 동적 실시간 천기(天氣) & 12시진 흐름 전광판 마퀴 배너 -->
+    <div class="bg-[#140e0a] border-t border-[#4a3525] overflow-hidden py-1 text-[11px] text-[#e6d5b8] font-serif-kr">
+      <div class="ticker-track space-x-10 px-4">
+        <span>☯ <strong class="text-[#facc15]">실시간 천기(天氣) 브리핑:</strong> <span id="liveSijinTickerText">현재 해시(亥時) 수(水)의 기운이 흐르고 있습니다. 깊은 지혜와 내일 설계에 길한 시각입니다.</span></span>
+        <span>🧙‍♂️ <strong class="text-[#f59e0b]">내장 AI 명리 도사 가동 중:</strong> 우측 하단 <strong>[AI 도사에게 물어보기]</strong>를 누르면 내 사주·용신·일진 기반 1:1 실시간 문답을 나누실 수 있습니다.</span>
+        <span>🛡️ <strong class="text-[#52b788]">보안 시스템 가동:</strong> PBKDF2+Salt 암호화 · SQL 인젝션 실시간 차단 · 5회 오류 SMS 발송 · 10회 오류 휴면 보호 적용 중</span>
+        <span>☯ <strong class="text-[#facc15]">실시간 천기(天氣) 브리핑:</strong> <span>오늘의 운세(12운성·십신·합충)는 100% 무료, 평생 사주팔자·10년 대운 심층 리포트는 500원 간편결제(토스·카카오·네이버페이)로 제공됩니다.</span></span>
       </div>
     </div>
   </header>
@@ -60,50 +94,259 @@
   <!-- Main Content -->
   <main class="flex-grow max-w-4xl w-full mx-auto px-4 py-7">
 
-    <!-- SECTION 1: Input & Service Choice View -->
-    <section id="inputSection" class="transition-all duration-300">
-      
-      <!-- Oriental Hero: 사주 & 오늘의 운세 키워드 극대화 -->
-      <div class="text-center max-w-xl mx-auto mb-6 pt-1">
-        <div class="inline-flex items-center space-x-1.5 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-300/80 text-amber-950 text-xs font-bold mb-3 shadow-2xs">
-          <span class="text-amber-700">☯</span>
-          <span class="font-serif-kr">음양오행(陰陽五行)과 KASI 정통 천문역법</span>
+    <!-- ======================================================================
+         SECTION 0: 한국 전통 명패(號牌) 회원가입 · 보안 로그인 · SMS 휴면해제 게이트
+         (최초 접속 시 기본 노출, 로그인 완료 시 #inputSection으로 진입)
+         ====================================================================== -->
+    <section id="authSection" class="transition-all duration-300 max-w-lg mx-auto space-y-5">
+
+      <!-- 상단 전통 현판 안내 -->
+      <div class="text-center space-y-2 pt-1">
+        <div class="inline-flex items-center space-x-2 px-4 py-1.5 rounded-md bg-[#261a13] border-2 border-[#b48a4e] text-[#f6d58e] text-xs font-bold shadow-md font-serif-kr">
+          <span class="text-[#ef4444]">☰ ☲</span>
+          <span>규장각 천명(天命) 만세력 · 회원 인증(號牌)</span>
+          <span class="text-[#38bdf8]">☵ ☷</span>
         </div>
-        <h1 id="heroTitle" class="text-2xl sm:text-3xl font-black tracking-tight mb-2 text-stone-900 font-serif-kr leading-snug">
-          하늘이 내린 운명과 오늘의 천기(天氣)
+        <h1 class="text-2xl sm:text-3xl font-black text-[#1b140e] font-serif-kr">
+          천명(天命) 만세력 입문(入門)
         </h1>
-        <p id="heroSubtitle" class="text-xs sm:text-sm text-stone-600 leading-relaxed font-medium">
-          오늘 하루의 일진(日辰) 바이오리듬부터 평생을 관통하는 사주팔자(四柱八字) 원국까지 명쾌하게 밝혀드립니다.
+        <p class="text-xs sm:text-sm text-[#4a3b2c] font-serif-kr font-medium">
+          회원가입 및 로그인 후 오늘의 운세(무료)와 정통 사주팔자(500원)를 이용하실 수 있습니다.
         </p>
+        <!-- 오방색 전통 문양 구분선 -->
+        <div class="flex items-center justify-center space-x-2 pt-1 text-xs font-serif-kr text-[#7c6244]">
+          <span>━━━</span>
+          <span class="px-1.5 py-0.2 rounded-xs bg-[#0f5132] text-white text-[10px]">靑</span>
+          <span class="px-1.5 py-0.2 rounded-xs bg-[#991b1b] text-white text-[10px]">赤</span>
+          <span class="px-1.5 py-0.2 rounded-xs bg-[#d97706] text-white text-[10px]">黃</span>
+          <span class="px-1.5 py-0.2 rounded-xs bg-[#faf6ee] text-[#1c1613] border border-[#a88d68] text-[10px]">白</span>
+          <span class="px-1.5 py-0.2 rounded-xs bg-[#1c1613] text-white text-[10px]">黑</span>
+          <span>━━━</span>
+        </div>
       </div>
 
-      <!-- 🌟 TOP 3-WAY SERVICE SELECTOR (오늘의 운세 / 사주 / 타로) -->
-      <div class="max-w-xl mx-auto mb-6 p-1.5 bg-[#ede5d8]/70 rounded-2xl border border-[#dfd5c4] grid grid-cols-3 gap-1.5 shadow-inner">
-        <button type="button" onclick="App.setMode('daily')" id="modeBtnDaily" class="py-3 px-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center space-x-1.5 bg-stone-900 text-amber-200 shadow-md border border-stone-800">
+      <!-- 📱 실시간 휴대폰 SMS 문자 수신 알림 배너 (5회 이상 비밀번호 오류 또는 휴면해제 문자 발송 시 노출) -->
+      <div id="smsNotificationBanner" class="hidden p-4 rounded-xl bg-[#1c1917] text-white border-2 border-[#f59e0b] shadow-xl space-y-2 animate-slide-up">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <span class="px-2 py-0.5 rounded bg-[#f59e0b] text-stone-950 font-black text-[10px]">📱 휴대폰 SMS 문자 도착</span>
+            <span id="smsPhoneTargetText" class="text-xs text-amber-200 font-bold">010-****-****</span>
+          </div>
+          <button type="button" onclick="document.getElementById('smsNotificationBanner').classList.add('hidden')" class="text-stone-400 hover:text-white text-xs font-bold">✕</button>
+        </div>
+        <p id="smsMessageBodyText" class="text-xs text-stone-100 font-medium leading-relaxed bg-stone-800/90 p-3 rounded-lg border border-stone-700"></p>
+        <div class="flex items-center justify-between pt-1 text-xs">
+          <span class="text-amber-300 font-extrabold">인증번호: <strong id="smsCodeHighlight" class="text-base underline">------</strong></span>
+          <button type="button" onclick="App.applyDemoSmsCodeToUnlock()" class="px-3 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-stone-950 font-black text-xs transition">
+            🔓 휴면해제 창에 인증번호 자동 입력
+          </button>
+        </div>
+      </div>
+
+      <!-- 메인 한지 고서 인증 카드 -->
+      <div class="modern-card p-6 sm:p-7 space-y-5">
+        <!-- 카드 헤더 -->
+        <div class="border-b-2 border-[#c8b08a] pb-3.5 flex items-center justify-between">
+          <div>
+            <span class="text-[11px] font-black px-2.5 py-0.5 rounded-sm bg-[#f5e4c3] text-[#5c2d0c] border border-[#b48a4e] font-serif-kr">🛡️ SQL 인젝션 차단 · PBKDF2 암호화</span>
+            <h2 id="authCardTitle" class="text-lg font-black text-[#1c140d] font-serif-kr mt-1">회원 로그인 (號牌 認證)</h2>
+          </div>
+          <div class="w-10 h-10 rounded-md oriental-seal text-xs leading-tight text-center p-1">
+            天命<br/>號牌
+          </div>
+        </div>
+
+        <!-- 3-Way 탭 (로그인 / 회원가입 / SMS 휴면해제) -->
+        <div class="p-1.5 bg-[#e6d7be] rounded-lg border-2 border-[#b49466] grid grid-cols-3 gap-1.5 font-serif-kr text-xs">
+          <button type="button" id="authTabBtn-login" onclick="App.switchAuthTab('login')" class="py-2.5 px-2 rounded-md font-bold bg-[#231710] text-[#f7d88c] shadow-sm border border-[#b48a4e] transition">
+            🔑 로그인
+          </button>
+          <button type="button" id="authTabBtn-signup" onclick="App.switchAuthTab('signup')" class="py-2.5 px-2 rounded-md font-semibold text-[#36281c] hover:text-black transition">
+            📝 회원가입
+          </button>
+          <button type="button" id="authTabBtn-unlock" onclick="App.switchAuthTab('unlock')" class="py-2.5 px-2 rounded-md font-semibold text-[#36281c] hover:text-black transition">
+            🔓 휴면·잠금 해제
+          </button>
+        </div>
+
+        <!-- 공통 보안 알림/경고 메시지 박스 -->
+        <div id="authAlertBox" class="hidden p-3.5 rounded-xl border text-xs font-bold leading-relaxed"></div>
+
+        <!-- [PANE 1] 로그인 폼 -->
+        <form id="loginFormPane" onsubmit="App.handleLoginSubmit(event)" class="space-y-4">
+          <div>
+            <label for="loginIdInput" class="block text-xs font-bold text-[#2c2219] mb-1">아이디 (ID)</label>
+            <input type="text" id="loginIdInput" required autocomplete="username" placeholder="영문, 숫자 4~20자" class="w-full bg-[#faf6ee] border-2 border-[#cbb799] rounded-lg px-3.5 py-2.5 text-sm text-[#1b140e] focus:outline-none focus:border-[#8c1d1d] transition font-medium">
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label for="loginPwInput" class="block text-xs font-bold text-[#2c2219]">비밀번호 (Password)</label>
+              <span id="loginAttemptCounterBadge" class="text-[11px] font-extrabold text-[#8c1d1d]">오류 횟수: 0 / 5회 (10회 시 휴면)</span>
+            </div>
+            <input type="password" id="loginPwInput" required autocomplete="current-password" placeholder="비밀번호를 입력하세요" class="w-full bg-[#faf6ee] border-2 border-[#cbb799] rounded-lg px-3.5 py-2.5 text-sm text-[#1b140e] focus:outline-none focus:border-[#8c1d1d] transition font-medium">
+          </div>
+
+          <button type="submit" id="loginSubmitBtn" class="w-full py-3.5 rounded-lg font-black text-sm text-[#fff6df] bg-gradient-to-r from-[#8c1d1d] via-[#a31d1d] to-[#7f1d1d] hover:from-[#991b1b] hover:to-[#8c1d1d] transition shadow-md border-2 border-[#d4a359] flex items-center justify-center space-x-2">
+            <span class="text-[#facc15]">☯</span>
+            <span>천명(天命) 만세력 로그인</span>
+          </button>
+
+          <div class="pt-2 border-t border-[#dfd1b8] flex items-center justify-between text-xs text-[#5c4d3c]">
+            <span>아직 계정이 없으신가요?</span>
+            <button type="button" onclick="App.switchAuthTab('signup')" class="font-extrabold text-[#8c1d1d] underline hover:text-[#691010]">
+              새 계정 회원가입 하기 ➔
+            </button>
+          </div>
+        </form>
+
+        <!-- [PANE 2] 회원가입 폼 -->
+        <form id="signupFormPane" onsubmit="App.handleSignupSubmit(event)" class="hidden space-y-3.5">
+          <div>
+            <label for="signupIdInput" class="block text-xs font-bold text-[#2c2219] mb-1">아이디 (영문·숫자 4~20자)</label>
+            <div class="flex space-x-2">
+              <input type="text" id="signupIdInput" required placeholder="예: hong1234" class="flex-grow bg-[#faf6ee] border-2 border-[#cbb799] rounded-lg px-3.5 py-2 text-sm text-[#1b140e] focus:outline-none focus:border-[#8c1d1d] font-medium">
+              <button type="button" onclick="App.checkDuplicateLoginId()" class="px-3.5 py-2 rounded-lg bg-[#231710] text-[#f7d88c] border border-[#b48a4e] text-xs font-bold shrink-0 hover:bg-[#362419] transition">
+                중복 확인
+              </button>
+            </div>
+            <p id="signupIdCheckMsg" class="text-[11px] text-[#5c4d3c] mt-1 font-medium">SQL 인젝션 특수문자(--, ;, ', OR 등)는 사용할 수 없습니다.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div>
+              <label for="signupPwInput" class="block text-xs font-bold text-[#2c2219] mb-1">비밀번호 (4자 이상)</label>
+              <input type="password" id="signupPwInput" required placeholder="비밀번호 입력" class="w-full bg-[#faf6ee] border-2 border-[#cbb799] rounded-lg px-3.5 py-2 text-sm text-[#1b140e] focus:outline-none focus:border-[#8c1d1d] font-medium">
+            </div>
+            <div>
+              <label for="signupPwConfirmInput" class="block text-xs font-bold text-[#2c2219] mb-1">비밀번호 확인</label>
+              <input type="password" id="signupPwConfirmInput" required placeholder="비밀번호 재입력" class="w-full bg-[#faf6ee] border-2 border-[#cbb799] rounded-lg px-3.5 py-2 text-sm text-[#1b140e] focus:outline-none focus:border-[#8c1d1d] font-medium">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div>
+              <label for="signupNameInput" class="block text-xs font-bold text-[#2c2219] mb-1">이름 (사주 명식 기본값)</label>
+              <input type="text" id="signupNameInput" required placeholder="홍길동" class="w-full bg-[#faf6ee] border-2 border-[#cbb799] rounded-lg px-3.5 py-2 text-sm text-[#1b140e] focus:outline-none focus:border-[#8c1d1d] font-medium">
+            </div>
+            <div>
+              <label for="signupPhoneInput" class="block text-xs font-bold text-[#2c2219] mb-1">휴대폰 번호 (보안 문자 수신용)</label>
+              <input type="tel" id="signupPhoneInput" required placeholder="010-1234-5678" class="w-full bg-[#faf6ee] border-2 border-[#cbb799] rounded-lg px-3.5 py-2 text-sm text-[#1b140e] focus:outline-none focus:border-[#8c1d1d] font-medium">
+            </div>
+          </div>
+
+          <button type="submit" class="w-full py-3.5 rounded-lg font-black text-sm text-[#fff6df] bg-gradient-to-r from-[#0f5132] via-[#146c43] to-[#0f5132] hover:opacity-95 transition shadow-md border-2 border-[#b48a4e] flex items-center justify-center space-x-2">
+            <span>📜</span>
+            <span>회원가입 완료 및 천명(天命) 입장하기</span>
+          </button>
+        </form>
+
+        <!-- [PANE 3] 휴대폰 SMS 인증번호 휴면·잠금 해제 폼 -->
+        <form id="unlockFormPane" onsubmit="App.handleSmsUnlockSubmit(event)" class="hidden space-y-3.5">
+          <div class="p-3 rounded-lg bg-amber-50 border border-amber-300 text-xs text-amber-950 font-medium leading-relaxed">
+            🔒 <strong>비밀번호 10회 이상 오류로 휴면화된 계정</strong>이거나, <strong>5회 이상 오류로 보안 경고가 발령된 계정</strong>을 휴대폰 SMS 6자리 인증번호로 즉시 해제합니다.
+          </div>
+
+          <div>
+            <label for="unlockIdInput" class="block text-xs font-bold text-[#2c2219] mb-1">휴면 해제할 아이디 (ID)</label>
+            <input type="text" id="unlockIdInput" required placeholder="가입한 아이디 입력" class="w-full bg-[#faf6ee] border-2 border-[#cbb799] rounded-lg px-3.5 py-2 text-sm text-[#1b140e] focus:outline-none focus:border-[#8c1d1d] font-medium">
+          </div>
+
+          <div>
+            <label for="unlockPhoneInput" class="block text-xs font-bold text-[#2c2219] mb-1">가입 시 등록한 휴대폰 번호</label>
+            <div class="flex space-x-2">
+              <input type="tel" id="unlockPhoneInput" required placeholder="010-1234-5678" class="flex-grow bg-[#faf6ee] border-2 border-[#cbb799] rounded-lg px-3.5 py-2 text-sm text-[#1b140e] focus:outline-none focus:border-[#8c1d1d] font-medium">
+              <button type="button" onclick="App.requestUnlockSmsCode()" class="px-3.5 py-2 rounded-lg bg-[#231710] text-[#f7d88c] border border-[#b48a4e] text-xs font-bold shrink-0 hover:bg-[#362419] transition">
+                📱 인증번호 문자 발송
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div>
+              <label for="unlockCodeInput" class="block text-xs font-bold text-[#2c2219] mb-1">SMS 인증번호 (6자리)</label>
+              <input type="text" id="unlockCodeInput" required maxlength="6" placeholder="6자리 숫자 입력" class="w-full bg-[#faf6ee] border-2 border-[#8c1d1d] rounded-lg px-3.5 py-2 text-sm text-[#1b140e] font-black tracking-widest focus:outline-none">
+            </div>
+            <div>
+              <label for="unlockNewPwInput" class="block text-xs font-bold text-[#2c2219] mb-1">새 비밀번호 변경 (선택)</label>
+              <input type="password" id="unlockNewPwInput" placeholder="비워두면 기존 비밀번호 유지" class="w-full bg-[#faf6ee] border-2 border-[#cbb799] rounded-lg px-3.5 py-2 text-sm text-[#1b140e] focus:outline-none focus:border-[#8c1d1d] font-medium">
+            </div>
+          </div>
+
+          <button type="submit" class="w-full py-3.5 rounded-lg font-black text-sm text-[#1b140e] bg-gradient-to-r from-[#f59e0b] via-[#fbbf24] to-[#f59e0b] hover:opacity-95 transition shadow-md border-2 border-[#78350f] flex items-center justify-center space-x-2">
+            <span>🔓</span>
+            <span>SMS 인증번호 확인 및 계정 휴면·오류 초기화</span>
+          </button>
+        </form>
+
+        <!-- 하단 보안 정책 요약 -->
+        <div class="p-3 rounded-lg bg-[#f4ead7] border border-[#c8b08a] text-[11px] text-[#4a3b2c] space-y-1">
+          <div class="font-extrabold text-[#1b140e]">🛡️ 천명(天命) 계정 보호 및 보안 정책</div>
+          <div>• <strong>1~4회 비밀번호 오류</strong>: 남은 시도 횟수 경고 안내</div>
+          <div>• <strong>5회 이상 비밀번호 오류</strong>: 등록된 휴대폰 번호로 보안 경고 및 본인확인 문자(SMS) 즉시 발송</div>
+          <div>• <strong>10회 이상 비밀번호 오류</strong>: 계정 즉시 <strong>휴면화(잠금)</strong> 전환 — 휴대폰 SMS 인증번호 검증 후 해제 가능</div>
+          <div>• <strong>SQL 인젝션 방어</strong>: PreparedStatement 파라미터 바인딩 및 공격 시그니처 실시간 차단 필터 적용</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 1: Input & Service Choice View (로그인 완료 후 노출) -->
+    <section id="inputSection" class="hidden transition-all duration-300">
+      
+      <!-- Korean Traditional Hero: 사괘(乾坤坎離) & 오방색 전통 현판 헤더 -->
+      <div class="text-center max-w-xl mx-auto mb-6 pt-1">
+        <div class="inline-flex items-center space-x-2 px-4 py-1.5 rounded-md bg-[#261a13] border-2 border-[#b48a4e] text-[#f6d58e] text-xs font-bold mb-3 shadow-md font-serif-kr">
+          <span class="text-[#ef4444]">☰ ☲</span>
+          <span>음양오행(陰陽五行) · 규장각 정통 천문역법(天文曆法)</span>
+          <span class="text-[#38bdf8]">☵ ☷</span>
+        </div>
+        <h1 id="heroTitle" class="text-2xl sm:text-3xl font-black tracking-tight mb-2 text-[#1b140e] font-serif-kr leading-snug">
+          하늘이 내린 천명(天命)과 오늘의 일진(日辰)
+        </h1>
+        <p id="heroSubtitle" class="text-xs sm:text-sm text-[#4a3b2c] leading-relaxed font-medium font-serif-kr">
+          전통 만세력 24절기 역법으로 오늘 하루의 길흉화복(吉凶禍福)부터 평생의 사주팔자 원국까지 명쾌하게 풀이합니다.
+        </p>
+        <!-- 오방색 전통 문양 구분선 -->
+        <div class="flex items-center justify-center space-x-2 mt-3 text-xs font-serif-kr text-[#7c6244]">
+          <span>━━━</span>
+          <span class="px-1.5 py-0.2 rounded-xs bg-[#0f5132] text-white text-[10px]">靑</span>
+          <span class="px-1.5 py-0.2 rounded-xs bg-[#991b1b] text-white text-[10px]">赤</span>
+          <span class="px-1.5 py-0.2 rounded-xs bg-[#d97706] text-white text-[10px]">黃</span>
+          <span class="px-1.5 py-0.2 rounded-xs bg-[#faf6ee] text-[#1c1613] border border-[#a88d68] text-[10px]">白</span>
+          <span class="px-1.5 py-0.2 rounded-xs bg-[#1c1613] text-white text-[10px]">黑</span>
+          <span>━━━</span>
+        </div>
+      </div>
+
+      <!-- 🌟 TOP 3-WAY SERVICE SELECTOR (오늘의 운세[무료] / 사주[500원] / 타로[무료]) -->
+      <div class="max-w-xl mx-auto mb-6 p-1.5 bg-[#e6d7be] rounded-lg border-2 border-[#b49466] grid grid-cols-3 gap-1.5 shadow-inner font-serif-kr">
+        <button type="button" onclick="App.setMode('daily')" id="modeBtnDaily" class="py-3 px-2 rounded-md text-xs sm:text-sm font-bold transition flex items-center justify-center space-x-1.5 bg-[#231710] text-[#f7d88c] shadow-md border border-[#b48a4e]">
           <span>☀️ 오늘의 운세</span>
+          <span class="text-[10px] px-1.5 py-0.2 rounded-sm bg-[#0f5132] text-[#f7e6c4] border border-[#52b788] font-black">무료</span>
         </button>
-        <button type="button" onclick="App.setMode('saju')" id="modeBtnSaju" class="py-3 px-2 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center justify-center space-x-1.5 text-stone-700 hover:text-stone-950">
+        <button type="button" onclick="App.setMode('saju')" id="modeBtnSaju" class="py-3 px-2 rounded-md text-xs sm:text-sm font-semibold transition flex items-center justify-center space-x-1.5 text-[#36281c] hover:text-black">
           <span>📜 사주팔자</span>
+          <span class="text-[10px] px-1.5 py-0.2 rounded-sm bg-[#8c1d1d] text-[#fff3d1] border border-[#d4a359] font-black">500원</span>
         </button>
-        <button type="button" onclick="App.setMode('tarot')" id="modeBtnTarot" class="py-3 px-2 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center justify-center space-x-1.5 text-stone-700 hover:text-stone-950">
-          <span>🔮 타로</span>
+        <button type="button" onclick="App.setMode('tarot')" id="modeBtnTarot" class="py-3 px-2 rounded-md text-xs sm:text-sm font-semibold transition flex items-center justify-center space-x-1.5 text-[#36281c] hover:text-black">
+          <span>🔮 타로 점괘</span>
+          <span class="text-[10px] px-1.5 py-0.2 rounded-sm bg-[#164e63] text-[#e0f2fe] border border-[#7dd3fc] font-black">무료</span>
         </button>
       </div>
 
-      <!-- VIEW A: 사주 & 오늘의 운세 입력 폼 카드 (한지 만세력 서책 스타일) -->
-      <div id="sajuFormCard" class="max-w-xl mx-auto modern-card p-6 sm:p-7 space-y-4 bg-white">
+      <!-- VIEW A: 사주 & 오늘의 운세 입력 폼 카드 (전통 한지 만세력 고서 명식첩 스타일) -->
+      <div id="sajuFormCard" class="max-w-xl mx-auto modern-card p-6 sm:p-7 space-y-4">
         
         <!-- Oriental Form Header -->
-        <div class="border-b border-[#e8ded2] pb-3.5 mb-2 flex items-center justify-between">
+        <div class="border-b-2 border-[#c8b08a] pb-3.5 mb-2 flex items-center justify-between">
           <div>
-            <div class="flex items-center space-x-1.5 mb-1">
-              <span id="formBadgeText" class="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-950 border border-amber-300">☀️ 오늘의 운세</span>
-              <span class="text-[11px] text-stone-500 font-medium">생년월일시 천기(天氣) 분석</span>
+            <div class="flex items-center space-x-2 mb-1">
+              <span id="formBadgeText" class="text-[11px] font-black px-2.5 py-0.5 rounded-sm bg-[#f5e4c3] text-[#5c2d0c] border border-[#b48a4e] font-serif-kr">☀️ 오늘의 운세 (무료)</span>
+              <span class="text-[11px] text-[#6b563e] font-serif-kr font-bold">사주명식첩(四柱命式帖) 기록</span>
             </div>
-            <h3 id="formTitleText" class="text-lg font-black text-stone-900 font-serif-kr">생년월일시(四柱) 입력</h3>
+            <h3 id="formTitleText" class="text-lg font-black text-[#1c140d] font-serif-kr">생년월일시(四柱八字) 명식 입력</h3>
           </div>
-          <div class="w-8 h-8 rounded-lg bg-stone-100 border border-stone-300 flex items-center justify-center font-serif-kr text-xs font-bold text-stone-600">
-            四柱
+          <div class="w-10 h-10 rounded-md oriental-seal text-xs leading-tight text-center p-1">
+            四柱<br/>命式
           </div>
         </div>
 
@@ -261,11 +504,11 @@
             </div>
           </div>
 
-          <!-- Submit Button (동양적 품격의 황금빛 인장 버튼) -->
-          <button type="submit" class="w-full py-4 rounded-2xl font-black text-sm text-stone-950 bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 transition-all duration-200 flex items-center justify-center space-x-2 shadow-md hover:shadow-lg active:scale-[0.98] border border-amber-500/50">
-            <span class="text-base">☯</span>
-            <span id="submitBtnText" class="font-serif-kr tracking-wide font-extrabold text-sm sm:text-base">오늘의 운세 & 천기(天氣) 확인하기</span>
-            <i data-lucide="arrow-right" class="w-4 h-4 text-stone-900"></i>
+          <!-- Submit Button (조선 왕실 어보 주칠·황금 인장 버튼) -->
+          <button type="submit" class="w-full py-4 rounded-lg font-black text-sm text-[#fff6df] bg-gradient-to-r from-[#8c1d1d] via-[#a31d1d] to-[#7f1d1d] hover:from-[#991b1b] hover:to-[#8c1d1d] transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg active:scale-[0.98] border-2 border-[#d4a359]">
+            <span class="text-base text-[#facc15]">☯</span>
+            <span id="submitBtnText" class="font-serif-kr tracking-wider font-extrabold text-sm sm:text-base">오늘의 일진 & 운세 무료 풀이 보기 ☀️</span>
+            <i data-lucide="arrow-right" class="w-4 h-4 text-[#facc15]"></i>
           </button>
         </form>
 
@@ -597,6 +840,33 @@
           </div>
         </div>
 
+        <!-- ☯ 일진 작동 메커니즘: 12운성 바이오리듬 & 합·충(合·沖) 신호등 (포스텔러·점신 표준) -->
+        <div class="modern-card p-5 space-y-3 bg-white border border-indigo-200">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-black text-stone-900 font-serif-kr flex items-center space-x-1.5">
+              <span>🧭</span>
+              <span>오늘의 일진(日辰) 작동 메커니즘 분석 (12운성 & 합·충 트리거)</span>
+            </h4>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300">무료 제공</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div class="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200 space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="text-indigo-950 font-extrabold">🔥 오늘의 12운성 에너지 단계</span>
+                <span id="dailyTwelveStageBadge" class="px-2 py-0.5 rounded-full bg-indigo-600 text-white font-black text-[11px]">건록(建祿)</span>
+              </div>
+              <p id="dailyTwelveStageDesc" class="text-stone-700 font-medium leading-relaxed"></p>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="text-amber-950 font-extrabold">⚡ 일간·일지 합·충(合·沖) 신호등</span>
+                <span class="text-[10px] text-amber-800 font-bold">사주 본원 vs 당일 일진</span>
+              </div>
+              <div id="dailyHapChungList" class="space-y-1 text-stone-800 font-medium"></div>
+            </div>
+          </div>
+        </div>
+
         <!-- Lucky Items -->
         <div class="modern-card p-5 space-y-3 bg-white">
           <h4 class="text-xs font-black text-stone-900 font-serif-kr flex items-center space-x-1.5">
@@ -633,6 +903,28 @@
             <span class="text-[11px] text-stone-500 font-medium">아침 · 오후 · 저녁 · 밤 4대 구간</span>
           </div>
           <div id="hourlyContainer" class="grid grid-cols-1 sm:grid-cols-4 gap-2"></div>
+        </div>
+
+        <!-- 💎 무료 오늘의 운세 하단 -> 유료 500원 정통 사주 전환 유도 배너 (상용 운세 웹 BM 퍼널) -->
+        <div class="modern-card p-5 bg-gradient-to-r from-stone-900 via-stone-800 to-stone-900 text-white border-2 border-amber-400 shadow-lg">
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="space-y-1 text-center sm:text-left">
+              <div class="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-amber-400 text-stone-950 text-[10px] font-black">
+                <span>👑 PREMIUM 정통 만세력 심층 리포트</span>
+                <span>·</span>
+                <span>87% 할인 특가 500원</span>
+              </div>
+              <h4 class="text-base sm:text-lg font-black font-serif-kr text-amber-200">
+                오늘 하루를 넘어, 내 평생의 재물 그릇과 10년 대운(大運) 황금기가 궁금하신가요?
+              </h4>
+              <p class="text-xs text-stone-300 font-medium">
+                사주 4주 8자 원국 · 60갑자 일주론 · 8대 신살 · 부족한 오행 용신 처방 · 평생 재물/연애운을 단 500원에 즉시 확인하세요.
+              </p>
+            </div>
+            <button type="button" onclick="App.goToPaidSajuFromDaily()" class="shrink-0 px-5 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-300 text-stone-950 font-black text-xs sm:text-sm hover:from-amber-300 hover:to-yellow-200 transition shadow-md whitespace-nowrap">
+              📜 내 사주팔자 심층 풀이 보기 (500원) ➔
+            </button>
+          </div>
         </div>
       </div>
 
@@ -709,6 +1001,81 @@
           </div>
         </div>
 
+        <!-- ✅ 500원 결제 완료 영수증 배너 (결제 완료 시 노출) -->
+        <div id="sajuPaidReceiptBanner" class="hidden p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-400 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs shadow-xs">
+          <div class="flex items-center space-x-2">
+            <span class="text-lg">🔓</span>
+            <div>
+              <span class="font-black text-emerald-950 block">프리미엄 정통 사주팔자 · 대운 · 오행 · 재물 리포트 전체 잠금 해제됨</span>
+              <span id="sajuPaidReceiptMeta" class="text-[11px] text-emerald-800 font-semibold">결제수단: 토스페이 · 결제금액: 500원 (MySQL 영구 보관 완료)</span>
+            </div>
+          </div>
+          <button type="button" onclick="App.openHistoryModal()" class="px-3 py-1.5 rounded-xl bg-emerald-700 text-white font-bold text-[11px] hover:bg-emerald-800 transition shrink-0">
+            🧾 결제 영수증 보기
+          </button>
+        </div>
+
+        <!-- 🔒 유료 500원 심층 사주 페이월 영역 (결제 전 블러 잠금 -> 500원 결제 시 즉시 해제) -->
+        <div id="sajuPaywallContainer" class="paywall-locked-area rounded-3xl">
+          
+          <!-- 페이월 잠금 오버레이 카드 -->
+          <div id="sajuPaywallOverlay" class="paywall-overlay-card rounded-3xl">
+            <div class="max-w-md w-full modern-card p-6 bg-white border-2 border-amber-400 shadow-2xl text-center space-y-4">
+              <div class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-950 border border-amber-400 text-xs font-black">
+                <span>🔒 정통 사주팔자 심층 리포트 잠금 해제</span>
+              </div>
+              <div class="space-y-1">
+                <h4 class="text-lg sm:text-xl font-black text-stone-900 font-serif-kr">
+                  단 <span class="text-amber-600 underline decoration-amber-400">500원</span>으로 평생 사주·대운·궁합 전체 열람
+                </h4>
+                <p class="text-xs text-stone-600 font-medium">
+                  위 4주 8자 원국표(무료 프리뷰)를 바탕으로 분석된 아래 5대 심층 비전이 즉시 공개됩니다.
+                </p>
+              </div>
+
+              <!-- 포함 내역 체크리스트 (상용 운세 웹 벤치마킹) -->
+              <div class="p-3.5 rounded-2xl bg-[#faf8f5] border border-[#e8ded2] text-left text-xs space-y-1.5 font-semibold text-stone-800">
+                <div class="flex items-center space-x-2"><span class="text-emerald-600 font-black">✔</span><span>60갑자 일주론(기질·강점·약점) & 8대 길신·흉신 정밀 풀이</span></div>
+                <div class="flex items-center space-x-2"><span class="text-emerald-600 font-black">✔</span><span>타고난 연애 DNA·배우자 인연 오행 & 2인 궁합 점수</span></div>
+                <div class="flex items-center space-x-2"><span class="text-emerald-600 font-black">✔</span><span>10년 대운(大運) 황금기 흐름 & 인생 3대 도약 변곡점</span></div>
+                <div class="flex items-center space-x-2"><span class="text-emerald-600 font-black">✔</span><span>오행(木火土金水) 결핍 진단 & 신강·신약 맞춤 용신(用神) 처방</span></div>
+                <div class="flex items-center space-x-2"><span class="text-emerald-600 font-black">✔</span><span>타고난 재물 그릇 · 자산 증식 스타일 · 천직 커리어 전략</span></div>
+              </div>
+
+              <!-- 가격 앵커링 -->
+              <div class="flex items-center justify-center space-x-2 pt-1">
+                <span class="text-xs text-stone-400 line-through font-bold">정가 3,900원</span>
+                <span class="px-2 py-0.5 rounded bg-rose-100 text-rose-800 text-[11px] font-black">87% 특가 할인</span>
+                <span class="text-2xl font-black text-stone-900">500원</span>
+              </div>
+
+              <!-- 간편결제 3사 바로가기 버튼 -->
+              <div class="space-y-2 pt-1">
+                <p class="text-[11px] font-bold text-stone-500">원하시는 간편결제 수단을 선택하면 즉시 잠금이 해제됩니다</p>
+                <div class="grid grid-cols-3 gap-2">
+                  <button type="button" onclick="App.openPaymentModal('TOSS_PAY')" class="py-2.5 px-2 rounded-xl font-black text-xs text-white bg-[#0064FF] hover:bg-[#0052D6] transition shadow-sm flex flex-col items-center justify-center space-y-0.5">
+                    <span class="text-[13px] tracking-tight">toss pay</span>
+                    <span class="text-[10px] opacity-90">토스페이 500원</span>
+                  </button>
+                  <button type="button" onclick="App.openPaymentModal('KAKAO_PAY')" class="py-2.5 px-2 rounded-xl font-black text-xs text-[#191919] bg-[#FEE500] hover:bg-[#F4DC00] transition shadow-sm flex flex-col items-center justify-center space-y-0.5 border border-yellow-400">
+                    <span class="text-[13px] tracking-tight">💬 pay</span>
+                    <span class="text-[10px]">카카오페이 500원</span>
+                  </button>
+                  <button type="button" onclick="App.openPaymentModal('NAVER_PAY')" class="py-2.5 px-2 rounded-xl font-black text-xs text-white bg-[#03C75A] hover:bg-[#02b350] transition shadow-sm flex flex-col items-center justify-center space-y-0.5">
+                    <span class="text-[13px] tracking-tight">N Pay</span>
+                    <span class="text-[10px] opacity-95">네이버페이 500원</span>
+                  </button>
+                </div>
+                <button type="button" onclick="App.openPaymentModal('TOSS_PAY')" class="w-full py-3.5 rounded-2xl font-black text-xs sm:text-sm text-stone-950 bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 transition shadow-md border border-amber-500/60">
+                  🔓 500원 결제하고 평생 사주·대운 리포트 전체 열람하기
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 블러 처리되는 실제 심층 사주 콘텐츠 영역 -->
+          <div class="paywall-blurred-content space-y-4">
+
         <!-- 💖 사주 연애운 & 인연 기질 -->
         <div class="modern-card p-5 space-y-3 bg-white border-2 border-rose-200">
           <div class="flex items-center justify-between">
@@ -772,6 +1139,9 @@
             <span id="daeunMeta" class="text-slate-700 font-bold"></span>
           </div>
           <div id="daeunContainer" class="grid grid-cols-4 sm:grid-cols-8 gap-2 text-center"></div>
+        </div>
+
+          </div>
         </div>
       </div>
 
@@ -974,21 +1344,250 @@
     </section>
   </main>
 
+  <!-- 💳 MODAL 1: 500원 간편결제 모달 (토스페이 · 카카오페이 · 네이버페이) -->
+  <dialog id="paymentDialog" class="custom-modal" onclick="if(event.target===this) App.closePaymentModal()">
+    <div class="bg-[#fcf9f2] rounded-xl border-2 border-[#b48a4e] overflow-hidden shadow-2xl text-[#1b140e] font-serif-kr">
+      <div class="dancheong-bar"></div>
+      <!-- Modal Header -->
+      <div class="bg-[#1e1510] text-white px-5 py-4 flex items-center justify-between border-b-2 border-[#b48a4e]">
+        <div class="flex items-center space-x-2.5">
+          <span class="w-8 h-8 rounded-md oriental-seal text-xs">天命</span>
+          <div>
+            <h3 class="text-base font-black font-serif-kr text-[#f9e5b4]">💳 500원 결제를 진행하시겠습니까?</h3>
+            <p class="text-[11px] text-[#d5c19e]">정통 사주팔자 · 10년 대운 · 오행 · 재물 리포트 유료 열람</p>
+          </div>
+        </div>
+        <button type="button" onclick="App.closePaymentModal()" class="text-[#d5c19e] hover:text-white text-lg font-bold px-1.5">✕</button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-5 space-y-4">
+        <!-- 안내 배너 -->
+        <div class="p-3 rounded-xl bg-amber-50 border border-amber-300 text-xs text-amber-950 font-bold text-center">
+          🔒 정통 사주팔자 분석은 유료(<strong>500원</strong>) 서비스입니다.<br/>결제 승인이 완료되어야 사주 결과 화면으로 이동합니다.
+        </div>
+
+        <!-- 상품 요약 -->
+        <div class="p-3.5 rounded-2xl bg-[#faf8f5] border border-[#e8ded2] space-y-1.5 text-xs">
+          <div class="flex items-center justify-between">
+            <span class="text-stone-500 font-bold">결제 상품</span>
+            <span class="font-extrabold text-stone-900">정통 사주팔자 · 10년 대운 · 오행 · 재물 통합권</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-stone-500 font-bold">분석 대상자</span>
+            <span id="payModalTargetUser" class="font-bold text-amber-900">홍길동 님</span>
+          </div>
+          <div class="flex items-center justify-between pt-2 border-t border-[#e8ded2]">
+            <span class="text-stone-700 font-black">최종 결제 금액</span>
+            <div class="flex items-center space-x-1.5">
+              <span class="text-stone-400 line-through text-[11px]">3,900원</span>
+              <span class="text-lg font-black text-rose-600">500원</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 간편결제 수단 3종 선택 (토스페이 / 카카오페이 / 네이버페이) -->
+        <div class="space-y-2">
+          <label class="block text-xs font-extrabold text-stone-800">결제 수단 선택 (토스 · 카카오페이 · 네이버페이)</label>
+          <div class="grid grid-cols-1 gap-2">
+            <!-- 토스페이 -->
+            <button type="button" id="payMethodBtn-TOSS_PAY" onclick="App.selectPaymentMethod('TOSS_PAY')" class="w-full p-3 rounded-2xl border-2 border-[#0064FF] bg-blue-50/70 flex items-center justify-between transition text-left">
+              <div class="flex items-center space-x-3">
+                <span class="px-2.5 py-1 rounded-lg bg-[#0064FF] text-white font-black text-xs tracking-tight">toss pay</span>
+                <div>
+                  <span class="text-xs font-extrabold text-slate-900 block">토스페이 (Toss Pay)</span>
+                  <span class="text-[11px] text-slate-600">토스 앱 생체인증 · 원터치 1초 결제</span>
+                </div>
+              </div>
+              <span id="payCheck-TOSS_PAY" class="text-sm font-black text-[#0064FF]">● 선택됨</span>
+            </button>
+
+            <!-- 카카오페이 -->
+            <button type="button" id="payMethodBtn-KAKAO_PAY" onclick="App.selectPaymentMethod('KAKAO_PAY')" class="w-full p-3 rounded-2xl border border-slate-200 bg-white hover:bg-yellow-50/40 flex items-center justify-between transition text-left">
+              <div class="flex items-center space-x-3">
+                <span class="px-2.5 py-1 rounded-lg bg-[#FEE500] text-[#191919] font-black text-xs tracking-tight border border-yellow-400">💬 pay</span>
+                <div>
+                  <span class="text-xs font-extrabold text-slate-900 block">카카오페이 (Kakao Pay)</span>
+                  <span class="text-[11px] text-slate-600">카카오톡 간편결제 · 페이머니/카드</span>
+                </div>
+              </div>
+              <span id="payCheck-KAKAO_PAY" class="text-xs font-bold text-slate-400">○ 선택</span>
+            </button>
+
+            <!-- 네이버페이 -->
+            <button type="button" id="payMethodBtn-NAVER_PAY" onclick="App.selectPaymentMethod('NAVER_PAY')" class="w-full p-3 rounded-2xl border border-slate-200 bg-white hover:bg-emerald-50/40 flex items-center justify-between transition text-left">
+              <div class="flex items-center space-x-3">
+                <span class="px-2.5 py-1 rounded-lg bg-[#03C75A] text-white font-black text-xs tracking-tight">N Pay</span>
+                <div>
+                  <span class="text-xs font-extrabold text-slate-900 block">네이버페이 (Naver Pay)</span>
+                  <span class="text-[11px] text-slate-600">네이버페이 포인트 사용 및 간편결제</span>
+                </div>
+              </div>
+              <span id="payCheck-NAVER_PAY" class="text-xs font-bold text-slate-400">○ 선택</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2단계 최종 결제 확인 박스 (토스/카카오/네이버페이 결제하시겠습니까?) -->
+        <div id="payFinalConfirmBox" class="hidden p-3.5 rounded-2xl bg-stone-900 text-white space-y-2.5 text-center border border-amber-400">
+          <p id="payFinalConfirmQuestion" class="text-xs sm:text-sm font-black text-amber-300">
+            선택하신 [토스페이]로 500원을 결제하시겠습니까?
+          </p>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" onclick="App.cancelFinalConfirmStep()" class="py-2 rounded-xl bg-stone-700 hover:bg-stone-600 text-stone-200 text-xs font-bold">
+              취소
+            </button>
+            <button type="button" id="realCheckoutApproveBtn" onclick="App.approveFinalPayment()" class="py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-stone-950 text-xs font-black">
+              네, 500원 결제 승인
+            </button>
+          </div>
+        </div>
+
+        <!-- 결제 실행 & 취소 버튼 -->
+        <div id="payInitialBtnGroup" class="space-y-2">
+          <button type="button" id="confirmPaySubmitBtn" onclick="App.executePaymentCheckout()" class="w-full py-3.5 rounded-2xl font-black text-sm text-white bg-[#0064FF] hover:opacity-95 transition shadow-lg flex items-center justify-center space-x-2">
+            <span id="confirmPayBtnText">토스페이로 500원 결제하고 결과 화면으로 이동</span>
+          </button>
+          <button type="button" onclick="App.closePaymentModal()" class="w-full py-2.5 rounded-xl text-xs font-bold text-stone-600 bg-stone-100 hover:bg-stone-200 transition">
+            결제 취소 (입력 화면에 머무르기)
+          </button>
+        </div>
+
+        <p class="text-[11px] text-center text-stone-500 font-medium">
+          결제 완료 즉시 MySQL <code class="bg-stone-100 px-1 rounded">payments</code> 테이블에 영수증이 기록되며 모든 탭의 잠금이 해제됩니다.
+        </p>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 🧾 MODAL 2: 내 결제 영수증 & MySQL 사주 보관함 모달 -->
+  <dialog id="historyDialog" class="custom-modal" onclick="if(event.target===this) App.closeHistoryModal()">
+    <div class="bg-[#fcf9f2] rounded-xl border-2 border-[#b48a4e] overflow-hidden shadow-2xl text-[#1b140e] font-serif-kr">
+      <div class="dancheong-bar"></div>
+      <div class="bg-[#1e1510] text-white px-5 py-4 flex items-center justify-between border-b-2 border-[#b48a4e]">
+        <div>
+          <h3 class="text-sm font-black font-serif-kr text-[#f9e5b4]">📜 MySQL 결제 영수증 & 사주명식 보관함</h3>
+          <p class="text-[11px] text-[#d5c19e]">Spring JDBC (JdbcTemplate) 실시간 DB 조회 내역</p>
+        </div>
+        <button type="button" onclick="App.closeHistoryModal()" class="text-[#d5c19e] hover:text-white text-lg font-bold px-1.5">✕</button>
+      </div>
+
+      <div class="p-5 space-y-4 max-h-[75vh] overflow-y-auto text-xs">
+        <div>
+          <h4 class="font-extrabold text-stone-900 mb-2 flex items-center justify-between">
+            <span>🧾 최근 500원 간편결제 승인 내역 (payments 테이블)</span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 font-bold">MySQL 연동</span>
+          </h4>
+          <div id="paymentHistoryListBox" class="space-y-2 text-stone-700">
+            <div class="p-3 rounded-xl bg-stone-50 text-center text-stone-500">결제 내역을 불러오는 중...</div>
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-stone-200">
+          <h4 class="font-extrabold text-stone-900 mb-2">📜 최근 저장된 사주팔자 원장 (saju_records 테이블)</h4>
+          <div id="sajuHistoryListBox" class="space-y-2 text-stone-700">
+            <div class="p-3 rounded-xl bg-stone-50 text-center text-stone-500">사주 기록을 불러오는 중...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- ======================================================================
+       🧙‍♂️ 내장 AI 명리 도사 챗봇 플로팅 버튼 & 동적 대화창 위젯 (로그인 완료 후에만 노출)
+       ====================================================================== -->
+  <div id="aiChatbotFloatingContainer" class="hidden fixed bottom-5 right-5 z-50 flex-col items-end space-y-2 no-print">
+    <!-- 말풍선 툴팁 -->
+    <div id="aiChatbotHintBubble" onclick="App.toggleAiChatbot()" class="cursor-pointer px-3.5 py-1.5 rounded-full bg-[#1e1510] text-[#f9e5b4] border border-[#d4a359] text-xs font-serif-kr font-extrabold shadow-lg flex items-center space-x-1.5 animate-bounce">
+      <span class="text-[#facc15] animate-spin-slow">☯</span>
+      <span>AI 도사에게 사주·꿈해몽 물어보기</span>
+    </div>
+
+    <!-- 플로팅 런처 버튼 -->
+    <button type="button" id="aiChatbotFab" onclick="App.toggleAiChatbot()" class="ai-fab-pulse px-4 py-3 rounded-2xl bg-gradient-to-r from-[#8c1d1d] via-[#a31d1d] to-[#7f1d1d] text-[#fff6df] border-2 border-[#d4a359] font-serif-kr font-black text-xs sm:text-sm flex items-center space-x-2 cursor-pointer">
+      <span class="text-xl">🧙‍♂️</span>
+      <div class="text-left leading-tight">
+        <span class="block text-[10px] text-[#facc15] font-bold">규장각 사주·해몽 AI</span>
+        <span>천명 AI 도사 챗봇</span>
+      </div>
+    </button>
+  </div>
+
+  <!-- AI 챗봇 드로어 패널 (로그인 완료 후에만 활성화) -->
+  <aside id="aiChatbotDrawer" class="hidden ai-chat-drawer hidden-drawer font-serif-kr no-print">
+    <div class="dancheong-bar shrink-0"></div>
+    <!-- 챗봇 헤더 -->
+    <div class="bg-[#1e1510] text-[#f7e6c4] px-4 py-3 flex items-center justify-between border-b-2 border-[#b48a4e] shrink-0">
+      <div class="flex items-center space-x-2.5">
+        <span class="w-8 h-8 rounded-md oriental-seal text-sm">道師</span>
+        <div>
+          <div class="flex items-center space-x-1.5">
+            <h3 class="text-sm font-black text-[#f9e5b4]">천명(天命) AI 명리·해몽 도사</h3>
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          </div>
+          <p id="aiChatContextStatus" class="text-[10px] text-[#d5c19e]">사주·일진·오행 & 동양 정통 꿈해몽 상담</p>
+        </div>
+      </div>
+      <button type="button" onclick="App.toggleAiChatbot(false)" class="text-[#d5c19e] hover:text-white text-base font-bold px-1.5">✕</button>
+    </div>
+
+    <!-- 추천 질문 원클릭 칩 바 (꿈해몽 포함) -->
+    <div class="bg-[#efe5d4] px-3 py-2 border-b border-[#c8b08a] shrink-0">
+      <div class="text-[10px] font-extrabold text-[#5c4d3c] mb-1">👇 사주 문답 & 꿈해몽 원클릭 질문</div>
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none text-[11px]">
+        <button type="button" onclick="App.askAiQuickQuestion('어젯밤 꿈에 돼지와 황금을 본 꿈을 꿨는데 해몽해줘!')" class="px-2.5 py-1 rounded-full bg-[#231710] border border-[#b48a4e] text-[#f7d88c] font-bold shrink-0 hover:opacity-90 transition">🌙 돼지·재물 꿈해몽</button>
+        <button type="button" onclick="App.askAiQuickQuestion('꿈에 큰 용이나 뱀이 나오는 꿈, 혹은 불이 활활 타는 꿈은 무슨 뜻이야?')" class="px-2.5 py-1 rounded-full bg-[#231710] border border-[#b48a4e] text-[#f7d88c] font-bold shrink-0 hover:opacity-90 transition">🐉 용·뱀·불 꿈해몽</button>
+        <button type="button" onclick="App.askAiQuickQuestion('꿈에서 이빨(치아)이 빠지거나 내가 죽는 꿈을 꿨는데 길몽이야 흉몽이야?')" class="px-2.5 py-1 rounded-full bg-[#231710] border border-[#b48a4e] text-[#f7d88c] font-bold shrink-0 hover:opacity-90 transition">✨ 치아·역몽 해몽</button>
+        <button type="button" onclick="App.askAiQuickQuestion('내 사주에 타고난 재물복과 투자 타이밍은 어때?')" class="px-2.5 py-1 rounded-full bg-[#fffdf8] border border-[#b48a4e] text-[#2c2219] font-bold shrink-0 hover:bg-[#f5e4c3] transition">💰 재물·투자운</button>
+        <button type="button" onclick="App.askAiQuickQuestion('내 연애 기질과 천생연분 배우자 인연은 어떤 사람이야?')" class="px-2.5 py-1 rounded-full bg-[#fffdf8] border border-[#b48a4e] text-[#2c2219] font-bold shrink-0 hover:bg-[#f5e4c3] transition">💖 연애·배우자운</button>
+        <button type="button" onclick="App.askAiQuickQuestion('나에게 맞는 천직(진로)과 이직·시험 합격 운을 알려줘')" class="px-2.5 py-1 rounded-full bg-[#fffdf8] border border-[#b48a4e] text-[#2c2219] font-bold shrink-0 hover:bg-[#f5e4c3] transition">💼 이직·진로·합격</button>
+        <button type="button" onclick="App.askAiQuickQuestion('오늘 내가 조심해야 할 점과 추천 개운 음식을 알려줘')" class="px-2.5 py-1 rounded-full bg-[#fffdf8] border border-[#b48a4e] text-[#2c2219] font-bold shrink-0 hover:bg-[#f5e4c3] transition">☀️ 오늘의 비책</button>
+        <button type="button" onclick="App.askAiQuickQuestion('내 사주에서 부족한 오행과 용신(用神)을 채우는 개운법은?')" class="px-2.5 py-1 rounded-full bg-[#fffdf8] border border-[#b48a4e] text-[#2c2219] font-bold shrink-0 hover:bg-[#f5e4c3] transition">🌱 용신·개운법</button>
+      </div>
+    </div>
+
+    <!-- 대화 메시지 스크롤 영역 -->
+    <div id="aiChatMessageList" class="flex-grow p-3.5 overflow-y-auto space-y-3 text-xs bg-[#faf4e8]">
+      <!-- 초기 AI 도사 환영 메시지 -->
+      <div class="flex items-start space-x-2">
+        <div class="w-7 h-7 rounded-lg bg-[#8c1d1d] text-[#fff6df] border border-[#d4a359] flex items-center justify-center text-sm shrink-0 shadow-xs">🧙‍♂️</div>
+        <div class="p-3 rounded-2xl rounded-tl-xs bg-[#fffdf9] border border-[#c8b08a] text-[#2c2219] shadow-xs space-y-1.5 max-w-[85%]">
+          <div class="text-[10px] font-black text-[#8c1d1d]">천명(天命) AI 명리·해몽 도사</div>
+          <p class="leading-relaxed font-medium">
+            반갑습니다! 규장각 만세력과 주공해몽(周公解夢)을 관장하는 <strong>천명 AI 명리·해몽 도사</strong>입니다. 🙇‍♂️<br/>
+            사주·운세 고민부터 <strong>🌙 어젯밤 꾸신 꿈해몽(돼지, 용, 뱀, 불, 물, 조상님, 치아, 역몽 등)</strong>까지 무엇이든 적어주시면 귀하의 일진과 결합하여 명쾌하게 풀이해 드립니다!
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 하단 질문 입력 폼 -->
+    <form onsubmit="App.handleAiChatSubmit(event)" class="p-2.5 bg-[#efe5d4] border-t border-[#c8b08a] flex items-center space-x-2 shrink-0">
+      <input type="text" id="aiChatInput" placeholder="예: 돼지꿈/뱀꿈 해몽해줘, 올해 재물운 알려줘..." class="flex-grow bg-[#fffdf9] border border-[#b49466] rounded-xl px-3 py-2 text-xs text-[#1b140e] focus:outline-none focus:border-[#8c1d1d] font-medium">
+      <button type="submit" id="aiChatSendBtn" class="px-3.5 py-2 rounded-xl bg-[#8c1d1d] hover:bg-[#991b1b] text-[#fff6df] border border-[#d4a359] text-xs font-black shrink-0 transition shadow-xs">
+        문답 전송
+      </button>
+    </form>
+  </aside>
+
   <!-- Footer -->
-  <footer class="border-t border-slate-300 bg-white/70 py-6 text-center text-xs text-slate-600 font-medium">
-    <p>한국천문연구원(KASI) 역법 데이터 및 정통 명리학 원전 준수</p>
-    <p class="mt-0.5">© 2024 Cheonmyeong. All rights reserved.</p>
+  <footer class="border-t-2 border-[#b48a4e] bg-[#1e1510] text-[#d5c19e] font-serif-kr">
+    <div class="dancheong-bar"></div>
+    <div class="py-6 text-center text-xs font-medium space-y-1">
+      <p class="text-[#f9e5b4] font-bold">천명(天命) 欽定萬歲曆 · 한국천문연구원(KASI) 역법 및 정통 명리학 원전(자평진전·적천수) 준수</p>
+      <p class="text-[11px] opacity-80">Spring Boot 4.x + MySQL 8.x JDBC/JPA 정규화 데이터베이스 & 내장 AI 도사 연동 · © 2026 Cheonmyeong</p>
+    </div>
   </footer>
 
   <!-- Scripts with Cache Buster -->
-  <script src="js/engine/manseryeok.bundle.js?v=20261016_1"></script>
-  <script src="js/data/gapja60.js?v=20261016_1"></script>
-  <script src="js/data/sinsal.js?v=20261016_1"></script>
-  <script src="js/data/tarot.js?v=20261016_1"></script>
-  <script src="js/engine/calendar.js?v=20261016_1"></script>
-  <script src="js/engine/saju.js?v=20261016_1"></script>
-  <script src="js/engine/fortune.js?v=20261016_1"></script>
-  <script src="js/app.js?v=20261016_1"></script>
+  <script src="js/engine/manseryeok.bundle.js?v=20261120_6"></script>
+  <script src="js/data/gapja60.js?v=20261120_6"></script>
+  <script src="js/data/sinsal.js?v=20261120_6"></script>
+  <script src="js/data/tarot.js?v=20261120_6"></script>
+  <script src="js/engine/calendar.js?v=20261120_6"></script>
+  <script src="js/engine/saju.js?v=20261120_6"></script>
+  <script src="js/engine/fortune.js?v=20261120_6"></script>
+  <script src="js/app.js?v=20261120_6"></script>
 
 </body>
 </html>

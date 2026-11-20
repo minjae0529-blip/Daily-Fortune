@@ -109,3 +109,63 @@ CREATE TABLE IF NOT EXISTS tarot_readings (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '뽑은 일시',
     CONSTRAINT fk_tarot_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='타로 카드 점괘 엔티티';
+
+CREATE TABLE IF NOT EXISTS payments (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '결제 고유 식별자',
+    user_id BIGINT NOT NULL COMMENT '결제 사용자 ID (FK)',
+    saju_record_id BIGINT NULL COMMENT '연동된 사주 원장 ID (FK)',
+    merchant_uid VARCHAR(60) NOT NULL UNIQUE COMMENT '가맹점 주문 고유번호 (예: ORD-20261120-123456)',
+    product_type VARCHAR(40) NOT NULL DEFAULT 'SAJU_FULL_REPORT' COMMENT '상품 코드 (SAJU_FULL_REPORT 등)',
+    product_name VARCHAR(100) NOT NULL COMMENT '결제 상품명',
+    payment_method ENUM('TOSS_PAY', 'KAKAO_PAY', 'NAVER_PAY') NOT NULL COMMENT '간편결제 수단 (토스페이, 카카오페이, 네이버페이)',
+    amount INT NOT NULL DEFAULT 500 COMMENT '결제 금액 (기본 500원)',
+    payment_status ENUM('PAID', 'CANCELLED') NOT NULL DEFAULT 'PAID' COMMENT '결제 상태',
+    pg_tid VARCHAR(80) NOT NULL COMMENT 'PG사 거래 승인번호',
+    paid_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '결제 승인 일시',
+    CONSTRAINT fk_payment_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_payment_saju FOREIGN KEY (saju_record_id) REFERENCES saju_records (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='유료 사주 500원 간편결제(토스/카카오/네이버페이) 원장 엔티티';
+
+CREATE TABLE IF NOT EXISTS accounts (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '계정 고유 식별자',
+    login_id VARCHAR(40) NOT NULL UNIQUE COMMENT '로그인 아이디 (영문/숫자 4~20자)',
+    password_hash VARCHAR(255) NOT NULL COMMENT 'PBKDF2WithHmacSHA256 단방향 암호화 해시',
+    password_salt VARCHAR(120) NOT NULL COMMENT '계정별 고유 16바이트 랜덤 Salt',
+    name VARCHAR(50) NOT NULL COMMENT '회원 이름 또는 닉네임',
+    phone_number VARCHAR(25) NOT NULL COMMENT '휴대폰 번호 (SMS 보안 경고 및 휴면 해제 인증용)',
+    gender VARCHAR(10) NOT NULL DEFAULT 'M' COMMENT '성별 (M/F)',
+    birth_year INT NULL COMMENT '출생년도',
+    birth_month INT NULL COMMENT '출생월',
+    birth_day INT NULL COMMENT '출생일',
+    failed_attempts INT NOT NULL DEFAULT 0 COMMENT '비밀번호 연속 실패 횟수 (5회 경고문자, 10회 휴면화)',
+    account_status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE' COMMENT '계정 상태 (ACTIVE, WARNING_SMS_SENT, DORMANT_LOCKED)',
+    last_failed_at DATETIME NULL COMMENT '마지막 로그인 실패 일시',
+    last_login_at DATETIME NULL COMMENT '마지막 로그인 성공 일시',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '회원가입 일시'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='웹 회원가입 및 보안 로그인 계정 엔티티';
+
+CREATE TABLE IF NOT EXISTS sms_verifications (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'SMS 인증 고유 식별자',
+    login_id VARCHAR(40) NOT NULL COMMENT '대상 로그인 아이디',
+    phone_number VARCHAR(25) NOT NULL COMMENT '수신 휴대폰 번호',
+    verification_code VARCHAR(10) NOT NULL COMMENT '6자리 인증번호',
+    purpose VARCHAR(30) NOT NULL COMMENT '발송 목적 (FAILED_5_ALERT, DORMANT_UNLOCK)',
+    message_content VARCHAR(255) NOT NULL COMMENT '발송된 SMS 문자 메시지 전문',
+    is_verified BOOLEAN NOT NULL DEFAULT FALSE COMMENT '인증 완료 여부',
+    expires_at DATETIME NOT NULL COMMENT '인증번호 만료 일시 (5분)',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '발송 일시'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='휴대폰 SMS 보안 경고 및 휴면 계정 해제 인증 엔티티';
+
+CREATE TABLE IF NOT EXISTS ai_chat_logs (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'AI 상담 로그 식별자',
+    user_name VARCHAR(50) NULL COMMENT '상담 사용자 이름',
+    ilju_name VARCHAR(30) NULL COMMENT '연동된 사주 일주명',
+    yongsin VARCHAR(30) NULL COMMENT '연동된 추천 용신',
+    intent_category VARCHAR(40) NOT NULL COMMENT '질문 의도 분류 (DREAM_INTERPRETATION, WEALTH, LOVE, CAREER 등)',
+    user_message TEXT NOT NULL COMMENT '사용자 질문 원문',
+    ai_response TEXT NOT NULL COMMENT 'AI 명리·해몽 도사 답변',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '상담 일시'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='내장 AI 명리·꿈해몽 도사 챗봇 상담 이력 엔티티';
+
+
+

@@ -24,6 +24,7 @@ public class SajuService {
     private final DailyFortuneRepository dailyFortuneRepository;
     private final CompatibilityRepository compatibilityRepository;
     private final TarotRepository tarotRepository;
+    private final PaymentRepository paymentRepository;
     private final SajuJdbcRepository sajuJdbcRepository;
 
     /**
@@ -231,5 +232,102 @@ public class SajuService {
      */
     public boolean testJdbcConnection() {
         return sajuJdbcRepository.checkJdbcConnection();
+    }
+
+    /**
+     * 유료 사주 리포트 500원 간편결제 (토스페이 / 카카오페이 / 네이버페이) 승인 및 DB 저장
+     */
+    @Transactional
+    public PaymentResponseDto processPayment(PaymentRequestDto req) {
+        String name = (req.getName() != null && !req.getName().isBlank()) ? req.getName() : "사용자";
+        String gender = (req.getGender() != null && !req.getGender().isBlank()) ? req.getGender() : "M";
+        Integer year = req.getBirthYear() != null ? req.getBirthYear() : 1996;
+        Integer month = req.getBirthMonth() != null ? req.getBirthMonth() : 5;
+        Integer day = req.getBirthDay() != null ? req.getBirthDay() : 15;
+
+        UserEntity user = findOrCreateUser(name, gender, "SOLAR", year, month, day, null, null, true, true);
+
+        SajuRecordEntity sajuRecord = null;
+        if (req.getSajuRecordId() != null) {
+            sajuRecord = sajuRecordRepository.findById(req.getSajuRecordId()).orElse(null);
+        } else {
+            List<SajuRecordEntity> records = sajuRecordRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+            if (!records.isEmpty()) {
+                sajuRecord = records.get(0);
+            }
+        }
+
+        String method = req.getPaymentMethod() != null ? req.getPaymentMethod().toUpperCase() : "TOSS_PAY";
+        if (!method.equals("TOSS_PAY") && !method.equals("KAKAO_PAY") && !method.equals("NAVER_PAY")) {
+            method = "TOSS_PAY";
+        }
+
+        long ts = System.currentTimeMillis();
+        String datePart = LocalDate.now().toString().replace("-", "");
+        String randomTail = String.valueOf(ts % 1000000);
+        String merchantUid = "ORD-" + datePart + "-" + randomTail;
+        String pgPrefix = method.replace("_PAY", "");
+        String pgTid = pgPrefix + "_TID_" + ts;
+
+        int amount = (req.getAmount() != null && req.getAmount() > 0) ? req.getAmount() : 500;
+        String productType = req.getProductType() != null ? req.getProductType() : "SAJU_FULL_REPORT";
+        String productName = req.getProductName() != null ? req.getProductName() : "천명(天命) 정통 사주팔자 · 대운 · 심층 리포트 열람권";
+
+        PaymentEntity payment = PaymentEntity.builder()
+                .user(user)
+                .sajuRecord(sajuRecord)
+                .merchantUid(merchantUid)
+                .productType(productType)
+                .productName(productName)
+                .paymentMethod(method)
+                .amount(amount)
+                .paymentStatus("PAID")
+                .pgTid(pgTid)
+                .build();
+
+        PaymentEntity saved = paymentRepository.save(payment);
+        log.info("==> [결제 승인 완료] 사용자={}, 수단={}, 금액={}원, 주문번호={}",
+                user.getName(), method, amount, merchantUid);
+
+        return toPaymentResponseDto(saved);
+    }
+
+    /**
+     * 해당 사용자의 500원 사주 리포트 결제 완료 여부 조회 (재열람 보장)
+     */
+    public PaymentResponseDto getLatestPaidPayment(String name, Integer year, Integer month, Integer day) {
+        return userRepository.findByNameAndBirthYearAndBirthMonthAndBirthDay(name, year, month, day)
+                .flatMap(u -> paymentRepository.findFirstByUserIdAndPaymentStatusOrderByPaidAtDesc(u.getId(), "PAID"))
+                .map(this::toPaymentResponseDto)
+                .orElse(null);
+    }
+
+    /**
+     * 최근 결제 내역 조회 (JDBC JOIN 쿼리)
+     */
+    public List<Map<String, Object>> getRecentPaymentHistoryViaJdbc(int limit) {
+        return sajuJdbcRepository.findRecentPayments(limit);
+    }
+
+    private PaymentResponseDto toPaymentResponseDto(PaymentEntity entity) {
+        String methodKr = switch (entity.getPaymentMethod()) {
+            case "KAKAO_PAY" -> "카카오페이";
+            case "NAVER_PAY" -> "네이버페이";
+            default -> "토스페이";
+        };
+        return PaymentResponseDto.builder()
+                .paymentId(entity.getId())
+                .userId(entity.getUser().getId())
+                .userName(entity.getUser().getName())
+                .merchantUid(entity.getMerchantUid())
+                .productType(entity.getProductType())
+                .productName(entity.getProductName())
+                .paymentMethod(entity.getPaymentMethod())
+                .paymentMethodKr(methodKr)
+                .amount(entity.getAmount())
+                .paymentStatus(entity.getPaymentStatus())
+                .pgTid(entity.getPgTid())
+                .paidAt(entity.getPaidAt())
+                .build();
     }
 }

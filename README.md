@@ -34,6 +34,24 @@
 
 ---
 
+## 🎬 서비스 시연 데모 영상 (Live Walkthrough Demo)
+
+> **자동 재생 데모 영상 (`assets/demo.gif`)** 및 **[🎥 고화질 H.264 MP4 데모 영상 원본 (`assets/demo.mp4`)](assets/demo.mp4)**
+
+<p align="center">
+  <img src="assets/demo.gif" alt="천명(天命) 전체 서비스 시연 데모 영상" width="760" />
+</p>
+
+### 🖼️ 단계별 주요 화면 프리뷰 (6대 핵심 플로우)
+
+| Step 1. 보안 로그인 · 회원가입 · SMS 휴면해제 | Step 2. 한국 전통 한지·단청 사주명식 입력 | Step 3. 500원 간편결제 게이트 (토스·카카오·네이버) |
+| :---: | :---: | :---: |
+| <img src="assets/step1_auth_login.png" width="280" alt="보안 로그인 게이트" /> | <img src="assets/step2_main_hanji_form.png" width="280" alt="전통 한지 입력 화면" /> | <img src="assets/step3_payment_modal_500krw.png" width="280" alt="500원 간편결제 모달" /> |
+| **Step 4. 결제 완료 영수증 & 사주·대운 리포트** | **Step 5. 3-Card 타로 & 카테고리 전환 재셔플** | **Step 6. 내장 AI 명리 · 꿈해몽 도사 챗봇** |
+| <img src="assets/step4_saju_unlocked_report.png" width="280" alt="사주 리포트 잠금해제" /> | <img src="assets/step5_tarot_3card_spread.png" width="280" alt="3-Card 타로 점괘" /> | <img src="assets/step6_ai_counselor_chatbot.png" width="280" alt="내장 AI 명리·꿈해몽 도사 챗봇" /> |
+
+---
+
 ## 🛠 2. 기술 스택 (Tech Stack)
 
 | 영역 | 기술 / 라이브러리 | 버전 | 적용 및 구현 역할 |

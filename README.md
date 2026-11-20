@@ -271,15 +271,17 @@ erDiagram
 
 ### 5-2. 7대 엔티티 클래스 및 테이블 매핑 요약
 
-| 번호 | 엔티티 클래스 (`com.chunmyung.saju.entity`) | DB 테이블명 | 연관관계 어노테이션 | 핵심 역할 |
-| :---: | :--- | :--- | :--- | :--- |
-| **1** | `UserEntity.java` | `users` | `@Id @GeneratedValue` | 사용자 기본 인적사항 및 출생 역법·시차보정 설정 보관 |
-| **2** | `SajuRecordEntity.java` | `saju_records` | `@ManyToOne(UserEntity)`<br/>`@OneToOne(FiveElements)`<br/>`@OneToMany(SinsalEntity)` | 사주 4주 8자(년·월·일·시 천간/지지), 본원 일간, 60갑자 일주론 해설 보관 |
-| **3** | `FiveElementsEntity.java` | `five_elements_balances` | `@OneToOne(SajuRecordEntity)` | 목·화·토·금·수 5오행 비율(%), 최강/결핍 오행, 신강약, 추천 용신 보관 |
-| **4** | `SinsalEntity.java` | `sinsal_records` | `@ManyToOne(SajuRecordEntity)` | 기둥별 작용하는 길신/흉신(천을귀인, 도화살, 역마살 등) 목록 및 해석 보관 |
-| **5** | `DailyFortuneEntity.java` | `daily_fortunes` | `@ManyToOne(UserEntity)` | 날짜별 일진 간지와 5대 운세 점수(종합·재물·애정·직업·건강), 행운 아이템 보관 |
-| **6** | `CompatibilityEntity.java` | `compatibility_records` | `@ManyToOne(user1, user2)` | 두 사용자 간의 궁합 점수, 등급, 천간 합충 및 지지 합충 분석 결과 보관 |
-| **7** | `TarotEntity.java` | `tarot_readings` | `@ManyToOne(UserEntity)` | 22장 메이저 아르카나 카드 번호, 정/역방향, 키워드 및 리딩 결과 보관 |
+> 패키지 경로: `com.chunmyung.saju.entity`
+
+| No. | 엔티티 클래스 | DB 테이블명 | 연관 관계 | 핵심 저장 항목 |
+| :-: | :--- | :--- | :---: | :--- |
+| **1** | `UserEntity` | `users` | `1 : N` (Root) | 이름, 성별, 생년월일시, 양·음력, 30분 시차보정 |
+| **2** | `SajuRecordEntity` | `saju_records` | `N : 1` (`users`) | 4주 8자(천간·지지), 본원 일간, 60갑자 일주론 |
+| **3** | `FiveElementsEntity` | `five_elements_balances` | `1 : 1` (`saju_records`) | 5오행 비율(%), 과다·결핍 오행, 신강약, 추천 용신 |
+| **4** | `SinsalEntity` | `sinsal_records` | `N : 1` (`saju_records`) | 기둥별 8대 신살(천을귀인·도화살 등) 및 상세 해설 |
+| **5** | `DailyFortuneEntity` | `daily_fortunes` | `N : 1` (`users`) | 일진 간지, 5대 운세 점수, 행운의 색·숫자·방위 |
+| **6** | `CompatibilityEntity` | `compatibility_records` | `N : 2` (`users`) | 본인·상대방 궁합 점수, 등급, 천간·지지 합충 분석 |
+| **7** | `TarotEntity` | `tarot_readings` | `N : 1` (`users`) | 타로 카드 번호(0~21), 정·역방향, 키워드·리딩 조언 |
 
 ---
 
@@ -342,23 +344,23 @@ Accept: application/json
 #### 📋 Request Body 필드 명세
 
 | 구분 | 필드명 | 타입 | 필수 | 설명 |
-| :---: | :--- | :---: | :---: | :--- |
+| :-: | :--- | :---: | :-: | :--- |
 | **사용자** | `name` | `String` | Y | 사용자 이름 또는 닉네임 |
 | **사용자** | `gender` | `String` | Y | 성별 (`"M"` 또는 `"F"`) |
 | **사용자** | `birthType` | `String` | Y | 역법 구분 (`"SOLAR"`, `"LUNAR"`, `"LEAP_LUNAR"`) |
 | **사용자** | `birthYear`, `birthMonth`, `birthDay` | `Integer` | Y | 출생 연·월·일 |
 | **사용자** | `birthHour`, `birthMinute` | `Integer` | N | 출생 시·분 (시간 모름일 경우 `null`) |
 | **사용자** | `isTimeUnknown` | `Boolean` | Y | 출생시간 모름 여부 (`true` / `false`) |
-| **사용자** | `timeCorrectionApplied` | `Boolean` | Y | 서울 동경 127.5° 기준 30분 시차 보정 적용 여부 |
+| **사용자** | `timeCorrectionApplied` | `Boolean` | Y | 동경 127.5° 기준 30분 시차보정 적용 여부 |
 | **사주원장** | `yearCheongan`, `yearJiji` | `String` | Y | 년주(年柱) 천간·지지 (예: `"乙"`, `"亥"`) |
 | **사주원장** | `monthCheongan`, `monthJiji` | `String` | Y | 월주(月柱) 천간·지지 (예: `"辛"`, `"巳"`) |
 | **사주원장** | `dayCheongan`, `dayJiji` | `String` | Y | 일주(日柱) 천간·지지 (예: `"丙"`, `"寅"`) |
 | **사주원장** | `timeCheongan`, `timeJiji` | `String` | N | 시주(時柱) 천간·지지 (예: `"乙"`, `"未"`) |
-| **사주원장** | `dayMaster`, `iljuName`, `zodiacAnimal` | `String` | Y | 본원 일간(`"丙"`), 일주명(`"병인(丙寅)"`), 상징 동물(`"붉은 호랑이"`) |
+| **사주원장** | `dayMaster`, `iljuName`, `zodiacAnimal` | `String` | Y | 본원 일간, 60갑자 일주명, 상징 동물 |
 | **오행밸런스** | `woodRatio` ~ `waterRatio` | `BigDecimal` | Y | 목·화·토·금·수 오행 비율 (`0.00` ~ `100.00`) |
 | **오행밸런스** | `dominantElement`, `deficientElement` | `String` | Y | 가장 강한 오행 / 가장 부족한 오행 |
-| **오행밸런스** | `strengthStatus`, `yongsin` | `String` | Y | 신강/신약 판정(`"신강(身强)"`) 및 추천 용신(`"금(金) / 수(水)"`) |
-| **신살목록** | `sinsals[].pillarType`, `sinsalName`, `sinsalType`, `description` | `List<SinsalDto>` | N | 기둥 위치(`"YEAR"`, `"DAY"` 등), 신살명, 길흉 타입, 상세 해설 배열 |
+| **오행밸런스** | `strengthStatus`, `yongsin` | `String` | Y | 신강·신약 판정 및 추천 용신 |
+| **신살목록** | `sinsals` | `List<SinsalDto>` | N | 기둥(`pillarType`), 신살명(`sinsalName`), 길흉, 해설 배열 |
 
 #### 📥 요청 예시 (Request Body JSON)
 ```json

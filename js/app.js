@@ -342,6 +342,7 @@ const App = {
 
     // 결과 렌더링 및 화면 전환
     this.renderResults();
+    this.saveToDatabase();
 
     document.getElementById("inputSection").classList.add("hidden");
     document.getElementById("resultSection").classList.remove("hidden");
@@ -357,6 +358,120 @@ const App = {
     setTimeout(() => {
       this.interactMascot();
     }, 450);
+  },
+
+  async saveToDatabase() {
+    try {
+      if (!this.userSaju) return;
+      const s = this.userSaju;
+      const f = this.dailyFortune;
+
+      const sajuPayload = {
+        name: s.userInfo.name || "사용자",
+        gender: (s.userInfo.gender === "female" || s.userInfo.gender === "F") ? "F" : "M",
+        birthType: s.userInfo.calendarType ? s.userInfo.calendarType.toUpperCase() : "SOLAR",
+        birthYear: s.userInfo.birthYear,
+        birthMonth: s.userInfo.birthMonth,
+        birthDay: s.userInfo.birthDay,
+        birthHour: s.userInfo.birthHour,
+        birthMinute: s.userInfo.birthMinute,
+        isTimeUnknown: Boolean(s.userInfo.isUnknownHour),
+        timeCorrectionApplied: s.userInfo.adjust30Min !== false,
+        yearCheongan: s.pillars.year.gan.char,
+        yearJiji: s.pillars.year.ji.char,
+        monthCheongan: s.pillars.month.gan.char,
+        monthJiji: s.pillars.month.ji.char,
+        dayCheongan: s.pillars.day.gan.char,
+        dayJiji: s.pillars.day.ji.char,
+        timeCheongan: s.pillars.time ? s.pillars.time.gan.char : null,
+        timeJiji: s.pillars.time ? s.pillars.time.ji.char : null,
+        dayMaster: s.pillars.day.gan.char,
+        iljuName: s.iljuDetail ? s.iljuDetail.name : `${s.pillars.day.gan.char}${s.pillars.day.ji.char}`,
+        zodiacAnimal: s.iljuDetail ? s.iljuDetail.symbol : "수호동물",
+        iljuDescription: s.iljuDetail ? (s.iljuDetail.summary || s.iljuDetail.desc || "") : "",
+        woodRatio: s.elements ? (s.elements["목"] || 0) : 0,
+        fireRatio: s.elements ? (s.elements["화"] || 0) : 0,
+        earthRatio: s.elements ? (s.elements["토"] || 0) : 0,
+        metalRatio: s.elements ? (s.elements["금"] || 0) : 0,
+        waterRatio: s.elements ? (s.elements["수"] || 0) : 0,
+        dominantElement: s.dominantElement || "-",
+        deficientElement: s.deficientElement || "-",
+        strengthStatus: s.strengthStatus || "중화",
+        yongsin: s.yongsin || "-",
+        analysisText: s.elementAnalysis || "",
+        sinsals: (s.sinsals || []).map(sin => ({
+          pillarType: sin.pillar || "GENERAL",
+          sinsalName: sin.name,
+          sinsalType: sin.type || "NEUTRAL",
+          description: sin.description || ""
+        }))
+      };
+
+      const res = await fetch("/api/saju/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(sajuPayload)
+      });
+      const result = await res.json();
+      if (result.success) {
+        console.log("💾 [천명 DB] 사주 정보가 MySQL에 성공적으로 저장되었습니다 (ID: " + result.data + ")");
+      }
+
+      if (f) {
+        const fortunePayload = {
+          name: s.userInfo.name || "사용자",
+          gender: (s.userInfo.gender === "female" || s.userInfo.gender === "F") ? "F" : "M",
+          birthYear: s.userInfo.birthYear,
+          birthMonth: s.userInfo.birthMonth,
+          birthDay: s.userInfo.birthDay,
+          fortuneDate: new Date().toISOString().split("T")[0],
+          todayGapja: f.todayGapja || "-",
+          totalScore: f.totalScore || 75,
+          wealthScore: f.wealthScore || 75,
+          loveScore: f.loveScore || 75,
+          careerScore: f.careerScore || 75,
+          healthScore: f.healthScore || 75,
+          luckyColor: (f.lucky && f.lucky.color) || "골드",
+          luckyNumber: (f.lucky && f.lucky.numbers) || "7",
+          luckyDirection: (f.lucky && f.lucky.direction) || "동쪽",
+          overallAdvice: f.summary || "오늘 하루도 긍정적인 마음으로 나아가세요."
+        };
+        await fetch("/api/fortune/save", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(fortunePayload)
+        });
+      }
+
+      if (this.compatResult && this.partnerSaju) {
+        const p = this.partnerSaju;
+        const c = this.compatResult;
+        const compatPayload = {
+          user1Name: s.userInfo.name || "본인",
+          user1Gender: (s.userInfo.gender === "female" || s.userInfo.gender === "F") ? "F" : "M",
+          user1BirthYear: s.userInfo.birthYear,
+          user1BirthMonth: s.userInfo.birthMonth,
+          user1BirthDay: s.userInfo.birthDay,
+          user2Name: p.userInfo.name || "상대방",
+          user2Gender: (p.userInfo.gender === "female" || p.userInfo.gender === "F") ? "F" : "M",
+          user2BirthYear: p.userInfo.birthYear,
+          user2BirthMonth: p.userInfo.birthMonth,
+          user2BirthDay: p.userInfo.birthDay,
+          score: c.totalScore || 85,
+          grade: c.grade || "천생연분",
+          cheonganHarmony: c.cheonganDesc || "",
+          jijiHarmony: c.jijiDesc || "",
+          relationshipAdvice: c.advice || ""
+        };
+        await fetch("/api/compatibility/save", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(compatPayload)
+        });
+      }
+    } catch (err) {
+      console.warn("MySQL DB 비동기 저장 알림: 백엔드 서버 상태 확인 필요", err);
+    }
   },
 
   resetToHome() {

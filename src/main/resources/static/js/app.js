@@ -1917,7 +1917,14 @@ const App = {
       return;
     }
 
-    // 1. 사용자 질문 말풍선 추가
+    // 1. 사용자 질문 말풍선 추가 및 히스토리 기록
+    this.aiChatHistory = this.aiChatHistory || [];
+    this.aiChatHistory.push({
+      role: "user",
+      text: userText,
+      time: new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })
+    });
+
     const userRow = document.createElement("div");
     userRow.className = "flex justify-end animate-slide-up";
     const safeUserDiv = document.createElement("div");
@@ -1975,6 +1982,13 @@ const App = {
 
       if (result && result.success && result.data) {
         const d = result.data;
+        this.aiChatHistory.push({
+          role: "ai",
+          badge: d.intentBadge || "🧙‍♂️ AI 명리 도사",
+          text: d.reply,
+          tip: d.followUpTip,
+          time: new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })
+        });
         this.appendAiMessageBubble(d.intentBadge || "🧙‍♂️ AI 명리 도사", d.reply, d.followUpTip, true);
       } else {
         this.appendAiMessageBubble("🧙‍♂️ AI 명리 도사", (result && result.message) || "잠시 천기를 읽는 중 혼선이 있었습니다. 다시 질문해 주세요.", null, false);
@@ -2391,6 +2405,1000 @@ const App = {
     }
 
     this.initTarotDeck();
+  },
+
+  // ==========================================================================
+  // 📥 카테고리별 인터랙티브 서책 자료 내보내기 (PDF 대체 독립형 HTML 서책)
+  // ==========================================================================
+  currentExportPreviewTab: "daily",
+  aiChatHistory: [],
+
+  openExportModal() {
+    if (!this.userSaju && !this.dailyFortune && (!this.tarotPickedCards || this.tarotPickedCards.length === 0)) {
+      alert("먼저 사주 또는 오늘의 운세를 분석한 후 내보내기를 이용해주세요.");
+      return;
+    }
+    const dialog = document.getElementById("exportDialog");
+    if (!dialog) return;
+    if (typeof dialog.showModal === "function") {
+      dialog.showModal();
+    } else {
+      dialog.setAttribute("open", "");
+    }
+    this.updateExportPreview();
+  },
+
+  closeExportModal() {
+    const dialog = document.getElementById("exportDialog");
+    if (!dialog) return;
+    if (typeof dialog.close === "function") {
+      dialog.close();
+    } else {
+      dialog.removeAttribute("open");
+    }
+  },
+
+  toggleAllExportCategories(checkAll) {
+    const ids = ["exportCatDaily", "exportCatSaju", "exportCatElements", "exportCatSinsal", "exportCatFuture", "exportCatTarot", "exportCatAi", "exportCatMascot"];
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.checked = checkAll;
+    });
+    this.updateExportPreview();
+  },
+
+  switchExportPreviewTab(tabKey) {
+    this.currentExportPreviewTab = tabKey;
+    const tabs = ["daily", "saju", "element", "sinsal", "future", "tarot", "ai"];
+    tabs.forEach(t => {
+      const btn = document.getElementById(`exportPrevTabBtn-${t}`);
+      if (btn) {
+        if (t === tabKey) {
+          btn.className = "px-2.5 py-1 rounded-md font-bold bg-[#231710] text-[#f7d88c] shadow-xs";
+        } else {
+          btn.className = "px-2.5 py-1 rounded-md font-semibold text-stone-700 hover:text-black transition";
+        }
+      }
+    });
+    this.updateExportPreview();
+  },
+
+  updateExportPreview() {
+    const box = document.getElementById("exportPreviewContentBox");
+    if (!box) return;
+
+    const s = this.userSaju;
+    const f = this.dailyFortune;
+    const tab = this.currentExportPreviewTab;
+
+    if (tab === "daily") {
+      if (!f) {
+        box.innerHTML = `<div class="text-stone-500 py-4 text-center">오늘의 운세 데이터가 없습니다. 먼저 분석을 진행해주세요.</div>`;
+        return;
+      }
+      box.innerHTML = `
+        <div class="space-y-2">
+          <div class="flex items-center justify-between pb-1.5 border-b border-stone-200">
+            <span class="font-bold text-amber-900 text-sm">🌟 오늘의 천기 & 일진 운세 (${f.dateString || "오늘"})</span>
+            <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-950 font-black text-xs">총운 ${f.totalScore}점</span>
+          </div>
+          <div class="p-2.5 rounded-lg bg-amber-50/70 border border-amber-200">
+            <strong class="text-amber-950 block mb-0.5 font-bold">테마: ${f.theme || "-"}</strong>
+            <p class="text-stone-700 leading-relaxed">${f.summary || "-"}</p>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-[11px]">
+            <div class="p-2 rounded bg-emerald-50 text-emerald-900 border border-emerald-200">
+              <strong class="block font-bold">✅ 추천:</strong> ${f.action || "-"}
+            </div>
+            <div class="p-2 rounded bg-rose-50 text-rose-900 border border-rose-200">
+              <strong class="block font-bold">⚠️ 주의:</strong> ${f.avoid || "-"}
+            </div>
+          </div>
+          <div class="p-2 rounded bg-stone-100 text-stone-800 text-[11px]">
+            🎨 행운 컬러: <strong>${f.lucky ? f.lucky.color : "-"}</strong> · 🔢 숫자: <strong>${f.lucky ? f.lucky.numbers : "-"}</strong> · 🧭 방위: <strong>${f.lucky ? f.lucky.direction : "-"}</strong>
+          </div>
+        </div>
+      `;
+    } else if (tab === "saju") {
+      if (!s) {
+        box.innerHTML = `<div class="text-stone-500 py-4 text-center">사주 원국 데이터가 없습니다.</div>`;
+        return;
+      }
+      const p = s.pillars;
+      box.innerHTML = `
+        <div class="space-y-2">
+          <div class="flex items-center justify-between pb-1.5 border-b border-stone-200">
+            <span class="font-bold text-stone-900 text-sm">📜 4주 8자 만세력 (${s.userInfo.name} 님)</span>
+            <span class="text-xs text-stone-600">${s.iljuDetail.name} (${s.iljuDetail.symbol})</span>
+          </div>
+          <div class="grid grid-cols-4 gap-1.5 text-center font-serif-kr">
+            <div class="p-1.5 rounded bg-amber-50 border border-amber-200">
+              <div class="text-[10px] text-stone-500">시주(時柱)</div>
+              <div class="text-sm font-black text-amber-900">${p.time ? p.time.gan.char + p.time.ji.char : "모름"}</div>
+              <div class="text-[10px] text-stone-600">${p.time ? p.time.tenGod : "-"}</div>
+            </div>
+            <div class="p-1.5 rounded bg-amber-100 border border-amber-300">
+              <div class="text-[10px] text-amber-800 font-bold">일주(日柱) 본원</div>
+              <div class="text-sm font-black text-amber-950">${p.day.gan.char + p.day.ji.char}</div>
+              <div class="text-[10px] text-amber-800 font-bold">나 자신(我)</div>
+            </div>
+            <div class="p-1.5 rounded bg-amber-50 border border-amber-200">
+              <div class="text-[10px] text-stone-500">월주(月柱)</div>
+              <div class="text-sm font-black text-amber-900">${p.month.gan.char + p.month.ji.char}</div>
+              <div class="text-[10px] text-stone-600">${p.month.tenGod}</div>
+            </div>
+            <div class="p-1.5 rounded bg-amber-50 border border-amber-200">
+              <div class="text-[10px] text-stone-500">년주(年柱)</div>
+              <div class="text-sm font-black text-amber-900">${p.year.gan.char + p.year.ji.char}</div>
+              <div class="text-[10px] text-stone-600">${p.year.tenGod}</div>
+            </div>
+          </div>
+          <div class="p-2 rounded bg-stone-50 text-stone-700 text-[11px] leading-relaxed">
+            ${s.iljuDetail.traits || "차분하고 지혜로운 성품으로 주변 사람들에게 신뢰를 주는 명식입니다."}
+          </div>
+        </div>
+      `;
+    } else if (tab === "element") {
+      if (!s) {
+        box.innerHTML = `<div class="text-stone-500 py-4 text-center">오행 데이터가 없습니다.</div>`;
+        return;
+      }
+      const el = s.elementPercentages || {};
+      box.innerHTML = `
+        <div class="space-y-2">
+          <div class="flex items-center justify-between pb-1.5 border-b border-stone-200">
+            <span class="font-bold text-stone-900 text-sm">☯ 오행 밸런스 & 용신 처방</span>
+            <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-900 font-bold text-xs">${s.strengthStatus}</span>
+          </div>
+          <div class="p-2 rounded bg-stone-50 border border-stone-200 space-y-1">
+            <div class="flex justify-between text-[11px] font-mono">
+              <span class="text-emerald-700 font-bold">목(木) ${el["목"] || 0}%</span>
+              <span class="text-rose-700 font-bold">화(火) ${el["화"] || 0}%</span>
+              <span class="text-amber-800 font-bold">토(土) ${el["토"] || 0}%</span>
+              <span class="text-slate-700 font-bold">금(金) ${el["금"] || 0}%</span>
+              <span class="text-blue-700 font-bold">수(水) ${el["수"] || 0}%</span>
+            </div>
+          </div>
+          <div class="p-2.5 rounded bg-amber-50 border border-amber-200 text-[11px] leading-relaxed">
+            <strong class="text-amber-950 block font-bold mb-0.5">추천 용신(用神): ${s.yongsin}</strong>
+            <p class="text-stone-700">${s.yongsinDesc || "사주의 오행 편중을 바로잡아 균형과 대운의 복을 극대화하는 맞춤 개운 처방입니다."}</p>
+          </div>
+        </div>
+      `;
+    } else if (tab === "sinsal") {
+      if (!s || !s.sinsal || s.sinsal.length === 0) {
+        box.innerHTML = `<div class="text-stone-500 py-4 text-center">신살 분석 데이터가 없습니다.</div>`;
+        return;
+      }
+      box.innerHTML = `
+        <div class="space-y-1.5">
+          <div class="font-bold text-stone-900 pb-1 border-b border-stone-200">🔮 8대 신살 분석 내역</div>
+          <div class="space-y-1.5">
+            ${s.sinsal.map(item => `
+              <div class="p-2 rounded bg-white border border-stone-200 flex items-start space-x-2 text-[11px]">
+                <span class="px-1.5 py-0.5 rounded font-bold text-[10px] ${item.type === '길신' ? 'bg-emerald-100 text-emerald-900' : 'bg-amber-100 text-amber-900'} shrink-0">${item.type || '신살'}</span>
+                <div>
+                  <strong class="text-stone-900">${item.name}</strong> (${item.pillar || '사주'})
+                  <p class="text-stone-600 mt-0.5 leading-relaxed">${item.desc}</p>
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    } else if (tab === "future") {
+      if (!s) {
+        box.innerHTML = `<div class="text-stone-500 py-4 text-center">미래 전략 데이터가 없습니다.</div>`;
+        return;
+      }
+      box.innerHTML = `
+        <div class="space-y-2">
+          <div class="font-bold text-stone-900 pb-1 border-b border-stone-200">🧭 미래 진로 & 재물 전략</div>
+          <div class="p-2.5 rounded bg-white border border-stone-200 text-[11px] leading-relaxed space-y-1.5">
+            <div>
+              <strong class="text-amber-900 block font-bold">💼 직업 & 천직 추천:</strong>
+              <p class="text-stone-700">${s.iljuDetail.careerAdvice || "전문성을 바탕으로 기획과 창의력을 발휘할 수 있는 분야가 매우 길합니다."}</p>
+            </div>
+            <div class="pt-1.5 border-t border-stone-100">
+              <strong class="text-amber-900 block font-bold">💰 재물 관리 & 투자 전략:</strong>
+              <p class="text-stone-700">${s.iljuDetail.wealthAdvice || "안정적인 자산 형성을 바탕으로 장기적인 투자를 지속할 때 큰 부를 축적합니다."}</p>
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (tab === "tarot") {
+      const cards = this.tarotPickedCards || [];
+      if (cards.length === 0) {
+        box.innerHTML = `<div class="text-stone-500 py-4 text-center">선택된 타로 카드가 없습니다. (타로 탭에서 카드를 뽑으시면 함께 내보내집니다)</div>`;
+        return;
+      }
+      const pos = ["과거(Past)", "현재(Present)", "미래(Future)"];
+      box.innerHTML = `
+        <div class="space-y-2">
+          <div class="font-bold text-stone-900 pb-1 border-b border-stone-200">🃏 3-Card 대화형 타로 점괘 결과</div>
+          <div class="space-y-1.5">
+            ${cards.map((cObj, idx) => {
+              const c = cObj.card;
+              return `
+                <div class="p-2 rounded bg-white border border-stone-200 text-[11px]">
+                  <div class="flex items-center justify-between font-bold text-amber-900 mb-0.5">
+                    <span>${pos[idx] || `카드 ${idx+1}`}: ${c.name_kr} (${c.name_en})</span>
+                    <span class="text-[10px] ${c.isReversed ? 'text-rose-600' : 'text-emerald-700'}">${c.isReversed ? '🔄 역방향' : '⬆ 정방향'}</span>
+                  </div>
+                  <p class="text-stone-700 leading-relaxed">${c.interpretation || ""}</p>
+                  <p class="text-stone-500 text-[10px] mt-0.5 font-semibold">💡 조언: ${c.advice || ""}</p>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      `;
+    } else if (tab === "ai") {
+      const logs = this.aiChatHistory || [];
+      if (logs.length === 0) {
+        box.innerHTML = `
+          <div class="text-stone-600 text-center py-4 space-y-1">
+            <p class="font-bold">아직 상담한 AI 도사 문답이 없습니다.</p>
+            <p class="text-[11px] text-stone-500">우측 하단 AI 도사 챗봇에서 질문하시면 내보내기 서책에 자동으로 함께 기록됩니다.</p>
+          </div>
+        `;
+        return;
+      }
+      box.innerHTML = `
+        <div class="space-y-2">
+          <div class="font-bold text-stone-900 pb-1 border-b border-stone-200">🧙‍♂️ 천명 AI 명리·해몽 도사 상담 기록</div>
+          <div class="space-y-2">
+            ${logs.map(m => {
+              if (m.role === 'user') {
+                return `
+                  <div class="p-2 rounded bg-amber-50/80 border border-amber-200 text-[11px]">
+                    <span class="font-bold text-[#8c1d1d] block text-[10px]">👤 사용자 질문 (${m.time})</span>
+                    <p class="text-stone-900 font-medium">${m.text}</p>
+                  </div>
+                `;
+              } else {
+                return `
+                  <div class="p-2.5 rounded bg-white border border-stone-200 text-[11px] space-y-1">
+                    <span class="inline-block px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 font-bold text-[10px]">${m.badge || 'AI 도사 풀이'}</span>
+                    <p class="text-stone-800 leading-relaxed whitespace-pre-line">${m.text}</p>
+                  </div>
+                `;
+              }
+            }).join("")}
+          </div>
+        </div>
+      `;
+    }
+  },
+
+  copyCategorizedText() {
+    const s = this.userSaju;
+    const f = this.dailyFortune;
+    const cards = this.tarotPickedCards || [];
+    const aiLogs = this.aiChatHistory || [];
+
+    const name = s ? s.userInfo.name : (this.currentAccount ? this.currentAccount.name : "회원");
+    const today = new Date().toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" });
+
+    let lines = [];
+    lines.push(`========================================================`);
+    lines.push(`📜 [천명(天命)] ${name} 님의 카테고리별 감결 서책`);
+    lines.push(`발행 일시: ${today}`);
+    lines.push(`========================================================\n`);
+
+    if (f && (document.getElementById("exportCatDaily")?.checked ?? true)) {
+      lines.push(`[🌟 1. 오늘의 천기 & 일진 운세]`);
+      lines.push(`• 일진: ${f.dateString || today} (${f.todayTenGod || "식신"})`);
+      lines.push(`• 총운 지수: ${f.totalScore}점`);
+      lines.push(`• 오늘의 테마: ${f.theme || "-"}`);
+      lines.push(`• 총평: ${f.summary || "-"}`);
+      lines.push(`• 추천 행동: ${f.action || "-"}`);
+      lines.push(`• 주의 행동: ${f.avoid || "-"}`);
+      if (f.lucky) {
+        lines.push(`• 행운 아이템: 컬러(${f.lucky.color}), 번호(${f.lucky.numbers}), 방위(${f.lucky.direction})`);
+      }
+      lines.push(``);
+    }
+
+    if (s && (document.getElementById("exportCatSaju")?.checked ?? true)) {
+      const p = s.pillars;
+      lines.push(`[📜 2. 사주 원국 (4주 8자) & 일주론]`);
+      lines.push(`• 출생: 양력 ${s.userInfo.solarDateString} (${s.userInfo.genderKr})`);
+      lines.push(`• 4주 8자:`);
+      lines.push(`  - 시주: ${p.time ? p.time.gan.char + p.time.ji.char + " (" + p.time.tenGod + ")" : "시간 미상"}`);
+      lines.push(`  - 일주(본원): ${p.day.gan.char + p.day.ji.char} (일간: ${p.day.gan.char})`);
+      lines.push(`  - 월주: ${p.month.gan.char + p.month.ji.char} (${p.month.tenGod})`);
+      lines.push(`  - 년주: ${p.year.gan.char + p.year.ji.char} (${p.year.tenGod})`);
+      lines.push(`• 60갑자 일주: ${s.iljuDetail.name} (${s.iljuDetail.symbol})`);
+      lines.push(`• 타고난 기질: ${s.iljuDetail.traits || "-"}`);
+      if (s.blessingPoints && s.blessingPoints.length > 0) {
+        lines.push(`• 내 사주가 좋은 이유 3가지:`);
+        s.blessingPoints.forEach((b, i) => lines.push(`  ${i+1}) ${b.title}: ${b.desc}`));
+      }
+      lines.push(``);
+    }
+
+    if (s && (document.getElementById("exportCatElements")?.checked ?? true)) {
+      const el = s.elementPercentages || {};
+      lines.push(`[☯ 3. 오행 밸런스 & 맞춤 용신 처방]`);
+      lines.push(`• 오행 비율: 목(${el["목"] || 0}%), 화(${el["화"] || 0}%), 토(${el["토"] || 0}%), 금(${el["금"] || 0}%), 수(${el["수"] || 0}%)`);
+      lines.push(`• 사주 체질: ${s.strengthStatus}`);
+      lines.push(`• 추천 용신: ${s.yongsin}`);
+      lines.push(`• 용신 해설: ${s.yongsinDesc || "-"}`);
+      lines.push(``);
+    }
+
+    if (s && s.sinsal && (document.getElementById("exportCatSinsal")?.checked ?? true)) {
+      lines.push(`[🔮 4. 8대 신살 분석]`);
+      s.sinsal.forEach(item => {
+        lines.push(`• ${item.name} (${item.type}): ${item.desc}`);
+      });
+      lines.push(``);
+    }
+
+    if (s && (document.getElementById("exportCatFuture")?.checked ?? true)) {
+      lines.push(`[🧭 5. 미래 진로 & 재물 전략]`);
+      lines.push(`• 진로 & 천직: ${s.iljuDetail.careerAdvice || "-"}`);
+      lines.push(`• 재물 & 투자: ${s.iljuDetail.wealthAdvice || "-"}`);
+      lines.push(``);
+    }
+
+    if (cards.length > 0 && (document.getElementById("exportCatTarot")?.checked ?? true)) {
+      lines.push(`[🃏 6. 3-Card 대화형 타로 점괘]`);
+      const pos = ["과거", "현재", "미래"];
+      cards.forEach((cObj, idx) => {
+        const c = cObj.card;
+        lines.push(`• [${pos[idx]}] ${c.name_kr} (${c.isReversed ? "역방향" : "정방향"}): ${c.interpretation}`);
+        lines.push(`  조언: ${c.advice}`);
+      });
+      lines.push(``);
+    }
+
+    if (aiLogs.length > 0 && (document.getElementById("exportCatAi")?.checked ?? true)) {
+      lines.push(`[🧙‍♂️ 7. AI 명리·꿈해몽 도사 문답 기록]`);
+      aiLogs.forEach(m => {
+        if (m.role === 'user') {
+          lines.push(`Q (${m.time}): ${m.text}`);
+        } else {
+          lines.push(`A: ${m.text}\n`);
+        }
+      });
+    }
+
+    lines.push(`========================================================`);
+    lines.push(`천명(天命) 欽定萬歲曆 · 조선 왕실 규장각 명리학 시스템`);
+    lines.push(`https://github.com/minjae0529-blip/Daily-Fortune`);
+
+    const fullText = lines.join("\n");
+    navigator.clipboard.writeText(fullText).then(() => {
+      alert("✅ 모든 카테고리별 자료가 깔끔한 텍스트로 클립보드에 복사되었습니다! 노션이나 메모장에 붙여넣으실 수 있습니다.");
+    }).catch(() => {
+      alert("복사에 실패했습니다.");
+    });
+  },
+
+  downloadInteractiveReportHtml() {
+    const s = this.userSaju;
+    const f = this.dailyFortune;
+    const cards = this.tarotPickedCards || [];
+    const aiLogs = this.aiChatHistory || [];
+
+    const name = s ? s.userInfo.name : (this.currentAccount ? this.currentAccount.name : "회원");
+    const nowStr = new Date().toLocaleString("ko-KR");
+
+    // Checkbox selections
+    const incDaily = f && (document.getElementById("exportCatDaily")?.checked ?? true);
+    const incSaju = s && (document.getElementById("exportCatSaju")?.checked ?? true);
+    const incElements = s && (document.getElementById("exportCatElements")?.checked ?? true);
+    const incSinsal = s && s.sinsal && (document.getElementById("exportCatSinsal")?.checked ?? true);
+    const incFuture = s && (document.getElementById("exportCatFuture")?.checked ?? true);
+    const incTarot = cards.length > 0 && (document.getElementById("exportCatTarot")?.checked ?? true);
+    const incAi = aiLogs.length > 0 && (document.getElementById("exportCatAi")?.checked ?? true);
+
+    const safeStr = (v) => v ? String(v).replace(/</g, "&lt;").replace(/>/g, "&gt;") : "-";
+
+    // Categories array for tab navigation
+    const navCategories = [];
+    if (incDaily) navCategories.push({ id: "daily", name: "🌟 오늘의 천기 운세" });
+    if (incSaju) navCategories.push({ id: "saju", name: "📜 사주 원국 (4주 8자)" });
+    if (incElements) navCategories.push({ id: "elements", name: "☯ 오행 밸런스 & 용신" });
+    if (incSinsal) navCategories.push({ id: "sinsal", name: "🔮 8대 신살 분석" });
+    if (incFuture) navCategories.push({ id: "future", name: "🧭 미래 진로 & 재물" });
+    if (incTarot) navCategories.push({ id: "tarot", name: "🃏 3-Card 타로 점괘" });
+    if (incAi) navCategories.push({ id: "ai", name: "🧙‍♂️ AI 도사 상담 문답" });
+
+    const firstCatId = navCategories.length > 0 ? navCategories[0].id : "daily";
+
+    const htmlContent = `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>천명(天命) 감결 서책 - ${name} 님</title>
+  <style>
+    :root {
+      --bg: #f7f3e8;
+      --paper: #fffdfa;
+      --card-bg: #ffffff;
+      --dancheong-red: #8c1d1d;
+      --dancheong-red-dark: #6e1313;
+      --gold: #d4a359;
+      --gold-dark: #b48a4e;
+      --dancheong-green: #2d6a4f;
+      --dancheong-blue: #1e3a8a;
+      --text-main: #1c1917;
+      --text-muted: #57534e;
+      --border: #e7ddcd;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+      background: var(--bg);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding: 20px 14px 40px;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+    .dancheong-bar {
+      height: 8px;
+      background: linear-gradient(90deg, #8c1d1d 0%, #d4a359 25%, #2d6a4f 50%, #1e3a8a 75%, #8c1d1d 100%);
+      border-radius: 4px 4px 0 0;
+    }
+    .royal-header {
+      background: #1e1510;
+      color: #f7e6c4;
+      padding: 24px 20px;
+      border-radius: 0 0 16px 16px;
+      border-bottom: 3px solid var(--gold);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+      position: relative;
+    }
+    .royal-header h1 {
+      font-family: "Noto Serif KR", "Batang", serif;
+      font-size: 24px;
+      font-weight: 900;
+      color: #f9e5b4;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .seal {
+      display: inline-block;
+      width: 32px;
+      height: 32px;
+      background: #8c1d1d;
+      border: 2px solid var(--gold);
+      border-radius: 6px;
+      text-align: center;
+      line-height: 28px;
+      font-size: 16px;
+      font-weight: bold;
+      color: #fff;
+    }
+    .user-profile-badge {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid #4a3525;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 12px;
+      color: #d5c19e;
+    }
+    .user-profile-badge strong { color: #facc15; }
+    .action-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin: 18px 0 12px;
+      flex-wrap: wrap;
+    }
+    .view-toggle-btn {
+      background: #fff;
+      border: 1px solid var(--gold-dark);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      color: #443425;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .view-toggle-btn:hover { background: #fdf6ea; }
+    .nav-tabs {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      margin-bottom: 18px;
+      scrollbar-width: thin;
+    }
+    .tab-btn {
+      padding: 10px 16px;
+      background: #ebdcc6;
+      border: 1px solid #cbb799;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: bold;
+      color: #3e2e1e;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover { background: #dfcbaf; color: #000; }
+    .tab-btn.active {
+      background: #1e1510;
+      color: #f7d88c;
+      border-color: var(--gold);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    .category-section {
+      background: var(--paper);
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      padding: 24px 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+      display: none;
+    }
+    .category-section.active-panel { display: block; }
+    .show-all .category-section { display: block !important; margin-bottom: 24px; }
+    .cat-title {
+      font-family: "Noto Serif KR", "Batang", serif;
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--dancheong-red);
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 8px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .score-banner {
+      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      border: 2px solid #f59e0b;
+      padding: 18px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .score-val { font-size: 38px; font-weight: 900; color: #b45309; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 14px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-bottom: 14px; }
+    .card-box {
+      background: #ffffff;
+      border: 1px solid #e7ddcd;
+      padding: 14px;
+      border-radius: 12px;
+    }
+    .table-pillars {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: center;
+      margin-bottom: 16px;
+      background: #fff;
+    }
+    .table-pillars th, .table-pillars td {
+      border: 1px solid #e2d5c3;
+      padding: 10px 8px;
+      font-size: 13px;
+    }
+    .table-pillars th { background: #faf4e8; color: #4a3525; font-weight: bold; }
+    .pillar-ganji { font-size: 18px; font-weight: 900; color: var(--dancheong-red); }
+    .gauge-bar-bg { background: #e7e5e4; border-radius: 8px; height: 12px; overflow: hidden; margin-top: 4px; }
+    .gauge-bar-fill { height: 100%; border-radius: 8px; }
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: bold;
+    }
+    .badge-auspicious { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    .badge-danger { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .chat-bubble-user {
+      background: #8c1d1d;
+      color: #fff6df;
+      padding: 12px 16px;
+      border-radius: 16px 16px 4px 16px;
+      max-width: 85%;
+      margin-left: auto;
+      margin-bottom: 10px;
+      font-size: 13px;
+    }
+    .chat-bubble-ai {
+      background: #ffffff;
+      border: 1px solid #c8b08a;
+      color: #2c2219;
+      padding: 14px 18px;
+      border-radius: 16px 16px 16px 4px;
+      max-width: 88%;
+      margin-right: auto;
+      margin-bottom: 14px;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    footer {
+      text-align: center;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #d5c19e;
+      font-size: 11px;
+      color: #78716c;
+    }
+    @media print {
+      .action-toolbar, .nav-tabs { display: none !important; }
+      .category-section { display: block !important; page-break-inside: avoid; border: 1px solid #ccc; box-shadow: none; }
+      body { background: #fff; padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="dancheong-bar"></div>
+    <header class="royal-header">
+      <h1>
+        <span class="seal">天</span>
+        <span>천명(天命) 欽定萬歲曆 감결 서책</span>
+      </h1>
+      <p style="font-size: 12px; color: #e6d5b8; margin-top: 4px;">조선 왕실 규장각 명리학 원전 · 한국천문연구원 역법 기반 고정밀 감정서</p>
+      <div class="user-profile-badge">
+        <span>성명: <strong>${safeStr(name)} 님</strong></span>
+        <span>성별: <strong>${s ? safeStr(s.userInfo.genderKr) : "-"}</strong></span>
+        <span>생년월일: <strong>${s ? safeStr(s.userInfo.solarDateString) : "-"}</strong></span>
+        <span>태어난 시각: <strong>${s ? (s.userInfo.isUnknownHour ? "시간 미상" : safeStr(s.userInfo.birthHour) + "시 " + safeStr(s.userInfo.birthMinute) + "분") : "-"}</strong></span>
+        <span>발행 일시: <strong>${nowStr}</strong></span>
+      </div>
+    </header>
+
+    <!-- 도구 바 -->
+    <div class="action-toolbar">
+      <div style="font-size: 12px; color: #57534e;">
+        👉 <strong>카테고리 탭</strong>을 클릭하면 해당 항목으로 즉시 전환됩니다.
+      </div>
+      <div style="display: flex; gap: 6px;">
+        <button type="button" class="view-toggle-btn" onclick="toggleAllView(this)">
+          <span>📖 전체 한눈에 보기</span>
+        </button>
+        <button type="button" class="view-toggle-btn" onclick="copyReportText()">
+          <span>📋 텍스트 복사</span>
+        </button>
+        <button type="button" class="view-toggle-btn" onclick="window.print()">
+          <span>🖨️ 인쇄</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 카테고리 탭 네비게이션 -->
+    <nav class="nav-tabs" id="categoryNavTabs">
+      ${navCategories.map((c, idx) => `
+        <button type="button" class="tab-btn ${c.id === firstCatId ? 'active' : ''}" onclick="selectCategory('${c.id}', this)">
+          ${c.name}
+        </button>
+      `).join("")}
+    </nav>
+
+    <!-- 1. 오늘의 운세 카테고리 -->
+    ${incDaily && f ? `
+    <section id="panel-daily" class="category-section ${firstCatId === 'daily' ? 'active-panel' : ''}">
+      <div class="cat-title">
+        <span>🌟 오늘의 천기 & 일진 운세 (${safeStr(f.dateString)})</span>
+        <span class="badge" style="background:#fef3c7; color:#92400e;">${safeStr(f.todayTenGod)}</span>
+      </div>
+      <div class="score-banner">
+        <div>
+          <div style="font-size: 12px; color: #78350f; font-weight: bold;">오늘의 운세 지수</div>
+          <div style="font-size: 16px; font-weight: 900; color: #451a03; margin-top: 2px;">
+            ${f.totalScore >= 90 ? "🌟 대대길(大大吉) - 만사형통의 날" : (f.totalScore >= 80 ? "✨ 대길(大吉) - 순풍에 돛 단 날" : "🌱 평온(平溫) - 실속 챙기는 날")}
+          </div>
+          <p style="font-size: 12px; color: #78350f; margin-top: 4px;">${safeStr(f.theme)}</p>
+        </div>
+        <div class="score-val">${f.totalScore}점</div>
+      </div>
+      <div class="card-box" style="margin-bottom: 12px; background: #fffcf4; border-color: #f3e5ca;">
+        <strong style="color: #8c1d1d; display: block; margin-bottom: 4px; font-size: 13px;">📜 천기 총평:</strong>
+        <p style="font-size: 13px; color: #44403c; line-height: 1.7;">${safeStr(f.summary)}</p>
+      </div>
+      <div class="grid-2">
+        <div class="card-box" style="background: #f0fdf4; border-color: #bbf7d0;">
+          <strong style="color: #166534; display: block; margin-bottom: 4px;">✅ 오늘의 추천:</strong>
+          <p style="font-size: 12px; color: #14532d;">${safeStr(f.action)}</p>
+        </div>
+        <div class="card-box" style="background: #fef2f2; border-color: #fecaca;">
+          <strong style="color: #991b1b; display: block; margin-bottom: 4px;">⚠️ 오늘의 주의:</strong>
+          <p style="font-size: 12px; color: #7f1d1d;">${safeStr(f.avoid)}</p>
+        </div>
+      </div>
+      <div class="grid-4">
+        <div class="card-box" style="text-align: center;">
+          <span style="font-size: 11px; color: #78716c; display: block;">재물운</span>
+          <strong style="font-size: 18px; color: #b45309;">${f.scores ? f.scores.wealth : 85}점</strong>
+        </div>
+        <div class="card-box" style="text-align: center;">
+          <span style="font-size: 11px; color: #78716c; display: block;">애정운</span>
+          <strong style="font-size: 18px; color: #be123c;">${f.scores ? f.scores.love : 88}점</strong>
+        </div>
+        <div class="card-box" style="text-align: center;">
+          <span style="font-size: 11px; color: #78716c; display: block;">건강운</span>
+          <strong style="font-size: 18px; color: #047857;">${f.scores ? f.scores.health : 90}점</strong>
+        </div>
+        <div class="card-box" style="text-align: center;">
+          <span style="font-size: 11px; color: #78716c; display: block;">직업/학업운</span>
+          <strong style="font-size: 18px; color: #1d4ed8;">${f.scores ? f.scores.career : 92}점</strong>
+        </div>
+      </div>
+      ${f.lucky ? `
+      <div class="card-box" style="background: #fafaf9; font-size: 12px;">
+        🎨 행운의 색: <strong>${safeStr(f.lucky.color)}</strong> · 🔢 행운의 번호: <strong>${safeStr(f.lucky.numbers)}</strong> · 🧭 길한 방위: <strong>${safeStr(f.lucky.direction)}</strong>
+      </div>
+      ` : ''}
+    </section>
+    ` : ''}
+
+    <!-- 2. 사주 원국 카테고리 -->
+    ${incSaju && s ? `
+    <section id="panel-saju" class="category-section ${firstCatId === 'saju' ? 'active-panel' : ''}">
+      <div class="cat-title">
+        <span>📜 사주 원국 (4주 8자 & 10년 대운)</span>
+        <span class="badge" style="background:#e0e7ff; color:#3730a3;">${safeStr(s.iljuDetail.name)}</span>
+      </div>
+      <table class="table-pillars">
+        <thead>
+          <tr>
+            <th>구분</th>
+            <th>시주(時柱)</th>
+            <th>일주(日柱) [본원]</th>
+            <th>월주(月柱)</th>
+            <th>년주(年柱)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="background:#faf4e8; font-weight:bold;">천간(天干)</td>
+            <td class="pillar-ganji">${s.pillars.time ? safeStr(s.pillars.time.gan.char) : "모름"}</td>
+            <td class="pillar-ganji" style="color: #b45309;">${safeStr(s.pillars.day.gan.char)}</td>
+            <td class="pillar-ganji">${safeStr(s.pillars.month.gan.char)}</td>
+            <td class="pillar-ganji">${safeStr(s.pillars.year.gan.char)}</td>
+          </tr>
+          <tr>
+            <td style="background:#faf4e8; font-weight:bold;">지지(地支)</td>
+            <td class="pillar-ganji">${s.pillars.time ? safeStr(s.pillars.time.ji.char) : "모름"}</td>
+            <td class="pillar-ganji" style="color: #b45309;">${safeStr(s.pillars.day.ji.char)}</td>
+            <td class="pillar-ganji">${safeStr(s.pillars.month.ji.char)}</td>
+            <td class="pillar-ganji">${safeStr(s.pillars.year.ji.char)}</td>
+          </tr>
+          <tr>
+            <td style="background:#faf4e8; font-weight:bold;">십신(十神)</td>
+            <td>${s.pillars.time ? safeStr(s.pillars.time.tenGod) : "-"}</td>
+            <td><strong>본인(我)</strong></td>
+            <td>${safeStr(s.pillars.month.tenGod)}</td>
+            <td>${safeStr(s.pillars.year.tenGod)}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="card-box" style="margin-bottom: 12px; background: #fffcf4;">
+        <strong style="color: #8c1d1d; display: block; margin-bottom: 6px; font-size: 13px;">👑 ${safeStr(s.iljuDetail.name)} (${safeStr(s.iljuDetail.symbol)}) 일주론:</strong>
+        <p style="font-size: 13px; color: #44403c; line-height: 1.7;">${safeStr(s.iljuDetail.traits)}</p>
+      </div>
+      ${s.blessingPoints && s.blessingPoints.length > 0 ? `
+      <div class="card-box" style="background: #faf5ed; border-color: #d4a359;">
+        <strong style="color: #b45309; display: block; margin-bottom: 8px; font-size: 13px;">🧧 내 사주가 특별히 좋은 이유 3가지 (타고난 복록):</strong>
+        <ul style="padding-left: 18px; font-size: 12px; color: #57534e; line-height: 1.8;">
+          ${s.blessingPoints.map(b => `<li><strong>${safeStr(b.title)}</strong>: ${safeStr(b.desc)}</li>`).join("")}
+        </ul>
+      </div>
+      ` : ''}
+    </section>
+    ` : ''}
+
+    <!-- 3. 오행 밸런스 & 용신 카테고리 -->
+    ${incElements && s ? `
+    <section id="panel-elements" class="category-section ${firstCatId === 'elements' ? 'active-panel' : ''}">
+      <div class="cat-title">
+        <span>☯ 오행 밸런스 & 조후·억부 맞춤 용신</span>
+        <span class="badge" style="background:#f3e8ff; color:#6b21a8;">${safeStr(s.strengthStatus)}</span>
+      </div>
+      <div class="grid-2">
+        <div class="card-box">
+          <strong style="display: block; margin-bottom: 10px; font-size: 13px;">📊 5대 오행 에너지 분포:</strong>
+          ${Object.entries(s.elementPercentages || {}).map(([el, pct]) => {
+            const colors = { "목": "#10b981", "화": "#ef4444", "토": "#f59e0b", "금": "#64748b", "수": "#3b82f6" };
+            return `
+              <div style="margin-bottom: 8px; font-size: 12px;">
+                <div style="display: flex; justify-content: space-between; font-weight: bold;">
+                  <span>${el}(${el==='목'?'木':el==='화'?'火':el==='토'?'土':el==='금'?'金':'水'})</span>
+                  <span>${pct}%</span>
+                </div>
+                <div class="gauge-bar-bg">
+                  <div class="gauge-bar-fill" style="width: ${pct}%; background: ${colors[el] || '#888'};"></div>
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+        <div class="card-box" style="background: #fdfaf4; border-color: #d4a359; display: flex; flex-direction: column; justify-content: center;">
+          <span style="font-size: 12px; color: #78716c; font-weight: bold;">사주 균형을 이끄는 핵심 용신(用神)</span>
+          <div style="font-size: 26px; font-weight: 900; color: #8c1d1d; margin: 4px 0;">용신: ${safeStr(s.yongsin)}</div>
+          <p style="font-size: 12px; color: #57534e; line-height: 1.7;">${safeStr(s.yongsinDesc)}</p>
+        </div>
+      </div>
+    </section>
+    ` : ''}
+
+    <!-- 4. 8대 신살 분석 카테고리 -->
+    ${incSinsal && s && s.sinsal ? `
+    <section id="panel-sinsal" class="category-section ${firstCatId === 'sinsal' ? 'active-panel' : ''}">
+      <div class="cat-title">
+        <span>🔮 8대 신살 상세 해설</span>
+        <span class="badge" style="background:#e0f2fe; color:#0369a1;">신살 분석</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        ${s.sinsal.map(item => `
+          <div class="card-box" style="display: flex; align-items: flex-start; gap: 10px;">
+            <span class="badge ${item.type === '길신' ? 'badge-auspicious' : 'badge-danger'}" style="margin-top: 2px;">
+              ${safeStr(item.type || '신살')}
+            </span>
+            <div>
+              <strong style="color: #1c1917; font-size: 13px;">${safeStr(item.name)}</strong>
+              <span style="font-size: 11px; color: #78716c; margin-left: 4px;">(${safeStr(item.pillar || '사주')})</span>
+              <p style="font-size: 12px; color: #57534e; margin-top: 2px; line-height: 1.6;">${safeStr(item.desc)}</p>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    </section>
+    ` : ''}
+
+    <!-- 5. 미래 진로 & 재물 전략 카테고리 -->
+    ${incFuture && s ? `
+    <section id="panel-future" class="category-section ${firstCatId === 'future' ? 'active-panel' : ''}">
+      <div class="cat-title">
+        <span>🧭 미래 진로 & 평생 재물 전략</span>
+      </div>
+      <div class="grid-2">
+        <div class="card-box">
+          <strong style="color: #8c1d1d; font-size: 13px; display: block; margin-bottom: 6px;">💼 천직 & 직업 적성:</strong>
+          <p style="font-size: 13px; color: #44403c; line-height: 1.7;">${safeStr(s.iljuDetail.careerAdvice)}</p>
+        </div>
+        <div class="card-box">
+          <strong style="color: #b45309; font-size: 13px; display: block; margin-bottom: 6px;">💰 평생 재물 & 투자 비결:</strong>
+          <p style="font-size: 13px; color: #44403c; line-height: 1.7;">${safeStr(s.iljuDetail.wealthAdvice)}</p>
+        </div>
+      </div>
+    </section>
+    ` : ''}
+
+    <!-- 6. 3-Card 타로 점괘 카테고리 -->
+    ${incTarot && cards.length > 0 ? `
+    <section id="panel-tarot" class="category-section ${firstCatId === 'tarot' ? 'active-panel' : ''}">
+      <div class="cat-title">
+        <span>🃏 3-Card 대화형 타로 카드 점괘</span>
+        <span class="badge" style="background:#fae8ff; color:#86198f;">타로 리딩</span>
+      </div>
+      <div class="grid-3" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px;">
+        ${cards.map((cObj, idx) => {
+          const c = cObj.card;
+          const pos = ["과거(Past)", "현재(Present)", "미래(Future)"][idx] || `카드 ${idx+1}`;
+          return `
+            <div class="card-box" style="border-top: 4px solid var(--gold);">
+              <div style="font-size: 11px; color: #78716c; font-weight: bold;">${pos}</div>
+              <div style="font-size: 15px; font-weight: 900; color: #8c1d1d; margin: 4px 0;">
+                ${safeStr(c.name_kr)}
+                <span style="font-size: 11px; color: ${c.isReversed ? '#e11d48' : '#16a34a'};">(${c.isReversed ? '역방향' : '정방향'})</span>
+              </div>
+              <p style="font-size: 12px; color: #44403c; line-height: 1.6; margin-bottom: 6px;">${safeStr(c.interpretation)}</p>
+              <div style="font-size: 11px; background: #faf5ed; padding: 6px 8px; border-radius: 6px; color: #78350f;">
+                💡 <strong>조언:</strong> ${safeStr(c.advice)}
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    </section>
+    ` : ''}
+
+    <!-- 7. AI 도사 상담 문답 카테고리 -->
+    ${incAi && aiLogs.length > 0 ? `
+    <section id="panel-ai" class="category-section ${firstCatId === 'ai' ? 'active-panel' : ''}">
+      <div class="cat-title">
+        <span>🧙‍♂️ 천명 AI 명리·해몽 도사 1:1 문답 이력</span>
+        <span class="badge" style="background:#ecfdf5; color:#065f46;">AI 도사</span>
+      </div>
+      <div style="padding: 10px 0;">
+        ${aiLogs.map(m => {
+          if (m.role === 'user') {
+            return `
+              <div class="chat-bubble-user">
+                <div style="font-size: 10px; opacity: 0.8; margin-bottom: 2px;">👤 ${safeStr(name)} 님의 질문 (${m.time || ''})</div>
+                <div>${safeStr(m.text)}</div>
+              </div>
+            `;
+          } else {
+            return `
+              <div class="chat-bubble-ai">
+                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                  <span class="badge" style="background: #fef3c7; color: #92400e;">${safeStr(m.badge || 'AI 도사 풀이')}</span>
+                  <span style="font-size: 10px; color: #a8a29e;">${m.time || ''}</span>
+                </div>
+                <div>${String(m.text || '').replace(/\n/g, '<br/>')}</div>
+              </div>
+            `;
+          }
+        }).join("")}
+      </div>
+    </section>
+    ` : ''}
+
+    <footer>
+      <p>천명(天命) 欽定萬歲曆 · 조선 왕실 규장각 명리학 데이터베이스</p>
+      <p style="margin-top: 4px; opacity: 0.7;">본 문서는 독립형 인터랙티브 HTML 서책으로 언제든 오프라인에서 카테고리 탭을 눌러 열람하실 수 있습니다.</p>
+    </footer>
+  </div>
+
+  <script>
+    let isAllExpanded = false;
+
+    function selectCategory(catId, btnEl) {
+      isAllExpanded = false;
+      document.body.classList.remove('show-all');
+      
+      // Update tab buttons
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      if (btnEl) btnEl.classList.add('active');
+
+      // Update panels
+      document.querySelectorAll('.category-section').forEach(sec => sec.classList.remove('active-panel'));
+      const target = document.getElementById('panel-' + catId);
+      if (target) {
+        target.classList.add('active-panel');
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function toggleAllView(btnEl) {
+      isAllExpanded = !isAllExpanded;
+      if (isAllExpanded) {
+        document.body.classList.add('show-all');
+        btnEl.innerHTML = '<span>📑 카테고리별 탭으로 보기</span>';
+      } else {
+        document.body.classList.remove('show-all');
+        btnEl.innerHTML = '<span>📖 전체 한눈에 보기</span>';
+      }
+    }
+
+    function copyReportText() {
+      const text = document.querySelector('.container').innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        alert('서책 내용 전체가 텍스트로 복사되었습니다!');
+      }).catch(() => {
+        alert('복사에 실패했습니다.');
+      });
+    }
+  </script>
+</body>
+</html>`;
+
+    // Download as HTML file
+    const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    a.href = url;
+    a.download = `천명_사주운세_인터랙티브_서책_${name}_${dateStr}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    alert(`🎉 [${name}] 님의 카테고리별 인터랙티브 서책 (.html) 다운로드가 완료되었습니다!\n\nPDF와 달리 다운로드된 파일을 더블클릭하면 브라우저에서 각 카테고리 탭을 직접 눌러가며 편리하게 열람하실 수 있습니다.`);
   },
 
   copyResultText() {

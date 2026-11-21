@@ -698,13 +698,14 @@
           <span>처음으로</span>
         </button>
         <div class="flex items-center space-x-2">
+          <!-- 📥 카테고리별 자료 내보내기 (PDF 파일 대신 사용자가 카테고리별로 눌러서 볼 수 있는 독립형 인터랙티브 서책) -->
+          <button type="button" onclick="App.openExportModal()" class="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-[#8c1d1d] via-[#a31d1d] to-[#7f1d1d] text-[#fff6df] border border-[#d4a359] font-serif-kr font-extrabold flex items-center space-x-1.5 shadow-sm hover:from-[#991b1b] hover:to-[#8c1d1d] transition">
+            <span>📥</span>
+            <span>카테고리별 자료 내보내기</span>
+          </button>
           <button onclick="App.copyResultText()" class="px-3 py-1.5 rounded-lg modern-chip text-slate-800 hover:text-black font-bold flex items-center space-x-1 shadow-sm">
             <i data-lucide="copy" class="w-3.5 h-3.5 text-amber-600"></i>
-            <span>복사</span>
-          </button>
-          <button onclick="window.print()" class="px-3 py-1.5 rounded-lg modern-chip text-slate-800 hover:text-black font-bold flex items-center space-x-1 shadow-sm">
-            <i data-lucide="printer" class="w-3.5 h-3.5"></i>
-            <span>인쇄</span>
+            <span>요약 복사</span>
           </button>
           <button onclick="App.shareLink()" class="px-3 py-1.5 rounded-lg bg-amber-100 text-amber-900 border border-amber-400 flex items-center space-x-1 shadow-sm font-bold">
             <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
@@ -1474,6 +1475,8 @@
     </div>
   </dialog>
 
+  
+
   <!-- 🧾 MODAL 2: 내 결제 영수증 & MySQL 사주 보관함 모달 -->
   <dialog id="historyDialog" class="custom-modal" onclick="if(event.target===this) App.closeHistoryModal()">
     <div class="bg-[#fcf9f2] rounded-xl border-2 border-[#b48a4e] overflow-hidden shadow-2xl text-[#1b140e] font-serif-kr">
@@ -1506,6 +1509,8 @@
       </div>
     </div>
   </dialog>
+
+  
 
   <!-- 👑 MODAL 3: 천명(天命) 시스템 최고 관리자 통합 관제실 모달 -->
   <dialog id="adminDialog" class="custom-modal" onclick="if(event.target===this) App.closeAdminModal()">
@@ -1585,6 +1590,125 @@
               </tbody>
             </table>
           </div>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 📥 MODAL 4: 카테고리별 인터랙티브 서책 자료 내보내기 모달 (PDF 대체) -->
+  <dialog id="exportDialog" class="custom-modal" onclick="if(event.target===this) App.closeExportModal()">
+    <div class="bg-[#fcf9f2] rounded-xl border-2 border-[#b48a4e] overflow-hidden shadow-2xl text-[#1b140e] font-serif-kr max-w-3xl w-full">
+      <div class="dancheong-bar"></div>
+      <div class="bg-[#1e1510] text-white px-5 py-4 flex items-center justify-between border-b-2 border-[#b48a4e]">
+        <div class="flex items-center space-x-2.5">
+          <span class="text-xl">📜</span>
+          <div>
+            <h3 class="text-sm sm:text-base font-black font-serif-kr text-[#f9e5b4]">천명(天命) 카테고리별 인터랙티브 자료 내보내기</h3>
+            <p class="text-[11px] text-[#d5c19e]">단순한 PDF 대신, 브라우저에서 카테고리별로 눌러볼 수 있는 디지털 서책 내보내기</p>
+          </div>
+        </div>
+        <button type="button" onclick="App.closeExportModal()" class="text-[#d5c19e] hover:text-white text-lg font-bold px-1.5">✕</button>
+      </div>
+
+      <div class="p-5 space-y-4 max-h-[78vh] overflow-y-auto text-xs">
+        <!-- 상단 내보내기 포맷 안내 배너 -->
+        <div class="p-3.5 rounded-xl bg-[#f5ecd8] border border-[#c8b08a] flex items-start space-x-3 text-stone-800">
+          <span class="text-xl shrink-0">💡</span>
+          <div class="space-y-1">
+            <p class="font-bold text-stone-900">PDF 파일 대신 사용자가 각 카테고리를 눌러서 볼 수 있는 독립형 인터랙티브 HTML 서책으로 내보냅니다.</p>
+            <p class="text-[11px] text-stone-600 leading-relaxed">
+              다운로드된 파일은 PC나 스마트폰 브라우저에서 언제든 열 수 있으며, 상단 탭을 눌러 <strong>[오늘의 운세]</strong>, <strong>[사주 원국 4주8자]</strong>, <strong>[오행 & 용신]</strong>, <strong>[8대 신살]</strong>, <strong>[미래 전략]</strong>, <strong>[타로 점괘]</strong>, <strong>[AI 도사 상담]</strong>을 클릭하여 카테고리별로 열람할 수 있습니다.
+            </p>
+          </div>
+        </div>
+
+        <!-- 1. 포함할 카테고리 선택 -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <label class="block font-bold text-stone-900">포함할 카테고리 선택</label>
+            <div class="space-x-2">
+              <button type="button" onclick="App.toggleAllExportCategories(true)" class="text-[11px] text-[#8c1d1d] underline font-bold">전체 선택</button>
+              <button type="button" onclick="App.toggleAllExportCategories(false)" class="text-[11px] text-stone-500 underline">선택 해제</button>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+            <label class="flex items-center space-x-1.5 p-2 rounded-lg bg-white border border-stone-200 cursor-pointer hover:bg-stone-50">
+              <input type="checkbox" id="exportCatDaily" checked class="rounded accent-[#8c1d1d]" onchange="App.updateExportPreview()">
+              <span class="font-bold">🌟 오늘의 운세</span>
+            </label>
+            <label class="flex items-center space-x-1.5 p-2 rounded-lg bg-white border border-stone-200 cursor-pointer hover:bg-stone-50">
+              <input type="checkbox" id="exportCatSaju" checked class="rounded accent-[#8c1d1d]" onchange="App.updateExportPreview()">
+              <span class="font-bold">📜 사주 원국 (4주8자)</span>
+            </label>
+            <label class="flex items-center space-x-1.5 p-2 rounded-lg bg-white border border-stone-200 cursor-pointer hover:bg-stone-50">
+              <input type="checkbox" id="exportCatElements" checked class="rounded accent-[#8c1d1d]" onchange="App.updateExportPreview()">
+              <span class="font-bold">☯ 오행 & 용신 처방</span>
+            </label>
+            <label class="flex items-center space-x-1.5 p-2 rounded-lg bg-white border border-stone-200 cursor-pointer hover:bg-stone-50">
+              <input type="checkbox" id="exportCatSinsal" checked class="rounded accent-[#8c1d1d]" onchange="App.updateExportPreview()">
+              <span class="font-bold">🔮 8대 신살 해설</span>
+            </label>
+            <label class="flex items-center space-x-1.5 p-2 rounded-lg bg-white border border-stone-200 cursor-pointer hover:bg-stone-50">
+              <input type="checkbox" id="exportCatFuture" checked class="rounded accent-[#8c1d1d]" onchange="App.updateExportPreview()">
+              <span class="font-bold">🧭 미래 & 재물 전략</span>
+            </label>
+            <label class="flex items-center space-x-1.5 p-2 rounded-lg bg-white border border-stone-200 cursor-pointer hover:bg-stone-50">
+              <input type="checkbox" id="exportCatTarot" checked class="rounded accent-[#8c1d1d]" onchange="App.updateExportPreview()">
+              <span class="font-bold">🃏 3-Card 타로 점괘</span>
+            </label>
+            <label class="flex items-center space-x-1.5 p-2 rounded-lg bg-white border border-stone-200 cursor-pointer hover:bg-stone-50">
+              <input type="checkbox" id="exportCatAi" checked class="rounded accent-[#8c1d1d]" onchange="App.updateExportPreview()">
+              <span class="font-bold">🧙‍♂️ AI 도사 상담 문답</span>
+            </label>
+            <label class="flex items-center space-x-1.5 p-2 rounded-lg bg-white border border-stone-200 cursor-pointer hover:bg-stone-50">
+              <input type="checkbox" id="exportCatMascot" checked class="rounded accent-[#8c1d1d]" onchange="App.updateExportPreview()">
+              <span class="font-bold">🐾 12지신 수호동물</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 2. 카테고리별 실시간 미리보기 (모달 안에서 직접 탭을 눌러볼 수 있음) -->
+        <div class="bg-white rounded-xl border border-[#d5c19e] overflow-hidden">
+          <div class="bg-[#faf4e8] px-3.5 py-2 border-b border-[#e6d5b8] flex items-center justify-between">
+            <span class="font-bold text-stone-800">카테고리 탭 미리보기 (눌러서 각 항목을 확인하세요)</span>
+            <span class="text-[10px] text-amber-800 font-bold">인터랙티브 뷰어 연동</span>
+          </div>
+          <!-- 미리보기 탭 바 -->
+          <div class="flex items-center gap-1 p-2 bg-[#f4ece1] border-b border-[#e2d5c3] overflow-x-auto scrollbar-none text-[11px]">
+            <button type="button" onclick="App.switchExportPreviewTab('daily')" id="exportPrevTabBtn-daily" class="px-2.5 py-1 rounded-md font-bold bg-[#231710] text-[#f7d88c]">🌟 오늘의 운세</button>
+            <button type="button" onclick="App.switchExportPreviewTab('saju')" id="exportPrevTabBtn-saju" class="px-2.5 py-1 rounded-md font-semibold text-stone-700 hover:text-black">📜 사주 원국</button>
+            <button type="button" onclick="App.switchExportPreviewTab('element')" id="exportPrevTabBtn-element" class="px-2.5 py-1 rounded-md font-semibold text-stone-700 hover:text-black">☯ 오행 & 용신</button>
+            <button type="button" onclick="App.switchExportPreviewTab('sinsal')" id="exportPrevTabBtn-sinsal" class="px-2.5 py-1 rounded-md font-semibold text-stone-700 hover:text-black">🔮 8대 신살</button>
+            <button type="button" onclick="App.switchExportPreviewTab('future')" id="exportPrevTabBtn-future" class="px-2.5 py-1 rounded-md font-semibold text-stone-700 hover:text-black">🧭 미래 전략</button>
+            <button type="button" onclick="App.switchExportPreviewTab('tarot')" id="exportPrevTabBtn-tarot" class="px-2.5 py-1 rounded-md font-semibold text-stone-700 hover:text-black">🃏 타로 점괘</button>
+            <button type="button" onclick="App.switchExportPreviewTab('ai')" id="exportPrevTabBtn-ai" class="px-2.5 py-1 rounded-md font-semibold text-stone-700 hover:text-black">🧙‍♂️ AI 상담</button>
+          </div>
+          <!-- 미리보기 내용 영역 -->
+          <div id="exportPreviewContentBox" class="p-4 max-h-56 overflow-y-auto text-xs leading-relaxed bg-[#fdfbf7]">
+            미리보기를 불러오는 중...
+          </div>
+        </div>
+
+        <!-- 3. 내보내기 실행 버튼 그룹 -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
+          <button type="button" onclick="App.downloadInteractiveReportHtml()" class="py-3 px-4 rounded-xl font-black text-sm text-[#fff6df] bg-gradient-to-r from-[#8c1d1d] via-[#a31d1d] to-[#7f1d1d] hover:from-[#991b1b] hover:to-[#8c1d1d] transition shadow-md border-2 border-[#d4a359] flex items-center justify-center space-x-2 cursor-pointer">
+            <span>📥</span>
+            <span>카테고리별 인터랙티브 서책 (.html) 다운로드</span>
+          </button>
+          <button type="button" onclick="App.copyCategorizedText()" class="py-3 px-4 rounded-xl font-bold text-xs text-[#2c1e16] bg-[#f5ecd8] hover:bg-[#ede0c5] border border-[#b48a4e] transition flex items-center justify-center space-x-2 cursor-pointer">
+            <span>📋</span>
+            <span>카테고리별 텍스트 복사 (노션·메모장용)</span>
+          </button>
+        </div>
+
+        <div class="text-center pt-1 flex items-center justify-center space-x-4">
+          <button type="button" onclick="window.print()" class="text-[11px] text-stone-500 hover:text-stone-800 underline">
+            기존 방식으로 브라우저 인쇄(PDF 저장)하기
+          </button>
+          <span class="text-stone-300">|</span>
+          <button type="button" onclick="App.closeExportModal()" class="text-[11px] text-stone-500 hover:text-stone-800">
+            닫기
+          </button>
         </div>
       </div>
     </div>
@@ -1684,7 +1808,7 @@
   <script src="js/engine/calendar.js?v=20261121_admin"></script>
   <script src="js/engine/saju.js?v=20261121_admin"></script>
   <script src="js/engine/fortune.js?v=20261121_admin"></script>
-  <script src="js/app.js?v=20261121_admin"></script>
+  <script src="js/app.js?v=20261121_export"></script>
 
 </body>
 </html>

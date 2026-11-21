@@ -2471,6 +2471,11 @@ const App = {
     const f = this.dailyFortune;
     const tab = this.currentExportPreviewTab;
 
+    const getTenGodName = (pillar) => {
+      if (!pillar || !pillar.tenGodGan) return "-";
+      return pillar.tenGodGan.name || pillar.tenGodGan.hanja || (typeof pillar.tenGodGan === "string" ? pillar.tenGodGan : "-");
+    };
+
     if (tab === "daily") {
       if (!f) {
         box.innerHTML = `<div class="text-stone-500 py-4 text-center">오늘의 운세 데이터가 없습니다. 먼저 분석을 진행해주세요.</div>`;
@@ -2515,7 +2520,7 @@ const App = {
             <div class="p-1.5 rounded bg-amber-50 border border-amber-200">
               <div class="text-[10px] text-stone-500">시주(時柱)</div>
               <div class="text-sm font-black text-amber-900">${p.time ? p.time.gan.char + p.time.ji.char : "모름"}</div>
-              <div class="text-[10px] text-stone-600">${p.time ? p.time.tenGod : "-"}</div>
+              <div class="text-[10px] text-stone-600">${p.time ? getTenGodName(p.time) : "-"}</div>
             </div>
             <div class="p-1.5 rounded bg-amber-100 border border-amber-300">
               <div class="text-[10px] text-amber-800 font-bold">일주(日柱) 본원</div>
@@ -2525,12 +2530,12 @@ const App = {
             <div class="p-1.5 rounded bg-amber-50 border border-amber-200">
               <div class="text-[10px] text-stone-500">월주(月柱)</div>
               <div class="text-sm font-black text-amber-900">${p.month.gan.char + p.month.ji.char}</div>
-              <div class="text-[10px] text-stone-600">${p.month.tenGod}</div>
+              <div class="text-[10px] text-stone-600">${getTenGodName(p.month)}</div>
             </div>
             <div class="p-1.5 rounded bg-amber-50 border border-amber-200">
               <div class="text-[10px] text-stone-500">년주(年柱)</div>
               <div class="text-sm font-black text-amber-900">${p.year.gan.char + p.year.ji.char}</div>
-              <div class="text-[10px] text-stone-600">${p.year.tenGod}</div>
+              <div class="text-[10px] text-stone-600">${getTenGodName(p.year)}</div>
             </div>
           </div>
           <div class="p-2 rounded bg-stone-50 text-stone-700 text-[11px] leading-relaxed">
@@ -2680,6 +2685,11 @@ const App = {
     const name = s ? s.userInfo.name : (this.currentAccount ? this.currentAccount.name : "회원");
     const today = new Date().toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" });
 
+    const getTenGodName = (pillar) => {
+      if (!pillar || !pillar.tenGodGan) return "-";
+      return pillar.tenGodGan.name || pillar.tenGodGan.hanja || (typeof pillar.tenGodGan === "string" ? pillar.tenGodGan : "-");
+    };
+
     let lines = [];
     lines.push(`========================================================`);
     lines.push(`📜 [천명(天命)] ${name} 님의 카테고리별 감결 서책`);
@@ -2705,10 +2715,10 @@ const App = {
       lines.push(`[📜 2. 사주 원국 (4주 8자) & 일주론]`);
       lines.push(`• 출생: 양력 ${s.userInfo.solarDateString} (${s.userInfo.genderKr})`);
       lines.push(`• 4주 8자:`);
-      lines.push(`  - 시주: ${p.time ? p.time.gan.char + p.time.ji.char + " (" + p.time.tenGod + ")" : "시간 미상"}`);
+      lines.push(`  - 시주: ${p.time ? p.time.gan.char + p.time.ji.char + " (" + getTenGodName(p.time) + ")" : "시간 미상"}`);
       lines.push(`  - 일주(본원): ${p.day.gan.char + p.day.ji.char} (일간: ${p.day.gan.char})`);
-      lines.push(`  - 월주: ${p.month.gan.char + p.month.ji.char} (${p.month.tenGod})`);
-      lines.push(`  - 년주: ${p.year.gan.char + p.year.ji.char} (${p.year.tenGod})`);
+      lines.push(`  - 월주: ${p.month.gan.char + p.month.ji.char} (${getTenGodName(p.month)})`);
+      lines.push(`  - 년주: ${p.year.gan.char + p.year.ji.char} (${getTenGodName(p.year)})`);
       lines.push(`• 60갑자 일주: ${s.iljuDetail.name} (${s.iljuDetail.symbol})`);
       lines.push(`• 타고난 기질: ${s.iljuDetail.traits || "-"}`);
       if (s.blessingPoints && s.blessingPoints.length > 0) {
@@ -2796,6 +2806,11 @@ const App = {
     const incAi = aiLogs.length > 0 && (document.getElementById("exportCatAi")?.checked ?? true);
 
     const safeStr = (v) => v ? String(v).replace(/</g, "&lt;").replace(/>/g, "&gt;") : "-";
+
+    const getTenGodName = (pillar) => {
+      if (!pillar || !pillar.tenGodGan) return "-";
+      return pillar.tenGodGan.name || pillar.tenGodGan.hanja || (typeof pillar.tenGodGan === "string" ? pillar.tenGodGan : "-");
+    };
 
     // Categories array for tab navigation
     const navCategories = [];
@@ -3177,10 +3192,10 @@ const App = {
           </tr>
           <tr>
             <td style="background:#faf4e8; font-weight:bold;">십신(十神)</td>
-            <td>${s.pillars.time ? safeStr(s.pillars.time.tenGod) : "-"}</td>
+            <td>${s.pillars.time ? safeStr(getTenGodName(s.pillars.time)) : "-"}</td>
             <td><strong>본인(我)</strong></td>
-            <td>${safeStr(s.pillars.month.tenGod)}</td>
-            <td>${safeStr(s.pillars.year.tenGod)}</td>
+            <td>${safeStr(getTenGodName(s.pillars.month))}</td>
+            <td>${safeStr(getTenGodName(s.pillars.year))}</td>
           </tr>
         </tbody>
       </table>

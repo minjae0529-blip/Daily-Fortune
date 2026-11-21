@@ -2407,7 +2407,7 @@ const App = {
     this.initTarotDeck();
   },
 
-  // ==========================================================================
+// ==========================================================================
   // 📥 카테고리별 인터랙티브 서책 자료 내보내기 (PDF 대체 독립형 HTML 서책)
   // ==========================================================================
   currentExportPreviewTab: "daily",
@@ -2454,9 +2454,9 @@ const App = {
       const btn = document.getElementById(`exportPrevTabBtn-${t}`);
       if (btn) {
         if (t === tabKey) {
-          btn.className = "px-2.5 py-1 rounded-md font-bold bg-[#231710] text-[#f7d88c] shadow-xs";
+          btn.className = "px-2.5 py-1 rounded-md font-bold bg-[#231710] text-[#f7d88c] shadow-sm";
         } else {
-          btn.className = "px-2.5 py-1 rounded-md font-semibold text-stone-700 hover:text-black transition";
+          btn.className = "px-2.5 py-1 rounded-md font-semibold text-stone-700 hover:text-black";
         }
       }
     });
@@ -2469,169 +2469,529 @@ const App = {
 
     const s = this.userSaju;
     const f = this.dailyFortune;
-    const tab = this.currentExportPreviewTab;
+    const tab = this.currentExportPreviewTab || "daily";
 
-    const getTenGodName = (pillar) => {
-      if (!pillar || !pillar.tenGodGan) return "-";
-      return pillar.tenGodGan.name || pillar.tenGodGan.hanja || (typeof pillar.tenGodGan === "string" ? pillar.tenGodGan : "-");
+    const safe = (val, def = "-") => (val !== undefined && val !== null && val !== "") ? val : def;
+    const getTenGodName = (tg) => {
+      if (!tg) return "-";
+      if (typeof tg === "string") return tg.split("(")[0];
+      return tg.name || tg.hanja || "-";
+    };
+
+    const TWELVE_STAGES_TABLE = {
+      "갑": { "해": "장생", "자": "목욕", "축": "관대", "인": "건록", "묘": "제왕", "진": "쇠", "사": "병", "오": "사", "미": "묘", "신": "절", "유": "태", "술": "양" },
+      "을": { "오": "장생", "사": "목욕", "진": "관대", "묘": "건록", "인": "제왕", "축": "쇠", "자": "병", "해": "사", "술": "묘", "유": "절", "신": "태", "미": "양" },
+      "병": { "인": "장생", "묘": "목욕", "진": "관대", "사": "건록", "오": "제왕", "미": "쇠", "신": "병", "유": "사", "술": "묘", "해": "절", "자": "태", "축": "양" },
+      "정": { "유": "장생", "신": "목욕", "미": "관대", "오": "건록", "사": "제왕", "진": "쇠", "묘": "병", "인": "사", "축": "묘", "자": "절", "해": "태", "술": "양" },
+      "무": { "인": "장생", "묘": "목욕", "진": "관대", "사": "건록", "오": "제왕", "미": "쇠", "신": "병", "유": "사", "술": "묘", "해": "절", "자": "태", "축": "양" },
+      "기": { "유": "장생", "신": "목욕", "미": "관대", "오": "건록", "사": "제왕", "진": "쇠", "묘": "병", "인": "사", "축": "묘", "자": "절", "해": "태", "술": "양" },
+      "경": { "사": "장생", "오": "목욕", "미": "관대", "신": "건록", "유": "제왕", "술": "쇠", "해": "병", "자": "사", "축": "묘", "인": "절", "묘": "태", "진": "양" },
+      "신": { "자": "장생", "해": "목욕", "술": "관대", "유": "건록", "신": "제왕", "미": "쇠", "오": "병", "사": "사", "진": "묘", "묘": "절", "인": "태", "축": "양" },
+      "임": { "신": "장생", "유": "목욕", "술": "관대", "해": "건록", "자": "제왕", "축": "쇠", "인": "병", "묘": "사", "진": "묘", "사": "절", "오": "태", "미": "양" },
+      "계": { "묘": "장생", "인": "목욕", "축": "관대", "자": "건록", "해": "제왕", "술": "쇠", "유": "병", "신": "사", "미": "묘", "오": "절", "사": "태", "진": "양" }
+    };
+    const getPillarStage = (dayGanChar, jiChar) => {
+      if (!dayGanChar || !jiChar) return "-";
+      return (TWELVE_STAGES_TABLE[dayGanChar] && TWELVE_STAGES_TABLE[dayGanChar][jiChar]) || "-";
     };
 
     if (tab === "daily") {
       if (!f) {
-        box.innerHTML = `<div class="text-stone-500 py-4 text-center">오늘의 운세 데이터가 없습니다. 먼저 분석을 진행해주세요.</div>`;
+        box.innerHTML = `<div class="text-stone-500 py-6 text-center">오늘의 운세 데이터가 없습니다. 먼저 분석을 진행해주세요.</div>`;
         return;
       }
+      const mascot = this.currentMascot || (window.ZODIAC_MASCOTS && s && s.pillars ? window.ZODIAC_MASCOTS[s.pillars.year.ji.char] : null) || {
+        emoji: "🐲", name: "청룡이", greeting: "희망찬 푸른 기운이 가득한 날이야!", quotes: ["스스로를 믿고 당당하게 나아가봐! 🌟"]
+      };
+
+      const hourlyList = (f.hourlyFlow && f.hourlyFlow.length > 0) ? f.hourlyFlow : [
+        { time: "아침 (07:00 ~ 11:00)", tenGodBadge: "정관의 기운", status: "순조(平)", desc: "정갈한 마음가짐으로 하루의 우선순위를 정하고 집중하기 좋은 시간입니다." },
+        { time: "오후 (11:00 ~ 17:00)", tenGodBadge: "정재의 기운", status: "최고조(大吉)", desc: "업무 추진력과 결실이 배가되는 시간으로 중요한 협상과 실행에 최적입니다." },
+        { time: "저녁 (17:00 ~ 21:00)", tenGodBadge: "식신의 기운", status: "순조(平)", desc: "좋은 사람들과 맛있는 음식을 나누며 따뜻한 대화를 이어가기 좋습니다." },
+        { time: "밤 (21:00 ~ 익일 07:00)", tenGodBadge: "정인의 기운", status: "안정(吉)", desc: "차분하게 사색하고 내면의 에너지를 충전하며 내일을 준비하세요." }
+      ];
+
       box.innerHTML = `
-        <div class="space-y-2">
-          <div class="flex items-center justify-between pb-1.5 border-b border-stone-200">
-            <span class="font-bold text-amber-900 text-sm">🌟 오늘의 천기 & 일진 운세 (${f.dateString || "오늘"})</span>
-            <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-950 font-black text-xs">총운 ${f.totalScore}점</span>
-          </div>
-          <div class="p-2.5 rounded-lg bg-amber-50/70 border border-amber-200">
-            <strong class="text-amber-950 block mb-0.5 font-bold">테마: ${f.theme || "-"}</strong>
-            <p class="text-stone-700 leading-relaxed">${f.summary || "-"}</p>
-          </div>
-          <div class="grid grid-cols-2 gap-2 text-[11px]">
-            <div class="p-2 rounded bg-emerald-50 text-emerald-900 border border-emerald-200">
-              <strong class="block font-bold">✅ 추천:</strong> ${f.action || "-"}
+        <div class="space-y-3 font-serif-kr">
+          <!-- 상단 총운 요약 헤더 -->
+          <div class="p-3 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 flex items-start justify-between">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="text-xs font-black text-amber-900 bg-amber-100 px-2 py-0.5 rounded">${safe(f.dateString)}</span>
+                <span class="text-xs text-stone-600 font-bold">오늘의 일진: ${safe(f.todayIljin ? f.todayIljin.name : "")} (${safe(f.todayTenGod)})</span>
+              </div>
+              <h4 class="text-sm sm:text-base font-black text-[#451a03] mt-1">${safe(f.theme)}</h4>
+              <p class="text-[11px] text-[#78350f] mt-0.5 leading-relaxed font-sans">${safe(f.summary)}</p>
             </div>
-            <div class="p-2 rounded bg-rose-50 text-rose-900 border border-rose-200">
-              <strong class="block font-bold">⚠️ 주의:</strong> ${f.avoid || "-"}
+            <div class="text-right shrink-0 ml-2">
+              <span class="text-2xl sm:text-3xl font-black text-[#b45309] font-sans">${f.totalScore}점</span>
+              <span class="block text-[10px] font-bold text-[#92400e]">${f.totalScore >= 90 ? "대대길(大大吉)" : (f.totalScore >= 80 ? "대길(大吉)" : "평온(平溫)")}</span>
             </div>
           </div>
-          <div class="p-2 rounded bg-stone-100 text-stone-800 text-[11px]">
-            🎨 행운 컬러: <strong>${f.lucky ? f.lucky.color : "-"}</strong> · 🔢 숫자: <strong>${f.lucky ? f.lucky.numbers : "-"}</strong> · 🧭 방위: <strong>${f.lucky ? f.lucky.direction : "-"}</strong>
+
+          <!-- 4대 운세 세부 지수 -->
+          <div class="grid grid-cols-4 gap-1.5 text-center font-sans">
+            <div class="p-2 rounded-lg bg-amber-50 border border-amber-200">
+              <span class="text-[10px] text-amber-800 font-bold block">💰 재물운</span>
+              <strong class="text-sm font-black text-amber-900">${f.scores ? f.scores.money : 85}%</strong>
+            </div>
+            <div class="p-2 rounded-lg bg-rose-50 border border-rose-200">
+              <span class="text-[10px] text-rose-800 font-bold block">💖 애정운</span>
+              <strong class="text-sm font-black text-rose-900">${f.scores ? f.scores.love : 88}%</strong>
+            </div>
+            <div class="p-2 rounded-lg bg-emerald-50 border border-emerald-200">
+              <span class="text-[10px] text-emerald-800 font-bold block">🌿 건강운</span>
+              <strong class="text-sm font-black text-emerald-900">${f.scores ? f.scores.health : 90}%</strong>
+            </div>
+            <div class="p-2 rounded-lg bg-sky-50 border border-sky-200">
+              <span class="text-[10px] text-sky-800 font-bold block">💼 직업운</span>
+              <strong class="text-sm font-black text-sky-900">${f.scores ? f.scores.career : 92}%</strong>
+            </div>
+          </div>
+
+          <!-- 🐾 12지신 수호동물 파트너 인사 & 명언 -->
+          <div class="p-2.5 rounded-xl bg-amber-50/80 border border-amber-300 flex items-center space-x-3">
+            <span class="text-3xl shrink-0 select-none">${mascot.emoji}</span>
+            <div class="text-xs space-y-0.5">
+              <div class="flex items-center space-x-1.5">
+                <span class="px-2 py-0.5 rounded text-[10px] font-black bg-amber-200 text-amber-950">수호동물 ${mascot.name} ${mascot.emoji}</span>
+                <span class="text-[10px] text-stone-500 font-medium">나만의 평생 수호 파트너</span>
+              </div>
+              <p class="font-bold text-stone-900">"${s ? s.userInfo.name : '도반'}님, ${mascot.greeting} 오늘 하루도 내가 든든하게 지켜줄게! 💖"</p>
+              <p class="text-[11px] text-amber-900 font-sans font-medium">💬 <em>${mascot.quotes ? mascot.quotes[0] : '너의 직관과 결단을 믿어봐! 오늘은 감이 최고야 ✨'}</em></p>
+            </div>
+          </div>
+
+          <!-- 12운성 & 합충 신호등 -->
+          ${f.twelveStage ? `
+          <div class="p-2.5 rounded-lg bg-[#faf4e8] border border-[#d5c19e] text-xs">
+            <div class="flex items-center justify-between mb-1">
+              <span class="font-bold text-[#8c1d1d]">⚡ 12운성 일진 에너지: ${safe(f.twelveStage.name)}(${safe(f.twelveStage.hanja)}) · ${safe(f.twelveStage.badge)} (${f.twelveStage.power}점)</span>
+            </div>
+            <p class="text-[11px] text-stone-700 leading-relaxed font-sans">${safe(f.twelveStage.desc)}</p>
+          </div>
+          ` : ''}
+
+          <!-- 합충 신호등 리스트 -->
+          ${f.hapChungSignals && f.hapChungSignals.length > 0 ? `
+          <div class="space-y-1">
+            ${f.hapChungSignals.map(sig => `
+              <div class="flex items-start space-x-1.5 text-[11px] p-1.5 rounded bg-white border border-stone-200">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-black shrink-0 ${sig.type === 'HAP' ? 'bg-emerald-100 text-emerald-900' : (sig.type === 'CHUNG' ? 'bg-rose-100 text-rose-900' : 'bg-stone-100 text-stone-800')}">${safe(sig.label)}</span>
+                <span class="text-stone-700 font-sans">${safe(sig.desc)}</span>
+              </div>
+            `).join("")}
+          </div>
+          ` : ''}
+
+          <!-- 추천 및 주의 행동 -->
+          <div class="grid grid-cols-2 gap-2 text-xs font-sans">
+            <div class="p-2.5 rounded-lg bg-emerald-50 text-emerald-950 border border-emerald-200">
+              <strong class="block text-emerald-900 font-bold mb-0.5">✅ 오늘의 추천:</strong>
+              <p class="text-[11px] leading-relaxed">${safe(f.action)}</p>
+            </div>
+            <div class="p-2.5 rounded-lg bg-rose-50 text-rose-950 border border-rose-200">
+              <strong class="block text-rose-900 font-bold mb-0.5">⚠️ 오늘의 주의:</strong>
+              <p class="text-[11px] leading-relaxed">${safe(f.avoid)}</p>
+            </div>
+          </div>
+
+          <!-- 행운 아이템 -->
+          <div class="p-2.5 rounded-lg bg-white border border-stone-200 text-xs flex flex-wrap gap-x-4 gap-y-1 text-stone-800">
+            <span>🎨 행운 컬러: <strong class="text-amber-900">${safe(f.lucky ? f.lucky.color : "-")}</strong></span>
+            <span>🔢 행운 번호: <strong class="text-amber-900">${safe(f.lucky ? f.lucky.numbers : "-")}</strong></span>
+            <span>🧭 길한 방위: <strong class="text-amber-900">${safe(f.lucky ? f.lucky.direction : "-")}</strong></span>
+            <span>🍲 추천 음식: <strong class="text-amber-900">${safe(f.lucky ? f.lucky.food : "-")}</strong></span>
+          </div>
+
+          <!-- ⏰ 시간대별 정밀 운세 리듬 & 12시진 흐름표 -->
+          <div class="pt-1">
+            <span class="font-bold text-stone-900 block mb-1 text-xs">⏰ 시간대별 일진 리듬 & 길흉 흐름표:</span>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-48 overflow-y-auto text-[11px] font-sans">
+              ${hourlyList.map(slot => `
+                <div class="p-2 rounded bg-white border border-stone-200 flex items-center justify-between">
+                  <div class="pr-2">
+                    <strong class="text-stone-900">${safe(slot.time)}</strong>
+                    <span class="text-[10px] text-amber-800 ml-1 font-bold">${safe(slot.tenGodBadge)}</span>
+                    <p class="text-[10px] text-stone-500 mt-0.5">${safe(slot.desc)}</p>
+                  </div>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-black shrink-0 ${slot.status && slot.status.includes('吉') ? 'bg-amber-100 text-amber-900 border border-amber-300' : (slot.status && slot.status.includes('凶') ? 'bg-rose-100 text-rose-900 border border-rose-300' : 'bg-slate-100 text-slate-800 border border-slate-300')}">${safe(slot.status)}</span>
+                </div>
+              `).join("")}
+            </div>
           </div>
         </div>
       `;
     } else if (tab === "saju") {
       if (!s) {
-        box.innerHTML = `<div class="text-stone-500 py-4 text-center">사주 원국 데이터가 없습니다.</div>`;
+        box.innerHTML = `<div class="text-stone-500 py-6 text-center">사주 원국 데이터가 없습니다. 메인 화면에서 사주 분석을 먼저 진행해주세요.</div>`;
         return;
       }
       const p = s.pillars;
+      const j = (ji) => {
+        const d = {
+          "자": "계(癸)", "축": "계·신·기", "인": "무·병·갑", "묘": "을(乙)",
+          "진": "을·계·무", "사": "무·경·병", "오": "병·기·정", "미": "정·을·기",
+          "신": "무·임·경", "유": "신(辛)", "술": "신·정·무", "해": "무·갑·임"
+        };
+        return d[ji] || "-";
+      };
+
+      const columns = [
+        { label: "시주(時柱)", pil: p.time, empty: !p.time },
+        { label: "일주(日柱)", pil: p.day, isMaster: true },
+        { label: "월주(月柱)", pil: p.month },
+        { label: "년주(年柱)", pil: p.year }
+      ];
+
       box.innerHTML = `
-        <div class="space-y-2">
-          <div class="flex items-center justify-between pb-1.5 border-b border-stone-200">
-            <span class="font-bold text-stone-900 text-sm">📜 4주 8자 만세력 (${s.userInfo.name} 님)</span>
-            <span class="text-xs text-stone-600">${s.iljuDetail.name} (${s.iljuDetail.symbol})</span>
+        <div class="space-y-3 font-serif-kr">
+          <div class="flex items-center justify-between pb-1 border-b border-stone-200">
+            <span class="font-bold text-stone-900 text-sm">사주 4주 8자 (四柱八字) 만세력</span>
+            <span class="text-xs text-amber-900 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">본원: ${p.day.gan.char}(${p.day.gan.hanja})</span>
           </div>
-          <div class="grid grid-cols-4 gap-1.5 text-center font-serif-kr">
-            <div class="p-1.5 rounded bg-amber-50 border border-amber-200">
-              <div class="text-[10px] text-stone-500">시주(時柱)</div>
-              <div class="text-sm font-black text-amber-900">${p.time ? p.time.gan.char + p.time.ji.char : "모름"}</div>
-              <div class="text-[10px] text-stone-600">${p.time ? getTenGodName(p.time) : "-"}</div>
+
+          <!-- 4주 8자 만세력 테이블 (천간, 지지, 십신, 지장간, 12운성 포함) -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-center border-collapse text-xs">
+              <thead>
+                <tr class="bg-[#f5eee3] text-stone-700 border-b border-stone-300">
+                  <th class="p-1.5 font-bold">구분</th>
+                  ${columns.map(c => `<th class="p-1.5 font-bold">${c.label}</th>`).join("")}
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-stone-200">
+                <tr class="bg-amber-50/50">
+                  <td class="p-1.5 text-stone-500 font-bold text-[10px]">천간 십신</td>
+                  ${columns.map(c => `<td class="p-1.5 text-[11px] font-bold text-amber-900">${c.pil ? (c.isMaster ? '★ 일간(나)' : getTenGodName(c.pil.tenGodGan)) : '모름'}</td>`).join("")}
+                </tr>
+                <tr class="font-bold text-base">
+                  <td class="p-2 text-stone-500 font-bold text-xs bg-stone-50">천간 (天干)</td>
+                  ${columns.map(c => `<td class="p-2 ${c.isMaster ? 'text-amber-950 bg-amber-100/60 font-black ring-1 ring-amber-400' : 'text-stone-900'}">${c.pil ? `${c.pil.gan.char}<span class="text-xs text-stone-500 ml-0.5">(${c.pil.gan.hanja})</span>` : '-'}</td>`).join("")}
+                </tr>
+                <tr class="font-bold text-base">
+                  <td class="p-2 text-stone-500 font-bold text-xs bg-stone-50">지지 (地支)</td>
+                  ${columns.map(c => `<td class="p-2 ${c.isMaster ? 'text-amber-950 bg-amber-100/60 font-black ring-1 ring-amber-400' : 'text-stone-900'}">${c.pil ? `${c.pil.ji.char}<span class="text-xs text-stone-500 ml-0.5">(${c.pil.ji.hanja})</span>` : '-'}</td>`).join("")}
+                </tr>
+                <tr class="bg-amber-50/50">
+                  <td class="p-1.5 text-stone-500 font-bold text-[10px]">지지 십신</td>
+                  ${columns.map(c => `<td class="p-1.5 text-[11px] font-bold text-stone-700">${c.pil ? getTenGodName(c.pil.tenGodJi) : '모름'}</td>`).join("")}
+                </tr>
+                <tr class="bg-stone-50">
+                  <td class="p-1.5 text-stone-500 font-bold text-[10px]">12운성</td>
+                  ${columns.map(c => `<td class="p-1.5 text-[11px] font-bold text-[#8c1d1d]">${c.pil ? getPillarStage(p.day.gan.char, c.pil.ji.char) : '모름'}</td>`).join("")}
+                </tr>
+                <tr>
+                  <td class="p-1.5 text-stone-500 font-bold text-[10px] bg-stone-50">지장간</td>
+                  ${columns.map(c => `<td class="p-1.5 text-[10px] text-stone-500 font-sans">${c.pil ? j(c.pil.ji.char) : '모름'}</td>`).join("")}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- 60갑자 일주론 상세 해설 (본원 성향, 강점, 주의점, 연애 스타일, 재물 스타일) -->
+          <div class="p-3 rounded-xl bg-amber-50/70 border border-amber-200 text-xs space-y-2">
+            <div class="flex items-center justify-between pb-1 border-b border-amber-200">
+              <span class="font-bold text-amber-950 text-sm">🌿 60갑자 일주론 심층 분석: ${safe(s.iljuDetail.name)} (${safe(s.iljuDetail.symbol)})</span>
+              <span class="text-[10px] text-amber-800 font-bold bg-amber-100 px-2 py-0.5 rounded">기질: ${safe(s.iljuDetail.nature)}</span>
             </div>
-            <div class="p-1.5 rounded bg-amber-100 border border-amber-300">
-              <div class="text-[10px] text-amber-800 font-bold">일주(日柱) 본원</div>
-              <div class="text-sm font-black text-amber-950">${p.day.gan.char + p.day.ji.char}</div>
-              <div class="text-[10px] text-amber-800 font-bold">나 자신(我)</div>
+            <p class="text-[11px] text-stone-800 leading-relaxed font-sans pt-0.5"><strong>본원 성향:</strong> ${safe(s.iljuDetail.desc)}</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-sans pt-1">
+              <div class="p-2 rounded bg-white border border-stone-200">
+                <strong class="text-emerald-900 block mb-0.5">✨ 타고난 강점:</strong>
+                <span class="text-stone-700">${safe(s.iljuDetail.strength)}</span>
+              </div>
+              <div class="p-2 rounded bg-white border border-stone-200">
+                <strong class="text-rose-900 block mb-0.5">⚠️ 주의할 점:</strong>
+                <span class="text-stone-700">${safe(s.iljuDetail.caution)}</span>
+              </div>
             </div>
-            <div class="p-1.5 rounded bg-amber-50 border border-amber-200">
-              <div class="text-[10px] text-stone-500">월주(月柱)</div>
-              <div class="text-sm font-black text-amber-900">${p.month.gan.char + p.month.ji.char}</div>
-              <div class="text-[10px] text-stone-600">${getTenGodName(p.month)}</div>
-            </div>
-            <div class="p-1.5 rounded bg-amber-50 border border-amber-200">
-              <div class="text-[10px] text-stone-500">년주(年柱)</div>
-              <div class="text-sm font-black text-amber-900">${p.year.gan.char + p.year.ji.char}</div>
-              <div class="text-[10px] text-stone-600">${getTenGodName(p.year)}</div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-sans pt-1">
+              <div class="p-2 rounded bg-pink-50/80 border border-pink-200">
+                <strong class="text-pink-900 block mb-0.5">💖 연애 스타일:</strong>
+                <span class="text-stone-700">${safe(s.iljuDetail.loveStyle)}</span>
+              </div>
+              <div class="p-2 rounded bg-amber-100/50 border border-amber-300">
+                <strong class="text-amber-950 block mb-0.5">💰 재물 스타일:</strong>
+                <span class="text-stone-700">${safe(s.iljuDetail.wealthStyle)}</span>
+              </div>
             </div>
           </div>
-          <div class="p-2 rounded bg-stone-50 text-stone-700 text-[11px] leading-relaxed">
-            ${s.iljuDetail.traits || "차분하고 지혜로운 성품으로 주변 사람들에게 신뢰를 주는 명식입니다."}
+
+          <!-- 내 사주가 특별히 좋은 이유 3가지 (3대 복록 카드) -->
+          ${s.blessingPoints && s.blessingPoints.length > 0 ? `
+          <div class="space-y-1.5 pt-1">
+            <span class="font-bold text-amber-950 block text-xs">✨ 내 사주가 특별히 좋은 이유 3가지 (3대 타고난 복록):</span>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs font-sans">
+              ${s.blessingPoints.map((pt, idx) => `
+                <div class="p-2.5 rounded-xl bg-white border border-amber-200/80 shadow-xs space-y-1">
+                  <div class="flex items-center space-x-1.5">
+                    <span class="w-4 h-4 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center">${idx + 1}</span>
+                    <strong class="text-stone-900 text-xs font-serif-kr">${safe(pt.title)}</strong>
+                  </div>
+                  <p class="text-[11px] text-stone-600 leading-relaxed">${safe(pt.desc)}</p>
+                </div>
+              `).join("")}
+            </div>
           </div>
+          ` : ''}
+
+          <!-- 10년 주기 대운 흐름표 -->
+          ${s.daeunList && s.daeunList.length > 0 ? `
+          <div class="pt-2">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="font-bold text-stone-900 text-xs">🌊 10년 주기 대운(大運) 흐름표</span>
+              <span class="text-[10px] text-stone-500">${s.isForward ? '순행(順行)' : '역행(逆行)'} · 대운수 ${s.daeunNumber || 1}</span>
+            </div>
+            <div class="grid grid-cols-5 sm:grid-cols-10 gap-1 text-center font-sans text-[10px]">
+              ${s.daeunList.map(d => `
+                <div class="p-1.5 rounded-lg border border-stone-200 bg-white">
+                  <span class="text-stone-500 block text-[9px]">${d.startAge}~${d.endAge}세</span>
+                  <strong class="text-stone-900 text-xs block my-0.5">${d.ganChar}${d.jiChar}</strong>
+                  <span class="text-[9px] text-amber-800 font-bold block truncate">${getTenGodName(d.tenGod)}</span>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+          ` : ''}
         </div>
       `;
     } else if (tab === "element") {
       if (!s) {
-        box.innerHTML = `<div class="text-stone-500 py-4 text-center">오행 데이터가 없습니다.</div>`;
+        box.innerHTML = `<div class="text-stone-500 py-6 text-center">오행 분석 데이터가 없습니다.</div>`;
         return;
       }
-      const el = s.elementPercentages || {};
+      const elMap = [
+        { name: "목(木)", key: "목", color: "bg-emerald-500", light: "bg-emerald-50 text-emerald-900 border-emerald-200", pct: s.elements["목"] || 0 },
+        { name: "화(火)", key: "화", color: "bg-rose-500", light: "bg-rose-50 text-rose-900 border-rose-200", pct: s.elements["화"] || 0 },
+        { name: "토(土)", key: "토", color: "bg-amber-500", light: "bg-amber-50 text-amber-900 border-amber-200", pct: s.elements["토"] || 0 },
+        { name: "금(金)", key: "금", color: "bg-slate-400", light: "bg-slate-50 text-slate-900 border-slate-200", pct: s.elements["금"] || 0 },
+        { name: "수(水)", key: "수", color: "bg-sky-500", light: "bg-sky-50 text-sky-900 border-sky-200", pct: s.elements["수"] || 0 }
+      ];
+
       box.innerHTML = `
-        <div class="space-y-2">
-          <div class="flex items-center justify-between pb-1.5 border-b border-stone-200">
-            <span class="font-bold text-stone-900 text-sm">☯ 오행 밸런스 & 용신 처방</span>
-            <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-900 font-bold text-xs">${s.strengthStatus}</span>
+        <div class="space-y-3 font-serif-kr">
+          <div class="flex items-center justify-between pb-1 border-b border-stone-200">
+            <span class="font-bold text-stone-900 text-sm">☯ 5대 오행 분포 & 사주 체질</span>
+            <span class="text-xs text-amber-900 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">체질: ${safe(s.strengthStatus)} (${s.strengthScore || 50}점)</span>
           </div>
-          <div class="p-2 rounded bg-stone-50 border border-stone-200 space-y-1">
-            <div class="flex justify-between text-[11px] font-mono">
-              <span class="text-emerald-700 font-bold">목(木) ${el["목"] || 0}%</span>
-              <span class="text-rose-700 font-bold">화(火) ${el["화"] || 0}%</span>
-              <span class="text-amber-800 font-bold">토(土) ${el["토"] || 0}%</span>
-              <span class="text-slate-700 font-bold">금(金) ${el["금"] || 0}%</span>
-              <span class="text-blue-700 font-bold">수(水) ${el["수"] || 0}%</span>
+
+          <!-- 5대 오행 비율 게이지 바 -->
+          <div class="grid grid-cols-5 gap-1.5 text-center font-sans">
+            ${elMap.map(el => `
+              <div class="p-2 rounded-xl border ${el.light}">
+                <span class="text-[10px] font-bold block">${el.name}</span>
+                <strong class="text-sm font-black block my-0.5">${el.pct}%</strong>
+                <div class="w-full bg-stone-200 rounded-full h-1.5 overflow-hidden">
+                  <div class="${el.color} h-full" style="width: ${el.pct}%;"></div>
+                </div>
+              </div>
+            `).join("")}
+          </div>
+
+          <!-- 신강/신약 체질 상세 총평 -->
+          <div class="p-2.5 rounded-lg bg-stone-50 border border-stone-200 text-xs font-sans space-y-1">
+            <strong class="text-stone-900 font-serif-kr font-bold block">⚖️ 체질 종합 판정:</strong>
+            <p class="text-[11px] text-stone-700 leading-relaxed">${safe(s.strengthDesc)}</p>
+          </div>
+
+          <!-- 결핍된 오행 개운 처방 -->
+          ${s.missingElements && s.missingElements.length > 0 ? `
+          <div class="space-y-1.5 pt-1">
+            <span class="font-bold text-stone-900 text-xs">💧 결핍된 오행 분석 & 맞춤 개운 비책:</span>
+            <div class="space-y-1.5 text-xs font-sans">
+              ${s.missingElements.map(m => `
+                <div class="p-2.5 rounded-lg bg-white border border-stone-200 space-y-1">
+                  <div class="flex items-center justify-between">
+                    <strong class="text-amber-950 font-bold font-serif-kr text-xs">${safe(m.name)} 기운 결핍</strong>
+                    <span class="text-[10px] text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 font-bold">보완 필요</span>
+                  </div>
+                  <p class="text-[11px] text-stone-600 leading-relaxed">${safe(m.desc)}</p>
+                  <p class="text-[11px] text-emerald-800 font-medium">🌿 <strong>생활 개운법:</strong> ${safe(m.remedy)}</p>
+                </div>
+              `).join("")}
             </div>
           </div>
-          <div class="p-2.5 rounded bg-amber-50 border border-amber-200 text-[11px] leading-relaxed">
-            <strong class="text-amber-950 block font-bold mb-0.5">추천 용신(用神): ${s.yongsin}</strong>
-            <p class="text-stone-700">${s.yongsinDesc || "사주의 오행 편중을 바로잡아 균형과 대운의 복을 극대화하는 맞춤 개운 처방입니다."}</p>
+          ` : `
+          <div class="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 font-sans">
+            🎉 <strong>오행구족(五行具足):</strong> 사주 원국에 5가지 오행이 모두 고르게 분포하여 한쪽으로 치우침이 없는 원만한 조화를 이루고 있습니다.
+          </div>
+          `}
+
+          <!-- 없는 십신 특화 잠재력 카드 -->
+          ${s.missingTenGods && s.missingTenGods.length > 0 ? `
+          <div class="space-y-1.5 pt-1">
+            <span class="font-bold text-stone-900 text-xs">🌟 없는 십신(十神)의 숨겨진 잠재력:</span>
+            <div class="space-y-1.5 text-xs font-sans">
+              ${s.missingTenGods.map(tg => `
+                <div class="p-2.5 rounded-lg bg-amber-50/50 border border-amber-200/80 space-y-1">
+                  <div class="flex items-center justify-between">
+                    <strong class="text-stone-900 font-bold text-xs font-serif-kr">${safe(tg.title)}</strong>
+                    <span class="text-[10px] text-amber-900 bg-amber-100 px-1.5 py-0.5 rounded font-bold">특수 재능</span>
+                  </div>
+                  <p class="text-[11px] text-stone-700 leading-relaxed">${safe(tg.desc)}</p>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+          ` : ''}
+
+          <!-- 수호 용신 처방 소견 -->
+          <div class="p-3 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300 text-xs font-sans space-y-1">
+            <div class="flex items-center justify-between pb-1 border-b border-amber-200">
+              <span class="font-bold text-amber-950 font-serif-kr text-xs">🛡️ 내 인생의 수호 용신(用神): ${safe(s.yongsin)}</span>
+              <span class="text-[10px] text-amber-800 font-bold bg-amber-100 px-2 py-0.5 rounded">최고의 길신</span>
+            </div>
+            <p class="text-[11px] text-stone-700 leading-relaxed pt-0.5">${safe(s.yongsinDesc)}</p>
           </div>
         </div>
       `;
     } else if (tab === "sinsal") {
       if (!s || !s.sinsal || s.sinsal.length === 0) {
-        box.innerHTML = `<div class="text-stone-500 py-4 text-center">신살 분석 데이터가 없습니다.</div>`;
+        box.innerHTML = `<div class="text-stone-500 py-6 text-center">신살 데이터가 없거나 평온한 사주 원국입니다.</div>`;
         return;
       }
       box.innerHTML = `
-        <div class="space-y-1.5">
-          <div class="font-bold text-stone-900 pb-1 border-b border-stone-200">🔮 8대 신살 분석 내역</div>
-          <div class="space-y-1.5">
-            ${s.sinsal.map(item => `
-              <div class="p-2 rounded bg-white border border-stone-200 flex items-start space-x-2 text-[11px]">
-                <span class="px-1.5 py-0.5 rounded font-bold text-[10px] ${item.type === '길신' ? 'bg-emerald-100 text-emerald-900' : 'bg-amber-100 text-amber-900'} shrink-0">${item.type || '신살'}</span>
-                <div>
-                  <strong class="text-stone-900">${item.name}</strong> (${item.pillar || '사주'})
-                  <p class="text-stone-600 mt-0.5 leading-relaxed">${item.desc}</p>
+        <div class="space-y-2.5 font-serif-kr">
+          <div class="flex items-center justify-between pb-1.5 border-b border-stone-200">
+            <span class="font-bold text-stone-900 text-sm">🔮 사주 8대 핵심 신살(神煞) 분석</span>
+            <span class="text-xs text-amber-800 font-bold bg-amber-100 px-2 py-0.5 rounded">${s.sinsal.length}개 신살 보유</span>
+          </div>
+          <div class="space-y-2">
+            ${s.sinsal.map(sal => {
+              const isGood = sal.type && (sal.type.includes("길") || sal.type.includes("귀인") || sal.type.includes("복"));
+              return `
+                <div class="p-3 rounded-xl bg-white border border-stone-200 text-xs space-y-1">
+                  <div class="flex items-center justify-between">
+                    <strong class="text-sm font-black ${isGood ? 'text-[#8c1d1d]' : 'text-stone-900'}">${safe(sal.name)}</strong>
+                    <div class="space-x-1">
+                      <span class="px-2 py-0.5 rounded-full text-[10px] font-black ${isGood ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">${safe(sal.type)}</span>
+                      <span class="px-2 py-0.5 rounded-full text-[10px] bg-stone-100 text-stone-700 font-bold">${safe(sal.position)}</span>
+                    </div>
+                  </div>
+                  <p class="text-[11px] text-stone-700 font-sans leading-relaxed pt-0.5">${safe(sal.modern || sal.desc)}</p>
                 </div>
-              </div>
-            `).join("")}
+              `;
+            }).join("")}
           </div>
         </div>
       `;
     } else if (tab === "future") {
       if (!s) {
-        box.innerHTML = `<div class="text-stone-500 py-4 text-center">미래 전략 데이터가 없습니다.</div>`;
+        box.innerHTML = `<div class="text-stone-500 py-6 text-center">미래 전략 데이터가 없습니다.</div>`;
         return;
       }
+      const careerAdvice = s.iljuDetail.careerAdvice || `전문직, 기획, IT 플랫폼, 미디어 및 [${s.yongsin}] 오행 관련 특화 산업 분야에서 큰 두각을 나타냅니다.`;
+      const wealthAdvice = s.iljuDetail.wealthAdvice || `${s.userInfo.name} 님의 사주는 ${s.iljuDetail.wealthStyle}`;
+      const riskText = s.isSinGang ?
+        "신강(身强) 사주는 주체성과 결단력이 뛰어나지만, 과도한 자신감으로 인한 무리한 레버리지 투자나 지인과의 보증·동업 갈등을 가장 경계해야 합니다. 현금 유동성을 항상 30% 이상 확보하고 분산 투자를 원칙으로 삼으세요." :
+        "신약(身弱) 사주는 세밀한 분석력과 신중함이 돋보이나, 귀가 얇아지거나 불안감에 쫓겨 고점 매수·손절매를 반복할 위험이 있습니다. 독단적 판단보다는 공신력 있는 금융 상품과 우량 배당 자산 중심의 안정형 포트폴리오를 유지하세요.";
+
       box.innerHTML = `
-        <div class="space-y-2">
-          <div class="font-bold text-stone-900 pb-1 border-b border-stone-200">🧭 미래 진로 & 재물 전략</div>
-          <div class="p-2.5 rounded bg-white border border-stone-200 text-[11px] leading-relaxed space-y-1.5">
-            <div>
-              <strong class="text-amber-900 block font-bold">💼 직업 & 천직 추천:</strong>
-              <p class="text-stone-700">${s.iljuDetail.careerAdvice || "전문성을 바탕으로 기획과 창의력을 발휘할 수 있는 분야가 매우 길합니다."}</p>
+        <div class="space-y-3 font-serif-kr">
+          <!-- 미래 인생 나침반 -->
+          <div class="p-3 rounded-xl bg-amber-50/80 border border-amber-200 text-xs space-y-1.5">
+            <span class="font-bold text-amber-950 text-sm block">🧭 미래 인생 나침반 (용신 기반 최적 행로)</span>
+            <p class="text-[11px] text-stone-700 font-sans leading-relaxed">${safe(s.compass ? s.compass.actionPlan : "당신의 수호 용신 에너지를 적극 활용하여 장기적인 전문성과 주도성을 확보하세요.")}</p>
+          </div>
+
+          <!-- 10년 대운으로 보는 3대 도약 타이밍 -->
+          <div class="p-3 rounded-xl bg-indigo-50/70 border border-indigo-200 text-xs space-y-2 font-sans">
+            <span class="font-bold text-indigo-950 font-serif-kr text-sm block">🚀 10년 대운으로 보는 3대 도약 타이밍</span>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+              <div class="p-2 rounded-lg bg-white border border-indigo-100">
+                <strong class="text-indigo-900 block text-xs">1차 도약기 (${s.daeunList && s.daeunList[1] ? s.daeunList[1].startAge : 17}~${s.daeunList && s.daeunList[1] ? s.daeunList[1].endAge : 26}세)</strong>
+                <p class="text-[10px] text-stone-600 mt-0.5">전문 역량의 토대를 닦고 독자적인 커리어 발판을 단단히 다지는 결정적 시기</p>
+              </div>
+              <div class="p-2 rounded-lg bg-white border border-indigo-100">
+                <strong class="text-indigo-900 block text-xs">2차 황금기 (${s.daeunList && s.daeunList[2] ? s.daeunList[2].startAge : 27}~${s.daeunList && s.daeunList[2] ? s.daeunList[2].endAge : 36}세)</strong>
+                <p class="text-[10px] text-stone-600 mt-0.5">인생 최대의 에너지와 기회가 결합하여 폭발적인 성취와 명예를 획득하는 전성기</p>
+              </div>
+              <div class="p-2 rounded-lg bg-white border border-indigo-100">
+                <strong class="text-indigo-900 block text-xs">3차 수확기 (${s.daeunList && s.daeunList[3] ? s.daeunList[3].startAge : 37}~${s.daeunList && s.daeunList[3] ? s.daeunList[3].endAge : 46}세)</strong>
+                <p class="text-[10px] text-stone-600 mt-0.5">구축된 자산과 네트워크를 바탕으로 풍요로운 결실을 거두고 시스템을 완성하는 시기</p>
+              </div>
             </div>
-            <div class="pt-1.5 border-t border-stone-100">
-              <strong class="text-amber-900 block font-bold">💰 재물 관리 & 투자 전략:</strong>
-              <p class="text-stone-700">${s.iljuDetail.wealthAdvice || "안정적인 자산 형성을 바탕으로 장기적인 투자를 지속할 때 큰 부를 축적합니다."}</p>
+          </div>
+
+          <!-- 경계해야 할 함정과 방패 전략 -->
+          <div class="p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-xs font-sans space-y-1">
+            <strong class="text-rose-950 font-serif-kr block">🛡️ 인생에서 경계해야 할 함정과 방패 전략:</strong>
+            <p class="text-[11px] text-stone-700 leading-relaxed">${safe(s.compass ? s.compass.trapAndShield : s.iljuDetail.caution)}</p>
+          </div>
+
+          <!-- 자산 증식 스타일 & 직업군 -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-sans">
+            <div class="p-2.5 rounded-lg bg-white border border-stone-200">
+              <strong class="text-amber-950 block font-bold mb-0.5">💰 자산 증식 스타일:</strong>
+              <p class="text-[11px] text-stone-600 leading-relaxed">${safe(s.iljuDetail.wealthStyle)}</p>
             </div>
+            <div class="p-2.5 rounded-lg bg-white border border-stone-200">
+              <strong class="text-stone-900 block font-bold mb-0.5">💼 적성 직업군 & 천직:</strong>
+              <p class="text-[11px] text-stone-600 leading-relaxed">${safe(careerAdvice)}</p>
+            </div>
+          </div>
+
+          <!-- ⚠️ 투자 주의 리스크 관리 & 자산 방어 전략 -->
+          <div class="p-2.5 rounded-lg bg-amber-50/90 border border-amber-300 text-xs font-sans space-y-1">
+            <strong class="text-amber-950 font-serif-kr block font-bold">⚠️ 평생 재물 & 투자 리스크 관리 지침:</strong>
+            <p class="text-[11px] text-stone-700 leading-relaxed">${safe(wealthAdvice)} ${riskText}</p>
           </div>
         </div>
       `;
     } else if (tab === "tarot") {
       const cards = this.tarotPickedCards || [];
       if (cards.length === 0) {
-        box.innerHTML = `<div class="text-stone-500 py-4 text-center">선택된 타로 카드가 없습니다. (타로 탭에서 카드를 뽑으시면 함께 내보내집니다)</div>`;
+        box.innerHTML = `
+          <div class="p-6 text-center text-stone-600 space-y-2 font-serif-kr bg-white rounded-xl border border-dashed border-stone-300">
+            <span class="text-3xl block">🎴</span>
+            <strong class="text-sm text-stone-800 block">선택된 타로 카드가 없습니다.</strong>
+            <p class="text-xs text-stone-500 font-sans leading-relaxed">
+              상단 메뉴의 <strong>'🃏 3-Card 타로'</strong>에서 카드를 3장 뽑으시면<br>
+              현실 직시 팩트 점괘와 과거·현재·미래 스토리 분석이 서책에 함께 포함됩니다.
+            </p>
+          </div>
+        `;
         return;
       }
-      const pos = ["과거(Past)", "현재(Present)", "미래(Future)"];
+      const posNames = ["과거 (Past / 원인과 배경)", "현재 (Present / 뼈아픈 직언)", "미래 (Future / 현실적 결말)"];
       box.innerHTML = `
-        <div class="space-y-2">
-          <div class="font-bold text-stone-900 pb-1 border-b border-stone-200">🃏 3-Card 대화형 타로 점괘 결과</div>
-          <div class="space-y-1.5">
+        <div class="space-y-2.5 font-serif-kr">
+          <div class="flex items-center justify-between pb-1.5 border-b border-stone-200">
+            <span class="font-bold text-stone-900 text-sm">🃏 3-Card 대화형 타로 점괘 심층 리딩</span>
+            <span class="text-[10px] text-amber-800 font-bold bg-amber-100 px-2 py-0.5 rounded">과거·현재·미래 스프레드</span>
+          </div>
+          <div class="space-y-2">
             ${cards.map((cObj, idx) => {
-              const c = cObj.card;
+              const c = cObj ? (cObj.card || cObj) : {};
+              const nameKr = c.nameKr || c.name_kr || c.name || `타로 카드 ${idx + 1}`;
+              const nameEn = c.name || c.nameEn || c.name_en || "";
+              const displayName = (nameKr.includes("(") || !nameEn) ? nameKr : `${nameKr} (${nameEn})`;
+              const summary = c.summary || c.interpretation || "현재 흐름을 직시하고 근본적인 원인을 돌아보세요.";
+              const advice = c.generalAdvice || c.advice || c.loveAdvice || c.moneyAdvice || c.careerAdvice || "현실을 냉정히 분석하고 기본에 충실하세요.";
+              const realityCheck = c.realityCheck || "";
+              const keywords = Array.isArray(c.keywords) ? c.keywords : (c.theme ? c.theme.split(",").map(x => x.trim()) : []);
+              const isReversed = !!c.isReversed;
+
               return `
-                <div class="p-2 rounded bg-white border border-stone-200 text-[11px]">
-                  <div class="flex items-center justify-between font-bold text-amber-900 mb-0.5">
-                    <span>${pos[idx] || `카드 ${idx+1}`}: ${c.name_kr} (${c.name_en})</span>
-                    <span class="text-[10px] ${c.isReversed ? 'text-rose-600' : 'text-emerald-700'}">${c.isReversed ? '🔄 역방향' : '⬆ 정방향'}</span>
+                <div class="p-3 rounded-xl bg-white border border-stone-200 text-xs space-y-1">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <span class="text-[10px] text-stone-500 font-bold">${posNames[idx] || `카드 ${idx+1}`}</span>
+                      <strong class="text-sm font-black text-[#8c1d1d] ml-1.5">${safe(displayName)}</strong>
+                    </div>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black ${isReversed ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'}">${isReversed ? '🔄 역방향' : '⬆ 정방향'}</span>
                   </div>
-                  <p class="text-stone-700 leading-relaxed">${c.interpretation || ""}</p>
-                  <p class="text-stone-500 text-[10px] mt-0.5 font-semibold">💡 조언: ${c.advice || ""}</p>
+                  ${keywords.length > 0 ? `
+                  <div class="flex flex-wrap gap-1 font-sans text-[10px]">
+                    ${keywords.map(kw => `<span class="px-1.5 py-0.5 rounded bg-stone-100 text-stone-600 font-medium">#${safe(kw)}</span>`).join("")}
+                  </div>
+                  ` : ''}
+                  <p class="text-[11px] text-stone-700 font-sans leading-relaxed pt-0.5">${safe(summary)}</p>
+                  ${realityCheck ? `<p class="text-[11px] text-stone-600 font-sans italic bg-stone-50 p-1.5 rounded">⚡ <strong>현실 팩트 체크:</strong> ${safe(realityCheck)}</p>` : ''}
+                  <div class="p-2 rounded bg-amber-50/70 border border-amber-200 text-[11px] text-amber-950 font-sans font-medium">
+                    💡 <strong>실천 조언:</strong> ${safe(advice)}
+                  </div>
                 </div>
               `;
             }).join("")}
@@ -2642,34 +3002,30 @@ const App = {
       const logs = this.aiChatHistory || [];
       if (logs.length === 0) {
         box.innerHTML = `
-          <div class="text-stone-600 text-center py-4 space-y-1">
-            <p class="font-bold">아직 상담한 AI 도사 문답이 없습니다.</p>
-            <p class="text-[11px] text-stone-500">우측 하단 AI 도사 챗봇에서 질문하시면 내보내기 서책에 자동으로 함께 기록됩니다.</p>
+          <div class="text-stone-600 text-center py-6 space-y-2 font-serif-kr">
+            <span class="text-2xl">🧙‍♂️</span>
+            <p class="font-bold text-stone-800 text-xs">아직 AI 도사와의 상담 이력이 없습니다.</p>
+            <p class="text-[11px] text-stone-500 font-sans">우측 상단 <strong>'🧙‍♂️ AI 명리·꿈해몽 도사'</strong> 챗봇에서 질문을 남기시면 문답 전문이 서책에 함께 포함됩니다.</p>
           </div>
         `;
         return;
       }
       box.innerHTML = `
-        <div class="space-y-2">
-          <div class="font-bold text-stone-900 pb-1 border-b border-stone-200">🧙‍♂️ 천명 AI 명리·해몽 도사 상담 기록</div>
-          <div class="space-y-2">
-            ${logs.map(m => {
-              if (m.role === 'user') {
-                return `
-                  <div class="p-2 rounded bg-amber-50/80 border border-amber-200 text-[11px]">
-                    <span class="font-bold text-[#8c1d1d] block text-[10px]">👤 사용자 질문 (${m.time})</span>
-                    <p class="text-stone-900 font-medium">${m.text}</p>
-                  </div>
-                `;
-              } else {
-                return `
-                  <div class="p-2.5 rounded bg-white border border-stone-200 text-[11px] space-y-1">
-                    <span class="inline-block px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 font-bold text-[10px]">${m.badge || 'AI 도사 풀이'}</span>
-                    <p class="text-stone-800 leading-relaxed whitespace-pre-line">${m.text}</p>
-                  </div>
-                `;
-              }
-            }).join("")}
+        <div class="space-y-2.5 font-serif-kr">
+          <div class="flex items-center justify-between pb-1.5 border-b border-stone-200">
+            <span class="font-bold text-stone-900 text-sm">🧙‍♂️ AI 명리·꿈해몽 도사 실시간 상담록</span>
+            <span class="text-[10px] text-amber-800 font-bold bg-amber-100 px-2 py-0.5 rounded">총 ${logs.length}건 기록</span>
+          </div>
+          <div class="space-y-2 text-xs font-sans">
+            ${logs.map((chat, idx) => `
+              <div class="p-2.5 rounded-xl ${chat.role === 'user' ? 'bg-amber-50/60 border border-amber-200 text-amber-950' : 'bg-white border border-stone-200 text-stone-800'} space-y-1">
+                <div class="flex items-center justify-between text-[10px] font-bold">
+                  <span class="${chat.role === 'user' ? 'text-amber-900' : 'text-stone-600'}">${chat.role === 'user' ? '🙋‍♂️ 내 질문' : '🧙‍♂️ AI 도사의 처방'}</span>
+                  <span class="text-stone-400 font-mono">${chat.time || ''}</span>
+                </div>
+                <p class="text-[11px] leading-relaxed whitespace-pre-wrap">${safe(chat.text)}</p>
+              </div>
+            `).join("")}
           </div>
         </div>
       `;
@@ -2677,641 +3033,955 @@ const App = {
   },
 
   copyCategorizedText() {
+    if (!this.userSaju && !this.dailyFortune) return;
     const s = this.userSaju;
     const f = this.dailyFortune;
-    const cards = this.tarotPickedCards || [];
-    const aiLogs = this.aiChatHistory || [];
+    const lines = [];
 
-    const name = s ? s.userInfo.name : (this.currentAccount ? this.currentAccount.name : "회원");
-    const today = new Date().toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" });
-
-    const getTenGodName = (pillar) => {
-      if (!pillar || !pillar.tenGodGan) return "-";
-      return pillar.tenGodGan.name || pillar.tenGodGan.hanja || (typeof pillar.tenGodGan === "string" ? pillar.tenGodGan : "-");
+    const getTenGodName = (tg) => {
+      if (!tg) return "-";
+      if (typeof tg === "string") return tg.split("(")[0];
+      return tg.name || tg.hanja || "-";
     };
 
-    let lines = [];
-    lines.push(`========================================================`);
-    lines.push(`📜 [천명(天命)] ${name} 님의 카테고리별 감결 서책`);
-    lines.push(`발행 일시: ${today}`);
-    lines.push(`========================================================\n`);
+    const TWELVE_STAGES_TABLE = {
+      "갑": { "해": "장생", "자": "목욕", "축": "관대", "인": "건록", "묘": "제왕", "진": "쇠", "사": "병", "오": "사", "미": "묘", "신": "절", "유": "태", "술": "양" },
+      "을": { "오": "장생", "사": "목욕", "진": "관대", "묘": "건록", "인": "제왕", "축": "쇠", "자": "병", "해": "사", "술": "묘", "유": "절", "신": "태", "미": "양" },
+      "병": { "인": "장생", "묘": "목욕", "진": "관대", "사": "건록", "오": "제왕", "미": "쇠", "신": "병", "유": "사", "술": "묘", "해": "절", "자": "태", "축": "양" },
+      "정": { "유": "장생", "신": "목욕", "미": "관대", "오": "건록", "사": "제왕", "진": "쇠", "묘": "병", "인": "사", "축": "묘", "자": "절", "해": "태", "술": "양" },
+      "무": { "인": "장생", "묘": "목욕", "진": "관대", "사": "건록", "오": "제왕", "미": "쇠", "신": "병", "유": "사", "술": "묘", "해": "절", "자": "태", "축": "양" },
+      "기": { "유": "장생", "신": "목욕", "미": "관대", "오": "건록", "사": "제왕", "진": "쇠", "묘": "병", "인": "사", "축": "묘", "자": "절", "해": "태", "술": "양" },
+      "경": { "사": "장생", "오": "목욕", "미": "관대", "신": "건록", "유": "제왕", "술": "쇠", "해": "병", "자": "사", "축": "묘", "인": "절", "묘": "태", "진": "양" },
+      "신": { "자": "장생", "해": "목욕", "술": "관대", "유": "건록", "신": "제왕", "미": "쇠", "오": "병", "사": "사", "진": "묘", "묘": "절", "인": "태", "축": "양" },
+      "임": { "신": "장생", "유": "목욕", "술": "관대", "해": "건록", "자": "제왕", "축": "쇠", "인": "병", "묘": "사", "진": "묘", "사": "절", "오": "태", "미": "양" },
+      "계": { "묘": "장생", "인": "목욕", "축": "관대", "자": "건록", "해": "제왕", "술": "쇠", "유": "병", "신": "사", "미": "묘", "오": "절", "사": "태", "진": "양" }
+    };
+    const getPillarStage = (dayGanChar, jiChar) => {
+      if (!dayGanChar || !jiChar) return "-";
+      return (TWELVE_STAGES_TABLE[dayGanChar] && TWELVE_STAGES_TABLE[dayGanChar][jiChar]) || "-";
+    };
+
+    lines.push(`=======================================================`);
+    lines.push(`  천명(天命) 프리미엄 사주 & 오늘의 운세 리포트`);
+    lines.push(`=======================================================`);
+    if (s) {
+      lines.push(`• 이름: ${s.userInfo.name} (${s.userInfo.genderKr})`);
+      lines.push(`• 양력 생년월일: ${s.userInfo.solarDateString}`);
+      lines.push(`• 음력 생년월일: ${s.userInfo.lunarDate ? `${s.userInfo.lunarDate.year}년 ${s.userInfo.lunarDate.month}월 ${s.userInfo.lunarDate.day}일` : "-"}`);
+      lines.push(`• 60갑자 일주: ${s.iljuDetail.name} (${s.iljuDetail.symbol})`);
+      lines.push(``);
+    }
 
     if (f && (document.getElementById("exportCatDaily")?.checked ?? true)) {
-      lines.push(`[🌟 1. 오늘의 천기 & 일진 운세]`);
-      lines.push(`• 일진: ${f.dateString || today} (${f.todayTenGod || "식신"})`);
-      lines.push(`• 총운 지수: ${f.totalScore}점`);
-      lines.push(`• 오늘의 테마: ${f.theme || "-"}`);
-      lines.push(`• 총평: ${f.summary || "-"}`);
+      lines.push(`[🌟 1. 오늘의 운세 (${f.dateString})]`);
+      lines.push(`• 오늘의 일진: ${f.todayIljin ? f.todayIljin.name : ""} (${f.todayTenGod})`);
+      lines.push(`• 종합 총운 점수: ${f.totalScore}점 (${f.totalScore >= 90 ? "대대길" : (f.totalScore >= 80 ? "대길" : "평온")})`);
+      lines.push(`• 4대 세부 지수: 재물(${f.scores?.money || 85}%), 애정(${f.scores?.love || 88}%), 건강(${f.scores?.health || 90}%), 직업(${f.scores?.career || 92}%)`);
+      lines.push(`• 핵심 테마: ${f.theme}`);
+      lines.push(`• 총운 해설: ${f.summary}`);
+      if (f.twelveStage) {
+        lines.push(`• 12운성 일진 에너지: ${f.twelveStage.name}(${f.twelveStage.hanja}) · ${f.twelveStage.badge} (${f.twelveStage.power}점) - ${f.twelveStage.desc}`);
+      }
       lines.push(`• 추천 행동: ${f.action || "-"}`);
       lines.push(`• 주의 행동: ${f.avoid || "-"}`);
       if (f.lucky) {
-        lines.push(`• 행운 아이템: 컬러(${f.lucky.color}), 번호(${f.lucky.numbers}), 방위(${f.lucky.direction})`);
+        lines.push(`• 행운 아이템: 컬러(${f.lucky.color}), 번호(${f.lucky.numbers}), 방위(${f.lucky.direction}), 추천 음식(${f.lucky.food})`);
+      }
+      const mascot = this.currentMascot || (window.ZODIAC_MASCOTS && s && s.pillars ? window.ZODIAC_MASCOTS[s.pillars.year.ji.char] : null);
+      if (mascot) {
+        lines.push(`• 12지신 수호 파트너: ${mascot.name} (${mascot.emoji}) - "${mascot.greeting}"`);
+      }
+      const hourlyList = (f.hourlyFlow && f.hourlyFlow.length > 0) ? f.hourlyFlow : [];
+      if (hourlyList.length > 0) {
+        lines.push(`• 시간대별 일진 리듬:`);
+        hourlyList.forEach(slot => {
+          lines.push(`  - ${slot.time}: [${slot.status}] ${slot.tenGodBadge} | ${slot.desc}`);
+        });
       }
       lines.push(``);
     }
 
     if (s && (document.getElementById("exportCatSaju")?.checked ?? true)) {
       const p = s.pillars;
-      lines.push(`[📜 2. 사주 원국 (4주 8자) & 일주론]`);
-      lines.push(`• 출생: 양력 ${s.userInfo.solarDateString} (${s.userInfo.genderKr})`);
-      lines.push(`• 4주 8자:`);
-      lines.push(`  - 시주: ${p.time ? p.time.gan.char + p.time.ji.char + " (" + getTenGodName(p.time) + ")" : "시간 미상"}`);
-      lines.push(`  - 일주(본원): ${p.day.gan.char + p.day.ji.char} (일간: ${p.day.gan.char})`);
-      lines.push(`  - 월주: ${p.month.gan.char + p.month.ji.char} (${getTenGodName(p.month)})`);
-      lines.push(`  - 년주: ${p.year.gan.char + p.year.ji.char} (${getTenGodName(p.year)})`);
-      lines.push(`• 60갑자 일주: ${s.iljuDetail.name} (${s.iljuDetail.symbol})`);
-      lines.push(`• 타고난 기질: ${s.iljuDetail.traits || "-"}`);
+      lines.push(`[📜 2. 사주 원국 (四柱八字) 만세력]`);
+      lines.push(`• 시주(時柱): ${p.time ? `${p.time.gan.char}${p.time.ji.char} (${getTenGodName(p.time.tenGodGan)}, 12운성: ${getPillarStage(p.day.gan.char, p.time.ji.char)})` : "모름"}`);
+      lines.push(`• 일주(日柱): ${p.day.gan.char}${p.day.ji.char} (★나의본원, 12운성: ${getPillarStage(p.day.gan.char, p.day.ji.char)})`);
+      lines.push(`• 월주(月柱): ${p.month.gan.char}${p.month.ji.char} (${getTenGodName(p.month.tenGodGan)}, 12운성: ${getPillarStage(p.day.gan.char, p.month.ji.char)})`);
+      lines.push(`• 년주(年柱): ${p.year.gan.char}${p.year.ji.char} (${getTenGodName(p.year.tenGodGan)}, 12운성: ${getPillarStage(p.day.gan.char, p.year.ji.char)})`);
+      lines.push(``);
+      lines.push(`• 60갑자 일주론 심층 분석:`);
+      lines.push(`  - 본원 성향: ${s.iljuDetail.desc}`);
+      lines.push(`  - 타고난 강점: ${s.iljuDetail.strength}`);
+      lines.push(`  - 주의할 점: ${s.iljuDetail.caution}`);
+      lines.push(`  - 연애 스타일: ${s.iljuDetail.loveStyle}`);
+      lines.push(`  - 재물 스타일: ${s.iljuDetail.wealthStyle}`);
       if (s.blessingPoints && s.blessingPoints.length > 0) {
-        lines.push(`• 내 사주가 좋은 이유 3가지:`);
-        s.blessingPoints.forEach((b, i) => lines.push(`  ${i+1}) ${b.title}: ${b.desc}`));
+        lines.push(`• 내 사주가 특별히 좋은 이유 3가지 (3대 복록):`);
+        s.blessingPoints.forEach((pt, idx) => {
+          lines.push(`  ${idx + 1}) ${pt.title}: ${pt.desc}`);
+        });
+      }
+      if (s.daeunList && s.daeunList.length > 0) {
+        lines.push(`• 10년 주기 대운 흐름 (${s.isForward ? '순행' : '역행'}, 대운수 ${s.daeunNumber || 1}):`);
+        s.daeunList.forEach(d => {
+          lines.push(`  - ${d.startAge}~${d.endAge}세: ${d.ganChar}${d.jiChar} (${getTenGodName(d.tenGod)})`);
+        });
       }
       lines.push(``);
     }
 
     if (s && (document.getElementById("exportCatElements")?.checked ?? true)) {
-      const el = s.elementPercentages || {};
-      lines.push(`[☯ 3. 오행 밸런스 & 맞춤 용신 처방]`);
-      lines.push(`• 오행 비율: 목(${el["목"] || 0}%), 화(${el["화"] || 0}%), 토(${el["토"] || 0}%), 금(${el["금"] || 0}%), 수(${el["수"] || 0}%)`);
-      lines.push(`• 사주 체질: ${s.strengthStatus}`);
-      lines.push(`• 추천 용신: ${s.yongsin}`);
-      lines.push(`• 용신 해설: ${s.yongsinDesc || "-"}`);
+      lines.push(`[☯ 3. 오행 밸런스 & 용신 처방]`);
+      lines.push(`• 5대 오행 비율: 목(${s.elements["목"] || 0}%), 화(${s.elements["화"] || 0}%), 토(${s.elements["토"] || 0}%), 금(${s.elements["금"] || 0}%), 수(${s.elements["수"] || 0}%)`);
+      lines.push(`• 체질 판정: ${s.strengthStatus} (${s.strengthScore || 50}점) - ${s.strengthDesc}`);
+      if (s.missingElements && s.missingElements.length > 0) {
+        lines.push(`• 결핍된 오행 처방:`);
+        s.missingElements.forEach(m => {
+          lines.push(`  - ${m.name}: ${m.desc} (처방: ${m.remedy})`);
+        });
+      } else {
+        lines.push(`• 결핍된 오행: 없음 (오행구족의 조화로운 사주)`);
+      }
+      if (s.missingTenGods && s.missingTenGods.length > 0) {
+        lines.push(`• 없는 십신의 잠재력:`);
+        s.missingTenGods.forEach(tg => {
+          lines.push(`  - ${tg.title}: ${tg.desc}`);
+        });
+      }
+      lines.push(`• 수호 용신(用神): [${s.yongsin}] - ${s.yongsinDesc}`);
       lines.push(``);
     }
 
     if (s && s.sinsal && (document.getElementById("exportCatSinsal")?.checked ?? true)) {
-      lines.push(`[🔮 4. 8대 신살 분석]`);
-      s.sinsal.forEach(item => {
-        lines.push(`• ${item.name} (${item.type}): ${item.desc}`);
+      lines.push(`[🔮 4. 8대 핵심 신살]`);
+      s.sinsal.forEach(sal => {
+        lines.push(`• ${sal.name} (${sal.type}, 위치: ${sal.position}): ${sal.modern || sal.desc}`);
       });
       lines.push(``);
     }
 
     if (s && (document.getElementById("exportCatFuture")?.checked ?? true)) {
-      lines.push(`[🧭 5. 미래 진로 & 재물 전략]`);
-      lines.push(`• 진로 & 천직: ${s.iljuDetail.careerAdvice || "-"}`);
-      lines.push(`• 재물 & 투자: ${s.iljuDetail.wealthAdvice || "-"}`);
+      lines.push(`[🧭 5. 미래 진로 & 평생 재물 전략]`);
+      lines.push(`• 천직 및 직업 적성: ${s.iljuDetail.careerAdvice || `전문직, 기획, IT 플랫폼, 미디어 및 [${s.yongsin}] 오행 관련 특화 산업 분야`}`);
+      lines.push(`• 평생 재물 및 투자 전략: ${s.iljuDetail.wealthAdvice || s.iljuDetail.wealthStyle}`);
+      lines.push(`• 자산 증식 스타일: ${s.isSinGang ? "추진력과 주체성을 바탕으로 규모 있는 부를 일구는 사업·투자형" : "정밀한 분석과 안정적인 전문 라이선스를 기반으로 실속 있는 알짜배기 자산 축적"}`);
+      if (s.daeunList && s.daeunList.length >= 3) {
+        lines.push(`• 10년 대운으로 보는 3대 도약 타이밍:`);
+        lines.push(`  1) 1차 도약기 (${s.daeunList[1]?.startAge || s.daeunList[0]?.startAge}~${s.daeunList[1]?.endAge || s.daeunList[0]?.endAge}세): 전문성 연마와 핵심 발판 마련`);
+        lines.push(`  2) 2차 황금기 (${s.daeunList[2]?.startAge || s.daeunList[1]?.startAge}~${s.daeunList[2]?.endAge || s.daeunList[1]?.endAge}세): 인생 최고의 역량 발휘와 재정적 확장`);
+        lines.push(`  3) 3차 수확기 (${s.daeunList[3]?.startAge || s.daeunList[2]?.startAge}~${s.daeunList[3]?.endAge || s.daeunList[2]?.endAge}세): 결실의 완성과 풍요로운 시스템 구축`);
+      }
+      lines.push(`• 인생에서 경계할 함정과 방패: ${s.compass?.trapAndShield || s.iljuDetail.caution}`);
       lines.push(``);
     }
 
+    const cards = this.tarotPickedCards || [];
     if (cards.length > 0 && (document.getElementById("exportCatTarot")?.checked ?? true)) {
+      const posNames = ["과거(Past)", "현재(Present)", "미래(Future)"];
       lines.push(`[🃏 6. 3-Card 대화형 타로 점괘]`);
-      const pos = ["과거", "현재", "미래"];
       cards.forEach((cObj, idx) => {
-        const c = cObj.card;
-        lines.push(`• [${pos[idx]}] ${c.name_kr} (${c.isReversed ? "역방향" : "정방향"}): ${c.interpretation}`);
-        lines.push(`  조언: ${c.advice}`);
+        const c = cObj ? (cObj.card || cObj) : {};
+        const nameKr = c.nameKr || c.name_kr || c.name || `타로 카드 ${idx + 1}`;
+        const nameEn = c.name || c.nameEn || c.name_en || "";
+        const summary = c.summary || c.interpretation || "";
+        const advice = c.generalAdvice || c.advice || c.loveAdvice || "";
+        lines.push(`• [${posNames[idx] || `카드 ${idx+1}`}] ${displayName} - ${c.isReversed ? '역방향' : '정방향'}`);
+        if (summary) lines.push(`  - 점괘 해설: ${summary}`);
+        if (advice) lines.push(`  - 실천 조언: ${advice}`);
       });
       lines.push(``);
     }
 
+    const aiLogs = this.aiChatHistory || [];
     if (aiLogs.length > 0 && (document.getElementById("exportCatAi")?.checked ?? true)) {
-      lines.push(`[🧙‍♂️ 7. AI 명리·꿈해몽 도사 문답 기록]`);
-      aiLogs.forEach(m => {
-        if (m.role === 'user') {
-          lines.push(`Q (${m.time}): ${m.text}`);
-        } else {
-          lines.push(`A: ${m.text}\n`);
-        }
+      lines.push(`[🧙‍♂️ 7. AI 명리·꿈해몽 도사 1:1 상담 대화록]`);
+      aiLogs.forEach((item, idx) => {
+        lines.push(`[#${idx + 1} ${item.role === 'user' ? '도반 질문' : 'AI 도사 처방'}] (${item.time || ''})`);
+        lines.push(`${item.text}`);
+        lines.push(``);
       });
     }
 
-    lines.push(`========================================================`);
-    lines.push(`천명(天命) 欽定萬歲曆 · 조선 왕실 규장각 명리학 시스템`);
-    lines.push(`https://github.com/minjae0529-blip/Daily-Fortune`);
+    lines.push(`=======================================================`);
+    lines.push(`  자료 제공: 천명(天命) AI 운세 & 명리 포털`);
+    lines.push(`=======================================================`);
 
     const fullText = lines.join("\n");
     navigator.clipboard.writeText(fullText).then(() => {
-      alert("✅ 모든 카테고리별 자료가 깔끔한 텍스트로 클립보드에 복사되었습니다! 노션이나 메모장에 붙여넣으실 수 있습니다.");
-    }).catch(() => {
-      alert("복사에 실패했습니다.");
+      alert("📋 선택하신 모든 카테고리의 상세 자료가 클립보드에 복사되었습니다!\n원하시는 곳(메모장, 카카오톡 등)에 붙여넣기(Ctrl+V) 하세요.");
+    }).catch(err => {
+      console.error(err);
+      alert("클립보드 복사 중 오류가 발생했습니다.");
     });
   },
 
   downloadInteractiveReportHtml() {
+    if (!this.userSaju && !this.dailyFortune && (!this.tarotPickedCards || this.tarotPickedCards.length === 0)) {
+      alert("내보낼 운세/사주 데이터가 없습니다.");
+      return;
+    }
+
     const s = this.userSaju;
     const f = this.dailyFortune;
+    const name = s ? s.userInfo.name : (this.currentAccount ? this.currentAccount.name : "고객");
+    const todayStr = f ? f.dateString : new Date().toLocaleDateString("ko-KR");
     const cards = this.tarotPickedCards || [];
     const aiLogs = this.aiChatHistory || [];
 
-    const name = s ? s.userInfo.name : (this.currentAccount ? this.currentAccount.name : "회원");
-    const nowStr = new Date().toLocaleString("ko-KR");
+    const safeStr = (val, def = "-") => (val !== undefined && val !== null && val !== "") ? String(val).replace(/</g, "&lt;").replace(/>/g, "&gt;") : def;
+    const getTenGodName = (tg) => {
+      if (!tg) return "-";
+      if (typeof tg === "string") return tg.split("(")[0];
+      return tg.name || tg.hanja || "-";
+    };
 
-    // Checkbox selections
-    const incDaily = f && (document.getElementById("exportCatDaily")?.checked ?? true);
-    const incSaju = s && (document.getElementById("exportCatSaju")?.checked ?? true);
-    const incElements = s && (document.getElementById("exportCatElements")?.checked ?? true);
-    const incSinsal = s && s.sinsal && (document.getElementById("exportCatSinsal")?.checked ?? true);
-    const incFuture = s && (document.getElementById("exportCatFuture")?.checked ?? true);
+    const TWELVE_STAGES_TABLE = {
+      "갑": { "해": "장생", "자": "목욕", "축": "관대", "인": "건록", "묘": "제왕", "진": "쇠", "사": "병", "오": "사", "미": "묘", "신": "절", "유": "태", "술": "양" },
+      "을": { "오": "장생", "사": "목욕", "진": "관대", "묘": "건록", "인": "제왕", "축": "쇠", "자": "병", "해": "사", "술": "묘", "유": "절", "신": "태", "미": "양" },
+      "병": { "인": "장생", "묘": "목욕", "진": "관대", "사": "건록", "오": "제왕", "미": "쇠", "신": "병", "유": "사", "술": "묘", "해": "절", "자": "태", "축": "양" },
+      "정": { "유": "장생", "신": "목욕", "미": "관대", "오": "건록", "사": "제왕", "진": "쇠", "묘": "병", "인": "사", "축": "묘", "자": "절", "해": "태", "술": "양" },
+      "무": { "인": "장생", "묘": "목욕", "진": "관대", "사": "건록", "오": "제왕", "미": "쇠", "신": "병", "유": "사", "술": "묘", "해": "절", "자": "태", "축": "양" },
+      "기": { "유": "장생", "신": "목욕", "미": "관대", "오": "건록", "사": "제왕", "진": "쇠", "묘": "병", "인": "사", "축": "묘", "자": "절", "해": "태", "술": "양" },
+      "경": { "사": "장생", "오": "목욕", "미": "관대", "신": "건록", "유": "제왕", "술": "쇠", "해": "병", "자": "사", "축": "묘", "인": "절", "묘": "태", "진": "양" },
+      "신": { "자": "장생", "해": "목욕", "술": "관대", "유": "건록", "신": "제왕", "미": "쇠", "오": "병", "사": "사", "진": "묘", "묘": "절", "인": "태", "축": "양" },
+      "임": { "신": "장생", "유": "목욕", "술": "관대", "해": "건록", "자": "제왕", "축": "쇠", "인": "병", "묘": "사", "진": "묘", "사": "절", "오": "태", "미": "양" },
+      "계": { "묘": "장생", "인": "목욕", "축": "관대", "자": "건록", "해": "제왕", "술": "쇠", "유": "병", "신": "사", "미": "묘", "오": "절", "사": "태", "진": "양" }
+    };
+    const getPillarStage = (dayGanChar, jiChar) => {
+      if (!dayGanChar || !jiChar) return "-";
+      return (TWELVE_STAGES_TABLE[dayGanChar] && TWELVE_STAGES_TABLE[dayGanChar][jiChar]) || "-";
+    };
+
+    const incDaily = !!f && (document.getElementById("exportCatDaily")?.checked ?? true);
+    const incSaju = !!s && (document.getElementById("exportCatSaju")?.checked ?? true);
+    const incElements = !!s && (document.getElementById("exportCatElements")?.checked ?? true);
+    const incSinsal = !!s && (document.getElementById("exportCatSinsal")?.checked ?? true);
+    const incFuture = !!s && (document.getElementById("exportCatFuture")?.checked ?? true);
     const incTarot = cards.length > 0 && (document.getElementById("exportCatTarot")?.checked ?? true);
     const incAi = aiLogs.length > 0 && (document.getElementById("exportCatAi")?.checked ?? true);
 
-    const safeStr = (v) => v ? String(v).replace(/</g, "&lt;").replace(/>/g, "&gt;") : "-";
+    const navCategories = [];
+    if (incDaily) navCategories.push({ id: "daily", name: "🌟 오늘의 운세" });
+    if (incSaju) navCategories.push({ id: "saju", name: "📜 사주 원국 (4주8자)" });
+    if (incElements) navCategories.push({ id: "elements", name: "☯ 오행 & 용신 처방" });
+    if (incSinsal) navCategories.push({ id: "sinsal", name: "🔮 8대 신살 해설" });
+    if (incFuture) navCategories.push({ id: "future", name: "🧭 미래 & 재물 전략" });
+    if (incTarot) navCategories.push({ id: "tarot", name: "🃏 3-Card 타로 점괘" });
+    if (incAi) navCategories.push({ id: "ai", name: "🧙‍♂️ AI 도사 상담록" });
 
-    const getTenGodName = (pillar) => {
-      if (!pillar || !pillar.tenGodGan) return "-";
-      return pillar.tenGodGan.name || pillar.tenGodGan.hanja || (typeof pillar.tenGodGan === "string" ? pillar.tenGodGan : "-");
+    if (navCategories.length === 0) {
+      alert("최소 1개 이상의 카테고리를 선택해주세요.");
+      return;
+    }
+
+    const firstCatId = navCategories[0].id;
+    const mascot = this.currentMascot || (window.ZODIAC_MASCOTS && s && s.pillars ? window.ZODIAC_MASCOTS[s.pillars.year.ji.char] : null) || {
+      emoji: "🐲", name: "청룡이", greeting: "희망찬 푸른 기운이 가득한 날이야!", quotes: ["스스로를 믿고 당당하게 나아가봐! 🌟"]
     };
 
-    // Categories array for tab navigation
-    const navCategories = [];
-    if (incDaily) navCategories.push({ id: "daily", name: "🌟 오늘의 천기 운세" });
-    if (incSaju) navCategories.push({ id: "saju", name: "📜 사주 원국 (4주 8자)" });
-    if (incElements) navCategories.push({ id: "elements", name: "☯ 오행 밸런스 & 용신" });
-    if (incSinsal) navCategories.push({ id: "sinsal", name: "🔮 8대 신살 분석" });
-    if (incFuture) navCategories.push({ id: "future", name: "🧭 미래 진로 & 재물" });
-    if (incTarot) navCategories.push({ id: "tarot", name: "🃏 3-Card 타로 점괘" });
-    if (incAi) navCategories.push({ id: "ai", name: "🧙‍♂️ AI 도사 상담 문답" });
+    const hourlyList = (f && f.hourlyFlow && f.hourlyFlow.length > 0) ? f.hourlyFlow : [
+      { time: "아침 (07:00 ~ 11:00)", tenGodBadge: "정관의 기운", status: "순조(平)", desc: "정갈한 마음가짐으로 하루의 우선순위를 정하고 집중하기 좋은 시간입니다." },
+      { time: "오후 (11:00 ~ 17:00)", tenGodBadge: "정재의 기운", status: "최고조(大吉)", desc: "업무 추진력과 결실이 배가되는 시간으로 중요한 협상과 실행에 최적입니다." },
+      { time: "저녁 (17:00 ~ 21:00)", tenGodBadge: "식신의 기운", status: "순조(平)", desc: "좋은 사람들과 맛있는 음식을 나누며 따뜻한 대화를 이어가기 좋습니다." },
+      { time: "밤 (21:00 ~ 익일 07:00)", tenGodBadge: "정인의 기운", status: "안정(吉)", desc: "차분하게 사색하고 내면의 에너지를 충전하며 내일을 준비하세요." }
+    ];
 
-    const firstCatId = navCategories.length > 0 ? navCategories[0].id : "daily";
+    const careerAdvice = (s && s.iljuDetail) ? (s.iljuDetail.careerAdvice || `전문직, 기획, IT 플랫폼, 미디어 및 [${s.yongsin}] 오행 관련 특화 산업 분야에서 큰 두각을 나타냅니다.`) : "-";
+    const wealthAdvice = (s && s.iljuDetail) ? (s.iljuDetail.wealthAdvice || `${s.userInfo.name} 님의 사주는 ${s.iljuDetail.wealthStyle}`) : "-";
+    const riskText = (s && s.isSinGang) ?
+      "신강(身强) 사주는 주체성과 결단력이 뛰어나지만, 과도한 자신감으로 인한 무리한 레버리지 투자나 지인과의 보증·동업 갈등을 가장 경계해야 합니다. 현금 유동성을 항상 30% 이상 확보하고 분산 투자를 원칙으로 삼으세요." :
+      "신약(身弱) 사주는 세밀한 분석력과 신중함이 돋보이나, 귀가 얇아지거나 불안감에 쫓겨 고점 매수·손절매를 반복할 위험이 있습니다. 독단적 판단보다는 공신력 있는 금융 상품과 우량 배당 자산 중심의 안정형 포트폴리오를 유지하세요.";
 
     const htmlContent = `<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>천명(天命) 감결 서책 - ${name} 님</title>
+  <title>천명(天命) 인터랙티브 명리 서책 - ${safeStr(name)}</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700;900&family=Pretendard:wght@300;400;500;600;700;800&display=swap');
+
     :root {
-      --bg: #f7f3e8;
-      --paper: #fffdfa;
-      --card-bg: #ffffff;
+      --bg-paper: #fcf9f2;
       --dancheong-red: #8c1d1d;
-      --dancheong-red-dark: #6e1313;
-      --gold: #d4a359;
-      --gold-dark: #b48a4e;
-      --dancheong-green: #2d6a4f;
-      --dancheong-blue: #1e3a8a;
-      --text-main: #1c1917;
-      --text-muted: #57534e;
-      --border: #e7ddcd;
+      --dancheong-red-dark: #6b1515;
+      --dancheong-gold: #c59b27;
+      --dancheong-gold-light: #f5eed9;
+      --dancheong-blue: #1e3a5f;
+      --dancheong-green: #1b4d3e;
+      --border-ink: #e3d5be;
+      --text-main: #231710;
+      --text-muted: #6b5c50;
+      --card-bg: #ffffff;
     }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
-      background: var(--bg);
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+      background-color: var(--bg-paper);
       color: var(--text-main);
       line-height: 1.6;
-      padding: 20px 14px 40px;
+      background-image: radial-gradient(#eadbc5 1px, transparent 1px);
+      background-size: 20px 20px;
+      padding-bottom: 60px;
     }
-    .container { max-width: 900px; margin: 0 auto; }
-    .dancheong-bar {
-      height: 8px;
-      background: linear-gradient(90deg, #8c1d1d 0%, #d4a359 25%, #2d6a4f 50%, #1e3a8a 75%, #8c1d1d 100%);
-      border-radius: 4px 4px 0 0;
-    }
-    .royal-header {
-      background: #1e1510;
-      color: #f7e6c4;
-      padding: 24px 20px;
-      border-radius: 0 0 16px 16px;
-      border-bottom: 3px solid var(--gold);
-      box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+
+    .font-serif { font-family: 'Noto Serif KR', serif; }
+
+    .header-banner {
+      background: linear-gradient(135deg, #1f140e 0%, #3a1a14 50%, #1f140e 100%);
+      color: #f7eedc;
+      padding: 30px 20px 24px;
+      text-align: center;
+      border-bottom: 4px solid var(--dancheong-gold);
       position: relative;
     }
-    .royal-header h1 {
-      font-family: "Noto Serif KR", "Batang", serif;
-      font-size: 24px;
+    .header-banner::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 4px;
+      background: linear-gradient(90deg, var(--dancheong-red), var(--dancheong-gold), var(--dancheong-green), var(--dancheong-blue));
+    }
+    .header-title {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 26px;
       font-weight: 900;
-      color: #f9e5b4;
+      color: #fce8bd;
       letter-spacing: -0.5px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      margin-bottom: 6px;
     }
-    .seal {
-      display: inline-block;
-      width: 32px;
-      height: 32px;
-      background: #8c1d1d;
-      border: 2px solid var(--gold);
-      border-radius: 6px;
-      text-align: center;
-      line-height: 28px;
-      font-size: 16px;
-      font-weight: bold;
-      color: #fff;
+    .header-sub {
+      font-size: 13px;
+      color: #d6c0a0;
+      font-weight: 500;
     }
-    .user-profile-badge {
-      margin-top: 14px;
-      padding-top: 12px;
-      border-top: 1px solid #4a3525;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      font-size: 12px;
-      color: #d5c19e;
+
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 20px;
     }
-    .user-profile-badge strong { color: #facc15; }
-    .action-toolbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      margin: 18px 0 12px;
-      flex-wrap: wrap;
-    }
-    .view-toggle-btn {
-      background: #fff;
-      border: 1px solid var(--gold-dark);
-      padding: 8px 14px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: bold;
-      cursor: pointer;
-      color: #443425;
+
+    .user-pill {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      transition: all 0.2s;
+      gap: 8px;
+      background: rgba(255,255,255,0.1);
+      padding: 6px 14px;
+      border-radius: 9999px;
+      margin-top: 10px;
+      font-size: 12px;
+      border: 1px solid rgba(197, 155, 39, 0.4);
     }
-    .view-toggle-btn:hover { background: #fdf6ea; }
+
+    .nav-bar-container {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(252, 249, 242, 0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border-ink);
+      padding: 10px 0;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
     .nav-tabs {
       display: flex;
       gap: 6px;
       overflow-x: auto;
-      padding-bottom: 6px;
-      margin-bottom: 18px;
-      scrollbar-width: thin;
+      scrollbar-width: none;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 20px;
     }
+    .nav-tabs::-webkit-scrollbar { display: none; }
     .tab-btn {
-      padding: 10px 16px;
-      background: #ebdcc6;
-      border: 1px solid #cbb799;
+      padding: 8px 14px;
       border-radius: 10px;
       font-size: 13px;
-      font-weight: bold;
-      color: #3e2e1e;
+      font-weight: 700;
+      border: 1px solid var(--border-ink);
+      background: #ffffff;
+      color: var(--text-muted);
       cursor: pointer;
       white-space: nowrap;
-      transition: all 0.2s;
+      transition: all 0.2s ease;
+      font-family: 'Noto Serif KR', serif;
     }
-    .tab-btn:hover { background: #dfcbaf; color: #000; }
+    .tab-btn:hover {
+      background: #f5ede0;
+      color: var(--text-main);
+    }
     .tab-btn.active {
-      background: #1e1510;
-      color: #f7d88c;
-      border-color: var(--gold);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      background: var(--dancheong-red);
+      color: #fff6df;
+      border-color: var(--dancheong-red-dark);
+      box-shadow: 0 2px 6px rgba(140, 29, 29, 0.25);
     }
+
+    .view-control {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      max-width: 860px;
+      margin: 0 auto 12px;
+      padding: 0 20px;
+    }
+    .control-btn {
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      border: 1px solid var(--border-ink);
+      background: #fff;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .control-btn:hover { background: #f5ede0; color: #000; }
+
     .category-section {
-      background: var(--paper);
-      border: 2px solid var(--border);
-      border-radius: 16px;
-      padding: 24px 20px;
-      margin-bottom: 16px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.03);
       display: none;
+      background: var(--card-bg);
+      border: 1px solid var(--border-ink);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.02);
+      animation: fadeIn 0.3s ease;
     }
     .category-section.active-panel { display: block; }
-    .show-all .category-section { display: block !important; margin-bottom: 24px; }
+    body.show-all .category-section { display: block !important; margin-bottom: 30px; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     .cat-title {
-      font-family: "Noto Serif KR", "Batang", serif;
+      font-family: 'Noto Serif KR', serif;
       font-size: 18px;
       font-weight: 900;
       color: var(--dancheong-red);
-      border-bottom: 2px solid var(--border);
-      padding-bottom: 8px;
-      margin-bottom: 16px;
+      border-bottom: 2px solid var(--dancheong-gold-light);
+      padding-bottom: 10px;
+      margin-bottom: 18px;
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
-    .score-banner {
-      background: linear-gradient(135deg, #fef3c7, #fde68a);
-      border: 2px solid #f59e0b;
-      padding: 18px;
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
+    .badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-family: 'Pretendard', sans-serif;
     }
-    .score-val { font-size: 38px; font-weight: 900; color: #b45309; }
-    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 14px; }
-    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-bottom: 14px; }
+
     .card-box {
-      background: #ffffff;
-      border: 1px solid #e7ddcd;
-      padding: 14px;
+      border: 1px solid var(--border-ink);
       border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 12px;
+      background: #fff;
     }
-    .table-pillars {
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+
+    table.saju-tbl {
       width: 100%;
       border-collapse: collapse;
       text-align: center;
-      margin-bottom: 16px;
-      background: #fff;
-    }
-    .table-pillars th, .table-pillars td {
-      border: 1px solid #e2d5c3;
-      padding: 10px 8px;
-      font-size: 13px;
-    }
-    .table-pillars th { background: #faf4e8; color: #4a3525; font-weight: bold; }
-    .pillar-ganji { font-size: 18px; font-weight: 900; color: var(--dancheong-red); }
-    .gauge-bar-bg { background: #e7e5e4; border-radius: 8px; height: 12px; overflow: hidden; margin-top: 4px; }
-    .gauge-bar-fill { height: 100%; border-radius: 8px; }
-    .badge {
-      display: inline-block;
-      padding: 3px 8px;
-      border-radius: 6px;
-      font-size: 11px;
-      font-weight: bold;
-    }
-    .badge-auspicious { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
-    .badge-danger { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
-    .chat-bubble-user {
-      background: #8c1d1d;
-      color: #fff6df;
-      padding: 12px 16px;
-      border-radius: 16px 16px 4px 16px;
-      max-width: 85%;
-      margin-left: auto;
-      margin-bottom: 10px;
-      font-size: 13px;
-    }
-    .chat-bubble-ai {
-      background: #ffffff;
-      border: 1px solid #c8b08a;
-      color: #2c2219;
-      padding: 14px 18px;
-      border-radius: 16px 16px 16px 4px;
-      max-width: 88%;
-      margin-right: auto;
       margin-bottom: 14px;
       font-size: 13px;
-      line-height: 1.7;
     }
-    footer {
+    table.saju-tbl th, table.saju-tbl td {
+      border: 1px solid var(--border-ink);
+      padding: 8px 4px;
+    }
+    table.saju-tbl th {
+      background: #f7eedc;
+      color: #4a3525;
+      font-weight: 700;
+    }
+
+    .footer {
       text-align: center;
-      margin-top: 30px;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 40px;
       padding-top: 20px;
-      border-top: 1px solid #d5c19e;
-      font-size: 11px;
-      color: #78716c;
+      border-top: 1px solid var(--border-ink);
     }
+
     @media print {
-      .action-toolbar, .nav-tabs { display: none !important; }
+      .nav-bar-container, .view-control { display: none !important; }
       .category-section { display: block !important; page-break-inside: avoid; border: 1px solid #ccc; box-shadow: none; }
-      body { background: #fff; padding: 0; }
+      body { background: #fff !important; }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="dancheong-bar"></div>
-    <header class="royal-header">
-      <h1>
-        <span class="seal">天</span>
-        <span>천명(天命) 欽定萬歲曆 감결 서책</span>
-      </h1>
-      <p style="font-size: 12px; color: #e6d5b8; margin-top: 4px;">조선 왕실 규장각 명리학 원전 · 한국천문연구원 역법 기반 고정밀 감정서</p>
-      <div class="user-profile-badge">
-        <span>성명: <strong>${safeStr(name)} 님</strong></span>
-        <span>성별: <strong>${s ? safeStr(s.userInfo.genderKr) : "-"}</strong></span>
-        <span>생년월일: <strong>${s ? safeStr(s.userInfo.solarDateString) : "-"}</strong></span>
-        <span>태어난 시각: <strong>${s ? (s.userInfo.isUnknownHour ? "시간 미상" : safeStr(s.userInfo.birthHour) + "시 " + safeStr(s.userInfo.birthMinute) + "분") : "-"}</strong></span>
-        <span>발행 일시: <strong>${nowStr}</strong></span>
-      </div>
-    </header>
 
-    <!-- 도구 바 -->
-    <div class="action-toolbar">
-      <div style="font-size: 12px; color: #57534e;">
-        👉 <strong>카테고리 탭</strong>을 클릭하면 해당 항목으로 즉시 전환됩니다.
-      </div>
-      <div style="display: flex; gap: 6px;">
-        <button type="button" class="view-toggle-btn" onclick="toggleAllView(this)">
-          <span>📖 전체 한눈에 보기</span>
-        </button>
-        <button type="button" class="view-toggle-btn" onclick="copyReportText()">
-          <span>📋 텍스트 복사</span>
-        </button>
-        <button type="button" class="view-toggle-btn" onclick="window.print()">
-          <span>🖨️ 인쇄</span>
-        </button>
-      </div>
+  <header class="header-banner">
+    <h1 class="header-title">천명(天命) 정통 사주 & 인터랙티브 디지털 서책</h1>
+    <p class="header-sub">PDF의 한계를 뛰어넘어, 브라우저에서 카테고리별로 자유롭게 열람하는 독립형 운세 비결서</p>
+    <div class="user-pill">
+      <span>👤 <strong>${safeStr(name)}</strong> 도반</span>
+      <span>|</span>
+      <span>📅 ${safeStr(todayStr)}</span>
+      ${s ? `<span>|</span><span>🧬 ${safeStr(s.iljuDetail ? s.iljuDetail.name : '')} (${safeStr(s.iljuDetail ? s.iljuDetail.symbol : '')})</span>` : ''}
     </div>
+  </header>
 
-    <!-- 카테고리 탭 네비게이션 -->
-    <nav class="nav-tabs" id="categoryNavTabs">
+  <!-- Navigation Bar (Sticky Tabs) -->
+  <div class="nav-bar-container">
+    <div class="nav-tabs">
       ${navCategories.map((c, idx) => `
-        <button type="button" class="tab-btn ${c.id === firstCatId ? 'active' : ''}" onclick="selectCategory('${c.id}', this)">
-          ${c.name}
-        </button>
+        <button type="button" class="tab-btn ${idx === 0 ? 'active' : ''}" onclick="selectCategory('${c.id}', this)">${c.name}</button>
       `).join("")}
-    </nav>
+    </div>
+  </div>
+
+  <div class="view-control">
+    <button type="button" class="control-btn" onclick="toggleAllView(this)"><span>📖 전체 한눈에 보기</span></button>
+    <button type="button" class="control-btn" onclick="window.print()"><span>🖨️ 인쇄하기</span></button>
+    <button type="button" class="control-btn" onclick="copyReportText()"><span>📋 텍스트 복사</span></button>
+  </div>
+
+  <div class="container">
 
     <!-- 1. 오늘의 운세 카테고리 -->
-    ${incDaily && f ? `
+    ${incDaily ? `
     <section id="panel-daily" class="category-section ${firstCatId === 'daily' ? 'active-panel' : ''}">
       <div class="cat-title">
-        <span>🌟 오늘의 천기 & 일진 운세 (${safeStr(f.dateString)})</span>
-        <span class="badge" style="background:#fef3c7; color:#92400e;">${safeStr(f.todayTenGod)}</span>
+        <span>🌟 오늘의 정밀 운세 & 일진 분석 (${safeStr(f.dateString)})</span>
+        <span class="badge" style="background:#fef3c7; color:#92400e;">${safeStr(f.todayIljin ? f.todayIljin.name : '')} (${safeStr(f.todayTenGod)})</span>
       </div>
-      <div class="score-banner">
-        <div>
-          <div style="font-size: 12px; color: #78350f; font-weight: bold;">오늘의 운세 지수</div>
-          <div style="font-size: 16px; font-weight: 900; color: #451a03; margin-top: 2px;">
-            ${f.totalScore >= 90 ? "🌟 대대길(大大吉) - 만사형통의 날" : (f.totalScore >= 80 ? "✨ 대길(大吉) - 순풍에 돛 단 날" : "🌱 평온(平溫) - 실속 챙기는 날")}
+
+      <div class="card-box" style="background: linear-gradient(to right, #fffbeb, #fef3c7); border-color: #fde68a;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h3 class="font-serif" style="font-size: 16px; font-weight: 800; color: #78350f;">${safeStr(f.theme)}</h3>
+            <p style="font-size: 13px; color: #92400e; margin-top: 4px; line-height: 1.6;">${safeStr(f.summary)}</p>
           </div>
-          <p style="font-size: 12px; color: #78350f; margin-top: 4px;">${safeStr(f.theme)}</p>
-        </div>
-        <div class="score-val">${f.totalScore}점</div>
-      </div>
-      <div class="card-box" style="margin-bottom: 12px; background: #fffcf4; border-color: #f3e5ca;">
-        <strong style="color: #8c1d1d; display: block; margin-bottom: 4px; font-size: 13px;">📜 천기 총평:</strong>
-        <p style="font-size: 13px; color: #44403c; line-height: 1.7;">${safeStr(f.summary)}</p>
-      </div>
-      <div class="grid-2">
-        <div class="card-box" style="background: #f0fdf4; border-color: #bbf7d0;">
-          <strong style="color: #166534; display: block; margin-bottom: 4px;">✅ 오늘의 추천:</strong>
-          <p style="font-size: 12px; color: #14532d;">${safeStr(f.action)}</p>
-        </div>
-        <div class="card-box" style="background: #fef2f2; border-color: #fecaca;">
-          <strong style="color: #991b1b; display: block; margin-bottom: 4px;">⚠️ 오늘의 주의:</strong>
-          <p style="font-size: 12px; color: #7f1d1d;">${safeStr(f.avoid)}</p>
+          <div style="text-align: right; margin-left: 14px;">
+            <span style="font-size: 32px; font-weight: 900; color: #b45309; line-height: 1;">${f.totalScore}점</span>
+            <span style="display: block; font-size: 11px; font-weight: 700; color: #b45309; margin-top: 2px;">${f.totalScore >= 90 ? "대대길(大大吉)" : (f.totalScore >= 80 ? "대길(大吉)" : "평온(平溫)")}</span>
+          </div>
         </div>
       </div>
-      <div class="grid-4">
-        <div class="card-box" style="text-align: center;">
-          <span style="font-size: 11px; color: #78716c; display: block;">재물운</span>
-          <strong style="font-size: 18px; color: #b45309;">${f.scores ? f.scores.wealth : 85}점</strong>
+
+      <!-- 4대 운세 세부 지수 -->
+      <div class="grid-4" style="margin-bottom: 12px;">
+        <div class="card-box" style="text-align: center; background: #fffbeb; padding: 10px;">
+          <span style="font-size: 11px; color: #92400e; font-weight: 700; display: block;">💰 재물운</span>
+          <strong style="font-size: 16px; color: #78350f;">${f.scores ? f.scores.money : 85}%</strong>
         </div>
-        <div class="card-box" style="text-align: center;">
-          <span style="font-size: 11px; color: #78716c; display: block;">애정운</span>
-          <strong style="font-size: 18px; color: #be123c;">${f.scores ? f.scores.love : 88}점</strong>
+        <div class="card-box" style="text-align: center; background: #fff1f2; padding: 10px;">
+          <span style="font-size: 11px; color: #be123c; font-weight: 700; display: block;">💖 애정운</span>
+          <strong style="font-size: 16px; color: #881337;">${f.scores ? f.scores.love : 88}%</strong>
         </div>
-        <div class="card-box" style="text-align: center;">
-          <span style="font-size: 11px; color: #78716c; display: block;">건강운</span>
-          <strong style="font-size: 18px; color: #047857;">${f.scores ? f.scores.health : 90}점</strong>
+        <div class="card-box" style="text-align: center; background: #ecfdf5; padding: 10px;">
+          <span style="font-size: 11px; color: #047857; font-weight: 700; display: block;">🌿 건강운</span>
+          <strong style="font-size: 16px; color: #064e3b;">${f.scores ? f.scores.health : 90}%</strong>
         </div>
-        <div class="card-box" style="text-align: center;">
-          <span style="font-size: 11px; color: #78716c; display: block;">직업/학업운</span>
-          <strong style="font-size: 18px; color: #1d4ed8;">${f.scores ? f.scores.career : 92}점</strong>
+        <div class="card-box" style="text-align: center; background: #f0f9ff; padding: 10px;">
+          <span style="font-size: 11px; color: #0369a1; font-weight: 700; display: block;">💼 직업운</span>
+          <strong style="font-size: 16px; color: #0c4a6e;">${f.scores ? f.scores.career : 92}%</strong>
         </div>
       </div>
-      ${f.lucky ? `
-      <div class="card-box" style="background: #fafaf9; font-size: 12px;">
-        🎨 행운의 색: <strong>${safeStr(f.lucky.color)}</strong> · 🔢 행운의 번호: <strong>${safeStr(f.lucky.numbers)}</strong> · 🧭 길한 방위: <strong>${safeStr(f.lucky.direction)}</strong>
+
+      <!-- 🐾 12지신 수호동물 파트너 인사 & 명언 -->
+      <div class="card-box" style="background: #fffbeb; border-color: #fde68a; display: flex; align-items: center; gap: 14px; margin-bottom: 12px;">
+        <span style="font-size: 38px; line-height: 1;">${mascot.emoji}</span>
+        <div>
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
+            <span class="badge" style="background: #fde68a; color: #78350f;">수호동물 ${safeStr(mascot.name)} ${mascot.emoji}</span>
+            <span style="font-size: 11px; color: #78716c;">평생의 든든한 파트너</span>
+          </div>
+          <p style="font-size: 13px; font-weight: 700; color: #1c1917;">"${safeStr(name)}님, ${safeStr(mascot.greeting)} 오늘 하루도 내가 든든하게 지켜줄게! 💖"</p>
+          <p style="font-size: 12px; color: #92400e; margin-top: 2px;">💬 <em>${safeStr(mascot.quotes ? mascot.quotes[0] : '너의 직관과 결단을 믿어봐! 오늘은 감이 최고야 ✨')}</em></p>
+        </div>
+      </div>
+
+      ${f.twelveStage ? `
+      <div class="card-box" style="background: #fdfbf7; border-color: #e7ddcd; margin-bottom: 12px;">
+        <strong style="color: #8c1d1d; font-size: 13px;">⚡ 12운성 일진 에너지: ${safeStr(f.twelveStage.name)}(${safeStr(f.twelveStage.hanja)}) · ${safeStr(f.twelveStage.badge)} (${f.twelveStage.power}점)</strong>
+        <p style="font-size: 12px; color: #57534e; margin-top: 4px; line-height: 1.6;">${safeStr(f.twelveStage.desc)}</p>
       </div>
       ` : ''}
+
+      ${f.hapChungSignals && f.hapChungSignals.length > 0 ? `
+      <div style="margin-bottom: 12px;">
+        ${f.hapChungSignals.map(sig => `
+          <div style="padding: 8px 12px; background: #fff; border: 1px solid var(--border-ink); border-radius: 8px; margin-bottom: 6px; font-size: 12px; display: flex; align-items: center; gap: 8px;">
+            <span class="badge" style="background: ${sig.type === 'HAP' ? '#d1fae5; color: #065f46;' : (sig.type === 'CHUNG' ? '#ffe4e6; color: #9f1239;' : '#f5f5f4; color: #292524;')}">${safeStr(sig.label)}</span>
+            <span style="color: #44403c;">${safeStr(sig.desc)}</span>
+          </div>
+        `).join("")}
+      </div>
+      ` : ''}
+
+      <div class="grid-2" style="margin-bottom: 12px;">
+        <div class="card-box" style="background: #f0fdf4; border-color: #bbf7d0;">
+          <strong style="color: #166534; font-size: 13px; display: block; margin-bottom: 4px;">✅ 오늘의 추천 행동:</strong>
+          <p style="font-size: 12px; color: #14532d; line-height: 1.6;">${safeStr(f.action)}</p>
+        </div>
+        <div class="card-box" style="background: #fff1f2; border-color: #fecdd3;">
+          <strong style="color: #9f1239; font-size: 13px; display: block; margin-bottom: 4px;">⚠️ 오늘의 주의 행동:</strong>
+          <p style="font-size: 12px; color: #881337; line-height: 1.6;">${safeStr(f.avoid)}</p>
+        </div>
+      </div>
+
+      ${f.lucky ? `
+      <div class="card-box" style="background: #fafaf9; font-size: 12px; margin-bottom: 12px;">
+        🎨 행운의 색: <strong>${safeStr(f.lucky.color)}</strong> · 🔢 행운의 번호: <strong>${safeStr(f.lucky.numbers)}</strong> · 🧭 길한 방위: <strong>${safeStr(f.lucky.direction)}</strong> · 🍲 추천 음식: <strong>${safeStr(f.lucky.food)}</strong>
+      </div>
+      ` : ''}
+
+      <!-- ⏰ 시간대별 정밀 운세 리듬 & 12시진 흐름표 -->
+      <div class="card-box">
+        <strong style="color: #4a3525; font-size: 13px; display: block; margin-bottom: 8px;">⏰ 시간대별 일진 리듬 & 길흉 흐름표:</strong>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px; font-size: 11px;">
+          ${hourlyList.map(slot => `
+            <div style="border: 1px solid #e7ddcd; padding: 8px 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; background: #fff;">
+              <div style="padding-right: 8px;">
+                <strong style="color: #1c1917;">${safeStr(slot.time)}</strong>
+                <span style="color: #b45309; font-weight: bold; margin-left: 4px;">${safeStr(slot.tenGodBadge)}</span>
+                <p style="color: #78716c; margin-top: 2px;">${safeStr(slot.desc)}</p>
+              </div>
+              <span class="badge" style="background: ${slot.status && slot.status.includes('吉') ? '#fef3c7; color: #92400e; border: 1px solid #fde68a;' : (slot.status && slot.status.includes('凶') ? '#ffe4e6; color: #9f1239; border: 1px solid #fecdd3;' : '#f5f5f4; color: #292524; border: 1px solid #e7e5e4;')}">${safeStr(slot.status)}</span>
+            </div>
+          `).join("")}
+        </div>
+      </div>
     </section>
     ` : ''}
 
     <!-- 2. 사주 원국 카테고리 -->
-    ${incSaju && s ? `
+    ${incSaju ? `
     <section id="panel-saju" class="category-section ${firstCatId === 'saju' ? 'active-panel' : ''}">
       <div class="cat-title">
-        <span>📜 사주 원국 (4주 8자 & 10년 대운)</span>
-        <span class="badge" style="background:#e0e7ff; color:#3730a3;">${safeStr(s.iljuDetail.name)}</span>
+        <span>📜 사주 4주 8자 (四柱八字) 원국 만세력</span>
+        <span class="badge" style="background:#fee2e2; color:#991b1b;">일간: ${safeStr(s.pillars.day.gan.char)}(${safeStr(s.pillars.day.gan.hanja)})</span>
       </div>
-      <table class="table-pillars">
+
+      <table class="saju-tbl">
         <thead>
           <tr>
-            <th>구분</th>
-            <th>시주(時柱)</th>
-            <th>일주(日柱) [본원]</th>
-            <th>월주(月柱)</th>
-            <th>년주(年柱)</th>
+            <th style="width: 16%;">구분</th>
+            <th style="width: 21%;">시주 (時柱)</th>
+            <th style="width: 21%; background: #fef3c7; color: #78350f;">★ 일주 (日柱)</th>
+            <th style="width: 21%;">월주 (月柱)</th>
+            <th style="width: 21%;">년주 (年柱)</th>
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td style="background:#faf4e8; font-weight:bold;">천간(天干)</td>
-            <td class="pillar-ganji">${s.pillars.time ? safeStr(s.pillars.time.gan.char) : "모름"}</td>
-            <td class="pillar-ganji" style="color: #b45309;">${safeStr(s.pillars.day.gan.char)}</td>
-            <td class="pillar-ganji">${safeStr(s.pillars.month.gan.char)}</td>
-            <td class="pillar-ganji">${safeStr(s.pillars.year.gan.char)}</td>
+          <tr style="background: #fafaf9;">
+            <td style="font-weight: bold; color: #78716c; font-size: 11px;">천간 십신</td>
+            <td style="font-weight: bold; color: #b45309;">${s.pillars.time ? getTenGodName(s.pillars.time.tenGodGan) : '모름'}</td>
+            <td style="font-weight: 900; color: #78350f; background: #fffbeb;">본원 (나)</td>
+            <td style="font-weight: bold; color: #b45309;">${getTenGodName(s.pillars.month.tenGodGan)}</td>
+            <td style="font-weight: bold; color: #b45309;">${getTenGodName(s.pillars.year.tenGodGan)}</td>
           </tr>
-          <tr>
-            <td style="background:#faf4e8; font-weight:bold;">지지(地支)</td>
-            <td class="pillar-ganji">${s.pillars.time ? safeStr(s.pillars.time.ji.char) : "모름"}</td>
-            <td class="pillar-ganji" style="color: #b45309;">${safeStr(s.pillars.day.ji.char)}</td>
-            <td class="pillar-ganji">${safeStr(s.pillars.month.ji.char)}</td>
-            <td class="pillar-ganji">${safeStr(s.pillars.year.ji.char)}</td>
+          <tr style="font-size: 18px; font-weight: 900;">
+            <td style="font-size: 12px; color: #78716c;">천간 (天干)</td>
+            <td>${s.pillars.time ? `${s.pillars.time.gan.char} (${s.pillars.time.gan.hanja})` : '-'}</td>
+            <td style="background: #fffbeb; color: #78350f;">${s.pillars.day.gan.char} (${s.pillars.day.gan.hanja})</td>
+            <td>${s.pillars.month.gan.char} (${s.pillars.month.gan.hanja})</td>
+            <td>${s.pillars.year.gan.char} (${s.pillars.year.gan.hanja})</td>
           </tr>
-          <tr>
-            <td style="background:#faf4e8; font-weight:bold;">십신(十神)</td>
-            <td>${s.pillars.time ? safeStr(getTenGodName(s.pillars.time)) : "-"}</td>
-            <td><strong>본인(我)</strong></td>
-            <td>${safeStr(getTenGodName(s.pillars.month))}</td>
-            <td>${safeStr(getTenGodName(s.pillars.year))}</td>
+          <tr style="font-size: 18px; font-weight: 900;">
+            <td style="font-size: 12px; color: #78716c;">지지 (地支)</td>
+            <td>${s.pillars.time ? `${s.pillars.time.ji.char} (${s.pillars.time.ji.hanja})` : '-'}</td>
+            <td style="background: #fffbeb; color: #78350f;">${s.pillars.day.ji.char} (${s.pillars.day.ji.hanja})</td>
+            <td>${s.pillars.month.ji.char} (${s.pillars.month.ji.hanja})</td>
+            <td>${s.pillars.year.ji.char} (${s.pillars.year.ji.hanja})</td>
+          </tr>
+          <tr style="background: #fafaf9;">
+            <td style="font-weight: bold; color: #78716c; font-size: 11px;">지지 십신</td>
+            <td style="font-weight: bold; color: #57534e;">${s.pillars.time ? getTenGodName(s.pillars.time.tenGodJi) : '모름'}</td>
+            <td style="font-weight: bold; color: #78350f; background: #fffbeb;">${getTenGodName(s.pillars.day.tenGodJi)}</td>
+            <td style="font-weight: bold; color: #57534e;">${getTenGodName(s.pillars.month.tenGodJi)}</td>
+            <td style="font-weight: bold; color: #57534e;">${getTenGodName(s.pillars.year.tenGodJi)}</td>
+          </tr>
+          <tr style="background: #fff;">
+            <td style="font-weight: bold; color: #8c1d1d; font-size: 11px;">12운성</td>
+            <td style="font-weight: bold; color: #8c1d1d;">${s.pillars.time ? getPillarStage(s.pillars.day.gan.char, s.pillars.time.ji.char) : '모름'}</td>
+            <td style="font-weight: 900; color: #8c1d1d; background: #fffbeb;">${getPillarStage(s.pillars.day.gan.char, s.pillars.day.ji.char)}</td>
+            <td style="font-weight: bold; color: #8c1d1d;">${getPillarStage(s.pillars.day.gan.char, s.pillars.month.ji.char)}</td>
+            <td style="font-weight: bold; color: #8c1d1d;">${getPillarStage(s.pillars.day.gan.char, s.pillars.year.ji.char)}</td>
           </tr>
         </tbody>
       </table>
-      <div class="card-box" style="margin-bottom: 12px; background: #fffcf4;">
-        <strong style="color: #8c1d1d; display: block; margin-bottom: 6px; font-size: 13px;">👑 ${safeStr(s.iljuDetail.name)} (${safeStr(s.iljuDetail.symbol)}) 일주론:</strong>
-        <p style="font-size: 13px; color: #44403c; line-height: 1.7;">${safeStr(s.iljuDetail.traits)}</p>
+
+      <!-- 60갑자 일주론 상세 해설 -->
+      <div class="card-box" style="background: #fffaf0; border-color: #fbd38d; margin-bottom: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #fbd38d; padding-bottom: 8px; margin-bottom: 10px;">
+          <h3 class="font-serif" style="font-size: 16px; font-weight: 900; color: #7b341e;">🌿 60갑자 일주론 심층 분석: ${safeStr(s.iljuDetail.name)} (${safeStr(s.iljuDetail.symbol)})</h3>
+          <span class="badge" style="background: #feebc8; color: #7b341e;">기질: ${safeStr(s.iljuDetail.nature)}</span>
+        </div>
+        <p style="font-size: 13px; color: #44403c; line-height: 1.7; margin-bottom: 10px;"><strong>본원 성향:</strong> ${safeStr(s.iljuDetail.desc)}</p>
+        <div class="grid-2" style="font-size: 12px; margin-bottom: 8px;">
+          <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px;">
+            <strong style="color: #276749; display: block; margin-bottom: 4px;">✨ 타고난 강점:</strong>
+            <p style="color: #4a5568; line-height: 1.6;">${safeStr(s.iljuDetail.strength)}</p>
+          </div>
+          <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px;">
+            <strong style="color: #9b2c2c; display: block; margin-bottom: 4px;">⚠️ 주의할 점:</strong>
+            <p style="color: #4a5568; line-height: 1.6;">${safeStr(s.iljuDetail.caution)}</p>
+          </div>
+        </div>
+        <div class="grid-2" style="font-size: 12px;">
+          <div style="background: #fff5f5; border: 1px solid #feb2b2; border-radius: 8px; padding: 10px;">
+            <strong style="color: #9b2c2c; display: block; margin-bottom: 4px;">💖 연애 스타일:</strong>
+            <p style="color: #4a5568; line-height: 1.6;">${safeStr(s.iljuDetail.loveStyle)}</p>
+          </div>
+          <div style="background: #fffaf0; border: 1px solid #fbd38d; border-radius: 8px; padding: 10px;">
+            <strong style="color: #7b341e; display: block; margin-bottom: 4px;">💰 재물 스타일:</strong>
+            <p style="color: #4a5568; line-height: 1.6;">${safeStr(s.iljuDetail.wealthStyle)}</p>
+          </div>
+        </div>
       </div>
+
+      <!-- 3대 복록 카드 -->
       ${s.blessingPoints && s.blessingPoints.length > 0 ? `
-      <div class="card-box" style="background: #faf5ed; border-color: #d4a359;">
-        <strong style="color: #b45309; display: block; margin-bottom: 8px; font-size: 13px;">🧧 내 사주가 특별히 좋은 이유 3가지 (타고난 복록):</strong>
-        <ul style="padding-left: 18px; font-size: 12px; color: #57534e; line-height: 1.8;">
-          ${s.blessingPoints.map(b => `<li><strong>${safeStr(b.title)}</strong>: ${safeStr(b.desc)}</li>`).join("")}
-        </ul>
+      <div style="margin-bottom: 14px;">
+        <strong class="font-serif" style="color: #78350f; font-size: 14px; display: block; margin-bottom: 8px;">✨ 내 사주가 특별히 좋은 이유 3가지 (3대 복록):</strong>
+        <div class="grid-3">
+          ${s.blessingPoints.map((pt, idx) => `
+            <div class="card-box" style="margin-bottom: 0;">
+              <strong style="color: #b45309; font-size: 12px; display: block; margin-bottom: 4px;">POINT 0${idx + 1}. ${safeStr(pt.title)}</strong>
+              <p style="font-size: 11px; color: #57534e; line-height: 1.6;">${safeStr(pt.desc)}</p>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+      ` : ''}
+
+      <!-- 10년 주기 대운 흐름표 -->
+      ${s.daeunList && s.daeunList.length > 0 ? `
+      <div class="card-box">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+          <strong style="color: #1c1917; font-size: 13px;">🌊 10년 주기 대운(大運) 흐름표</strong>
+          <span style="font-size: 11px; color: #78716c;">${s.isForward ? '순행(順行)' : '역행(逆行)'} · 대운수 ${s.daeunNumber || 1}</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(70px, 1fr)); gap: 6px; text-align: center; font-size: 11px;">
+          ${s.daeunList.map(d => `
+            <div style="border: 1px solid var(--border-ink); border-radius: 8px; padding: 6px 2px; background: #fafaf9;">
+              <span style="font-size: 10px; color: #78716c; display: block;">${d.startAge}~${d.endAge}세</span>
+              <strong style="font-size: 13px; color: #1c1917; display: block; margin: 2px 0;">${d.ganChar}${d.jiChar}</strong>
+              <span style="font-size: 10px; color: #b45309; font-weight: bold; display: block;">${getTenGodName(d.tenGod)}</span>
+            </div>
+          `).join("")}
+        </div>
       </div>
       ` : ''}
     </section>
     ` : ''}
 
-    <!-- 3. 오행 밸런스 & 용신 카테고리 -->
-    ${incElements && s ? `
+    <!-- 3. 오행 & 용신 카테고리 -->
+    ${incElements ? `
     <section id="panel-elements" class="category-section ${firstCatId === 'elements' ? 'active-panel' : ''}">
       <div class="cat-title">
-        <span>☯ 오행 밸런스 & 조후·억부 맞춤 용신</span>
-        <span class="badge" style="background:#f3e8ff; color:#6b21a8;">${safeStr(s.strengthStatus)}</span>
+        <span>☯ 5대 오행 분포 & 맞춤 용신(用神) 처방</span>
+        <span class="badge" style="background:#e0f2fe; color:#0369a1;">체질: ${safeStr(s.strengthStatus)} (${s.strengthScore || 50}점)</span>
       </div>
-      <div class="grid-2">
+
+      <div class="grid-2" style="margin-bottom: 14px;">
         <div class="card-box">
-          <strong style="display: block; margin-bottom: 10px; font-size: 13px;">📊 5대 오행 에너지 분포:</strong>
-          ${Object.entries(s.elementPercentages || {}).map(([el, pct]) => {
-            const colors = { "목": "#10b981", "화": "#ef4444", "토": "#f59e0b", "금": "#64748b", "수": "#3b82f6" };
-            return `
-              <div style="margin-bottom: 8px; font-size: 12px;">
-                <div style="display: flex; justify-content: space-between; font-weight: bold;">
-                  <span>${el}(${el==='목'?'木':el==='화'?'火':el==='토'?'土':el==='금'?'金':'水'})</span>
-                  <span>${pct}%</span>
+          <strong style="font-size: 13px; color: #1c1917; display: block; margin-bottom: 10px;">5대 오행 비율 & 분포:</strong>
+          <div style="space-y: 8px;">
+            ${[
+              { name: "목(木)", pct: s.elements["목"] || 0, color: "#10b981" },
+              { name: "화(火)", pct: s.elements["화"] || 0, color: "#f43f5e" },
+              { name: "토(土)", pct: s.elements["토"] || 0, color: "#f59e0b" },
+              { name: "금(金)", pct: s.elements["금"] || 0, color: "#94a3b8" },
+              { name: "수(水)", pct: s.elements["수"] || 0, color: "#0ea5e9" }
+            ].map(el => `
+              <div style="margin-bottom: 8px;">
+                <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; margin-bottom: 2px;">
+                  <span>${el.name}</span>
+                  <span>${el.pct}%</span>
                 </div>
-                <div class="gauge-bar-bg">
-                  <div class="gauge-bar-fill" style="width: ${pct}%; background: ${colors[el] || '#888'};"></div>
+                <div style="width: 100%; height: 8px; background: #f5f5f4; border-radius: 4px; overflow: hidden;">
+                  <div style="width: ${el.pct}%; height: 100%; background: ${el.color};"></div>
                 </div>
               </div>
-            `;
-          }).join("")}
+            `).join("")}
+          </div>
         </div>
-        <div class="card-box" style="background: #fdfaf4; border-color: #d4a359; display: flex; flex-direction: column; justify-content: center;">
-          <span style="font-size: 12px; color: #78716c; font-weight: bold;">사주 균형을 이끄는 핵심 용신(用神)</span>
-          <div style="font-size: 26px; font-weight: 900; color: #8c1d1d; margin: 4px 0;">용신: ${safeStr(s.yongsin)}</div>
-          <p style="font-size: 12px; color: #57534e; line-height: 1.7;">${safeStr(s.yongsinDesc)}</p>
+
+        <div class="card-box" style="background: #fafaf9;">
+          <strong style="font-size: 13px; color: #1c1917; display: block; margin-bottom: 6px;">⚖️ 신강/신약 체질 종합 판정:</strong>
+          <p style="font-size: 12px; color: #57534e; line-height: 1.7;">${safeStr(s.strengthDesc)}</p>
+          <div style="margin-top: 10px; padding: 10px; background: #fff; border-radius: 8px; border: 1px solid var(--border-ink);">
+            <strong style="color: #b45309; font-size: 12px; display: block;">🛡️ 수호 용신(用神): [${safeStr(s.yongsin)}]</strong>
+            <p style="font-size: 11px; color: #78716c; margin-top: 2px;">${safeStr(s.yongsinDesc)}</p>
+          </div>
         </div>
       </div>
+
+      <!-- 결핍 오행 개운 처방 -->
+      ${s.missingElements && s.missingElements.length > 0 ? `
+      <div class="card-box" style="margin-bottom: 14px;">
+        <strong style="color: #1c1917; font-size: 13px; display: block; margin-bottom: 8px;">💧 결핍된 오행 분석 & 맞춤 개운 비책:</strong>
+        <div style="space-y: 8px;">
+          ${s.missingElements.map(m => `
+            <div style="padding: 10px; background: #fff; border: 1px solid var(--border-ink); border-radius: 8px; margin-bottom: 6px;">
+              <strong style="color: #8c1d1d; font-size: 12px;">${safeStr(m.name)} 기운 결핍</strong>
+              <p style="font-size: 11px; color: #57534e; margin-top: 2px;">${safeStr(m.desc)}</p>
+              <p style="font-size: 11px; color: #047857; font-weight: bold; margin-top: 4px;">🌿 생활 개운 처방: ${safeStr(m.remedy)}</p>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+      ` : `
+      <div class="card-box" style="background: #ecfdf5; border-color: #a7f3d0; margin-bottom: 14px; font-size: 12px; color: #065f46;">
+        🎉 <strong>오행구족(五行具足):</strong> 5대 오행이 원국에 고루 조화를 이루어 한쪽으로 결핍되지 않은 평온한 기운입니다.
+      </div>
+      `}
+
+      <!-- 없는 십신 특화 잠재력 카드 -->
+      ${s.missingTenGods && s.missingTenGods.length > 0 ? `
+      <div class="card-box">
+        <strong style="color: #1c1917; font-size: 13px; display: block; margin-bottom: 8px;">🌟 없는 십신(十神)의 숨겨진 잠재력:</strong>
+        <div style="space-y: 8px;">
+          ${s.missingTenGods.map(tg => `
+            <div style="padding: 10px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; margin-bottom: 6px;">
+              <strong style="color: #78350f; font-size: 12px;">${safeStr(tg.title)}</strong>
+              <p style="font-size: 11px; color: #92400e; margin-top: 2px;">${safeStr(tg.desc)}</p>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+      ` : ''}
     </section>
     ` : ''}
 
-    <!-- 4. 8대 신살 분석 카테고리 -->
+    <!-- 4. 8대 신살 카테고리 -->
     ${incSinsal && s && s.sinsal ? `
     <section id="panel-sinsal" class="category-section ${firstCatId === 'sinsal' ? 'active-panel' : ''}">
       <div class="cat-title">
-        <span>🔮 8대 신살 상세 해설</span>
-        <span class="badge" style="background:#e0f2fe; color:#0369a1;">신살 분석</span>
+        <span>🔮 사주 8대 핵심 신살(神煞) 분석</span>
+        <span class="badge" style="background:#f3e8ff; color:#7e22ce;">${s.sinsal.length}개 신살 보유</span>
       </div>
-      <div style="display: flex; flex-direction: column; gap: 8px;">
-        ${s.sinsal.map(item => `
-          <div class="card-box" style="display: flex; align-items: flex-start; gap: 10px;">
-            <span class="badge ${item.type === '길신' ? 'badge-auspicious' : 'badge-danger'}" style="margin-top: 2px;">
-              ${safeStr(item.type || '신살')}
-            </span>
-            <div>
-              <strong style="color: #1c1917; font-size: 13px;">${safeStr(item.name)}</strong>
-              <span style="font-size: 11px; color: #78716c; margin-left: 4px;">(${safeStr(item.pillar || '사주')})</span>
-              <p style="font-size: 12px; color: #57534e; margin-top: 2px; line-height: 1.6;">${safeStr(item.desc)}</p>
+
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        ${s.sinsal.map(sal => {
+          const isGood = sal.type && (sal.type.includes("길") || sal.type.includes("귀인") || sal.type.includes("복"));
+          return `
+            <div class="card-box" style="margin-bottom: 0;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <strong style="font-size: 14px; color: ${isGood ? '#8c1d1d' : '#1c1917'};">${safeStr(sal.name)}</strong>
+                <div>
+                  <span class="badge" style="background: ${isGood ? '#ecfdf5; color: #065f46;' : '#ffe4e6; color: #9f1239;'}">${safeStr(sal.type)}</span>
+                  <span class="badge" style="background: #f5f5f4; color: #57534e;">${safeStr(sal.position)}</span>
+                </div>
+              </div>
+              <p style="font-size: 12px; color: #44403c; line-height: 1.6;">${safeStr(sal.modern || sal.desc)}</p>
             </div>
-          </div>
-        `).join("")}
+          `;
+        }).join("")}
       </div>
     </section>
     ` : ''}
 
-    <!-- 5. 미래 진로 & 재물 전략 카테고리 -->
-    ${incFuture && s ? `
+    <!-- 5. 미래 전략 & 재물 카테고리 -->
+    ${incFuture ? `
     <section id="panel-future" class="category-section ${firstCatId === 'future' ? 'active-panel' : ''}">
       <div class="cat-title">
-        <span>🧭 미래 진로 & 평생 재물 전략</span>
+        <span>🧭 미래 나침반 & 평생 재물·커리어 전략</span>
+        <span class="badge" style="background:#fef3c7; color:#92400e;">10년 대운 도약기 연동</span>
       </div>
-      <div class="grid-2">
+
+      <div class="card-box" style="background: #fffbeb; border-color: #fde68a; margin-bottom: 12px;">
+        <strong style="color: #78350f; font-size: 13px; display: block; margin-bottom: 4px;">🧭 미래 인생 나침반 (용신 기반 최적 행로):</strong>
+        <p style="font-size: 12px; color: #92400e; line-height: 1.7;">${safeStr(s.compass ? s.compass.actionPlan : "당신의 수호 용신 에너지를 적극 활용하여 장기적인 전문성과 주도성을 확보하세요.")}</p>
+      </div>
+
+      <div class="grid-2" style="margin-bottom: 12px;">
         <div class="card-box">
           <strong style="color: #8c1d1d; font-size: 13px; display: block; margin-bottom: 6px;">💼 천직 & 직업 적성:</strong>
-          <p style="font-size: 13px; color: #44403c; line-height: 1.7;">${safeStr(s.iljuDetail.careerAdvice)}</p>
+          <p style="font-size: 12px; color: #44403c; line-height: 1.7;">${safeStr(careerAdvice)}</p>
         </div>
         <div class="card-box">
-          <strong style="color: #b45309; font-size: 13px; display: block; margin-bottom: 6px;">💰 평생 재물 & 투자 비결:</strong>
-          <p style="font-size: 13px; color: #44403c; line-height: 1.7;">${safeStr(s.iljuDetail.wealthAdvice)}</p>
+          <strong style="color: #b45309; font-size: 13px; display: block; margin-bottom: 6px;">💰 평생 재물 & 자산 증식 스타일:</strong>
+          <p style="font-size: 12px; color: #44403c; line-height: 1.7;">${safeStr(s.iljuDetail.wealthStyle)}</p>
         </div>
+      </div>
+
+      <div class="card-box" style="margin-bottom: 12px; background: #eef2ff; border-color: #c7d2fe;">
+        <strong style="color: #3730a3; font-size: 13px; display: block; margin-bottom: 4px;">🚀 10년 대운으로 보는 3대 도약 타이밍:</strong>
+        <div class="grid-3" style="margin-top: 8px;">
+          <div style="background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #c7d2fe;">
+            <strong style="color: #3730a3; font-size: 11px; display: block;">1차 도약기 (${s.daeunList && s.daeunList[1] ? s.daeunList[1].startAge : 17}~${s.daeunList && s.daeunList[1] ? s.daeunList[1].endAge : 26}세)</strong>
+            <p style="font-size: 10px; color: #4b5563; margin-top: 2px;">전문 역량의 토대를 닦고 독자적인 커리어 발판을 단단히 다지는 결정적 시기</p>
+          </div>
+          <div style="background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #c7d2fe;">
+            <strong style="color: #3730a3; font-size: 11px; display: block;">2차 황금기 (${s.daeunList && s.daeunList[2] ? s.daeunList[2].startAge : 27}~${s.daeunList && s.daeunList[2] ? s.daeunList[2].endAge : 36}세)</strong>
+            <p style="font-size: 10px; color: #4b5563; margin-top: 2px;">인생 최대의 에너지와 기회가 결합하여 폭발적인 성취와 명예를 획득하는 전성기</p>
+          </div>
+          <div style="background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #c7d2fe;">
+            <strong style="color: #3730a3; font-size: 11px; display: block;">3차 수확기 (${s.daeunList && s.daeunList[3] ? s.daeunList[3].startAge : 37}~${s.daeunList && s.daeunList[3] ? s.daeunList[3].endAge : 46}세)</strong>
+            <p style="font-size: 10px; color: #4b5563; margin-top: 2px;">구축된 자산과 네트워크를 바탕으로 풍요로운 결실을 거두고 시스템을 완성하는 시기</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-box" style="background: #fff1f2; border-color: #fecdd3; margin-bottom: 12px;">
+        <strong style="color: #9f1239; font-size: 13px; display: block; margin-bottom: 4px;">🛡️ 인생에서 경계해야 할 함정과 방패 전략:</strong>
+        <p style="font-size: 12px; color: #881337; line-height: 1.7;">${safeStr(s.compass ? s.compass.trapAndShield : s.iljuDetail.caution)}</p>
+      </div>
+
+      <!-- ⚠️ 투자 주의 리스크 관리 지침 -->
+      <div class="card-box" style="background: #fffaf0; border-color: #fbd38d;">
+        <strong style="color: #7b341e; font-size: 13px; display: block; margin-bottom: 4px;">⚠️ 평생 재물 & 투자 리스크 관리 지침:</strong>
+        <p style="font-size: 12px; color: #44403c; line-height: 1.7;">${safeStr(wealthAdvice)} ${riskText}</p>
       </div>
     </section>
     ` : ''}
 
     <!-- 6. 3-Card 타로 점괘 카테고리 -->
-    ${incTarot && cards.length > 0 ? `
+    ${incTarot ? `
     <section id="panel-tarot" class="category-section ${firstCatId === 'tarot' ? 'active-panel' : ''}">
       <div class="cat-title">
-        <span>🃏 3-Card 대화형 타로 카드 점괘</span>
-        <span class="badge" style="background:#fae8ff; color:#86198f;">타로 리딩</span>
+        <span>🃏 3-Card 대화형 타로 점괘 심층 리딩</span>
+        <span class="badge" style="background:#e0e7ff; color:#3730a3;">과거·현재·미래 팩트 리딩</span>
       </div>
-      <div class="grid-3" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px;">
+
+      <div style="display: flex; flex-direction: column; gap: 12px;">
         ${cards.map((cObj, idx) => {
-          const c = cObj.card;
-          const pos = ["과거(Past)", "현재(Present)", "미래(Future)"][idx] || `카드 ${idx+1}`;
+          const c = cObj ? (cObj.card || cObj) : {};
+          const posNames = ["과거 (Past / 원인과 배경)", "현재 (Present / 뼈아픈 직언)", "미래 (Future / 현실적 결말)"];
+          const nameKr = c.nameKr || c.name_kr || c.name || `타로 카드 ${idx + 1}`;
+          const nameEn = c.name || c.nameEn || c.name_en || "";
+          const displayName = (nameKr.includes("(") || !nameEn) ? nameKr : `${nameKr} (${nameEn})`;
+          const summary = c.summary || c.interpretation || "현재 흐름을 직시하고 근본적인 원인을 돌아보세요.";
+          const advice = c.generalAdvice || c.advice || c.loveAdvice || c.moneyAdvice || c.careerAdvice || "현실을 냉정히 분석하고 기본에 충실하세요.";
+          const realityCheck = c.realityCheck || "";
+          const keywords = Array.isArray(c.keywords) ? c.keywords : (c.theme ? c.theme.split(",").map(x => x.trim()) : []);
+          const isReversed = !!c.isReversed;
+
           return `
-            <div class="card-box" style="border-top: 4px solid var(--gold);">
-              <div style="font-size: 11px; color: #78716c; font-weight: bold;">${pos}</div>
-              <div style="font-size: 15px; font-weight: 900; color: #8c1d1d; margin: 4px 0;">
-                ${safeStr(c.name_kr)}
-                <span style="font-size: 11px; color: ${c.isReversed ? '#e11d48' : '#16a34a'};">(${c.isReversed ? '역방향' : '정방향'})</span>
+            <div class="card-box" style="margin-bottom: 0;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <div>
+                  <span style="font-size: 11px; font-weight: 700; color: #78716c;">${posNames[idx] || `카드 ${idx+1}`}</span>
+                  <strong style="font-size: 15px; color: #8c1d1d; margin-left: 6px;">${safeStr(displayName)}</strong>
+                </div>
+                <span style="font-size: 11px; color: ${isReversed ? '#e11d48' : '#16a34a'}; font-weight: bold;">(${isReversed ? '역방향' : '정방향'})</span>
               </div>
-              <p style="font-size: 12px; color: #44403c; line-height: 1.6; margin-bottom: 6px;">${safeStr(c.interpretation)}</p>
-              <div style="font-size: 11px; background: #faf5ed; padding: 6px 8px; border-radius: 6px; color: #78350f;">
-                💡 <strong>조언:</strong> ${safeStr(c.advice)}
+              ${keywords.length > 0 ? `
+              <div style="margin-bottom: 6px;">
+                ${keywords.map(kw => `<span style="font-size: 10px; background: #f5f5f4; color: #57534e; padding: 2px 6px; border-radius: 4px; margin-right: 4px;">#${safeStr(kw)}</span>`).join("")}
+              </div>
+              ` : ''}
+              <p style="font-size: 12px; color: #44403c; line-height: 1.6; margin-bottom: 6px;">${safeStr(summary)}</p>
+              ${realityCheck ? `<p style="font-size: 11px; color: #57534e; background: #f5f5f4; padding: 6px 10px; border-radius: 6px; margin-bottom: 6px; font-style: italic;">⚡ <strong>현실 팩트 체크:</strong> ${safeStr(realityCheck)}</p>` : ''}
+              <div style="font-size: 11px; background: #faf5ed; padding: 8px 10px; border-radius: 6px; color: #78350f; border-left: 3px solid #b45309;">
+                💡 <strong>실천 조언:</strong> ${safeStr(advice)}
               </div>
             </div>
           `;
@@ -3324,39 +3994,29 @@ const App = {
     ${incAi && aiLogs.length > 0 ? `
     <section id="panel-ai" class="category-section ${firstCatId === 'ai' ? 'active-panel' : ''}">
       <div class="cat-title">
-        <span>🧙‍♂️ 천명 AI 명리·해몽 도사 1:1 문답 이력</span>
-        <span class="badge" style="background:#ecfdf5; color:#065f46;">AI 도사</span>
+        <span>🧙‍♂️ 천명 AI 명리·해몽 도사 1:1 상담 대화록</span>
+        <span class="badge" style="background:#ecfdf5; color:#065f46;">AI 도사 대화록</span>
       </div>
       <div style="padding: 10px 0;">
-        ${aiLogs.map(m => {
-          if (m.role === 'user') {
-            return `
-              <div class="chat-bubble-user">
-                <div style="font-size: 10px; opacity: 0.8; margin-bottom: 2px;">👤 ${safeStr(name)} 님의 질문 (${m.time || ''})</div>
-                <div>${safeStr(m.text)}</div>
-              </div>
-            `;
-          } else {
-            return `
-              <div class="chat-bubble-ai">
-                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
-                  <span class="badge" style="background: #fef3c7; color: #92400e;">${safeStr(m.badge || 'AI 도사 풀이')}</span>
-                  <span style="font-size: 10px; color: #a8a29e;">${m.time || ''}</span>
-                </div>
-                <div>${String(m.text || '').replace(/\n/g, '<br/>')}</div>
-              </div>
-            `;
-          }
-        }).join("")}
+        ${aiLogs.map(item => `
+          <div style="margin-bottom: 12px; padding: 12px; border-radius: 10px; background: ${item.role === 'user' ? '#fdf8ee' : '#ffffff'}; border: 1px solid var(--border-ink);">
+            <div style="font-size: 11px; font-weight: bold; color: ${item.role === 'user' ? '#8c1d1d' : '#1e3a5f'}; margin-bottom: 4px; display: flex; justify-content: space-between;">
+              <span>${item.role === 'user' ? '🙋‍♂️ 도반의 질문' : '🧙‍♂️ AI 도사의 처방'}</span>
+              <span style="color: #a8a29e; font-weight: normal;">${safeStr(item.time)}</span>
+            </div>
+            <p style="font-size: 12px; line-height: 1.7; white-space: pre-wrap; color: #292524;">${safeStr(item.text)}</p>
+          </div>
+        `).join("")}
       </div>
     </section>
     ` : ''}
 
-    <footer>
-      <p>천명(天命) 欽定萬歲曆 · 조선 왕실 규장각 명리학 데이터베이스</p>
-      <p style="margin-top: 4px; opacity: 0.7;">본 문서는 독립형 인터랙티브 HTML 서책으로 언제든 오프라인에서 카테고리 탭을 눌러 열람하실 수 있습니다.</p>
-    </footer>
   </div>
+
+  <footer class="footer">
+    <p>천명(天命) AI 운세 포털 · 한국천문연구원(KASI) 정통 역법 알고리즘 탑재</p>
+    <p style="margin-top: 4px; font-size: 11px; color: #a8a29e;">본 문서는 사용자 본인만을 위해 생성된 독립형 인터랙티브 디지털 서책입니다.</p>
+  </footer>
 
   <script>
     let isAllExpanded = false;
@@ -3416,7 +4076,7 @@ const App = {
     alert(`🎉 [${name}] 님의 카테고리별 인터랙티브 서책 (.html) 다운로드가 완료되었습니다!\n\nPDF와 달리 다운로드된 파일을 더블클릭하면 브라우저에서 각 카테고리 탭을 직접 눌러가며 편리하게 열람하실 수 있습니다.`);
   },
 
-  copyResultText() {
+      copyResultText() {
     if (!this.userSaju || !this.dailyFortune) return;
     const s = this.userSaju;
     const f = this.dailyFortune;

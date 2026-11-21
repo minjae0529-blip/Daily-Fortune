@@ -2425,7 +2425,7 @@ const App = {
     } else {
       dialog.setAttribute("open", "");
     }
-    this.updateExportPreview();
+    this.switchExportPreviewTab(this.currentExportPreviewTab || "daily");
   },
 
   closeExportModal() {
@@ -2436,6 +2436,14 @@ const App = {
     } else {
       dialog.removeAttribute("open");
     }
+  },
+
+  selectExportCategoryCard(tabKey, event) {
+    this.switchExportPreviewTab(tabKey);
+  },
+
+  onExportCheckboxChange(tabKey) {
+    this.switchExportPreviewTab(tabKey);
   },
 
   toggleAllExportCategories(checkAll) {
@@ -2449,14 +2457,24 @@ const App = {
 
   switchExportPreviewTab(tabKey) {
     this.currentExportPreviewTab = tabKey;
-    const tabs = ["daily", "saju", "element", "sinsal", "future", "tarot", "ai"];
+    const tabs = ["daily", "saju", "element", "sinsal", "future", "tarot", "ai", "mascot"];
     tabs.forEach(t => {
+      // 1. 하단 탭 버튼 스타일
       const btn = document.getElementById(`exportPrevTabBtn-${t}`);
       if (btn) {
         if (t === tabKey) {
           btn.className = "px-2.5 py-1 rounded-md font-bold bg-[#231710] text-[#f7d88c] shadow-sm";
         } else {
           btn.className = "px-2.5 py-1 rounded-md font-semibold text-stone-700 hover:text-black";
+        }
+      }
+      // 2. 상단 카테고리 카드 스타일 동기화
+      const card = document.getElementById(`exportCard-${t}`);
+      if (card) {
+        if (t === tabKey) {
+          card.className = "export-category-card flex items-center justify-between p-2.5 rounded-xl bg-amber-100/90 border-2 border-[#8c1d1d] shadow-sm ring-1 ring-[#8c1d1d] cursor-pointer transition select-none";
+        } else {
+          card.className = "export-category-card flex items-center justify-between p-2.5 rounded-xl bg-white border-2 border-stone-200 cursor-pointer hover:border-amber-400 transition select-none";
         }
       }
     });
@@ -3029,6 +3047,38 @@ const App = {
           </div>
         </div>
       `;
+    } else if (tab === "mascot") {
+      const mascot = this.currentMascot || (window.ZODIAC_MASCOTS && s && s.pillars ? window.ZODIAC_MASCOTS[s.pillars.year.ji.char] : null) || {
+        emoji: "🐲", name: "청룡이", greeting: "희망찬 푸른 기운이 가득한 날이야!", quotes: ["스스로를 믿고 당당하게 나아가봐! 🌟"]
+      };
+      box.innerHTML = `
+        <div class="space-y-3 font-serif-kr">
+          <div class="flex items-center justify-between pb-1.5 border-b border-stone-200">
+            <span class="font-bold text-stone-900 text-sm">🐾 나만의 12지신 수호동물 파트너</span>
+            <span class="text-[10px] text-amber-800 font-bold bg-amber-100 px-2 py-0.5 rounded">평생의 수호신</span>
+          </div>
+          <div class="p-3.5 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300 flex items-center space-x-3.5">
+            <span class="text-4xl shrink-0 select-none">${mascot.emoji}</span>
+            <div class="space-y-0.5">
+              <div class="flex items-center space-x-1.5">
+                <span class="px-2 py-0.5 rounded text-[10px] font-black bg-amber-200 text-amber-950">수호동물 ${mascot.name} ${mascot.emoji}</span>
+                <span class="text-[10px] text-stone-500 font-medium">${s ? `${s.userInfo.name}님의 평생 수호 파트너` : '나만의 수호신'}</span>
+              </div>
+              <p class="text-xs font-bold text-stone-900">"${s ? s.userInfo.name : '도반'}님, ${mascot.greeting} 오늘 하루도 내가 든든하게 지켜줄게! 💖"</p>
+              <div class="p-2 rounded-lg bg-white/90 border border-amber-200 text-[11px] text-amber-950 font-sans font-medium mt-1">
+                💬 <strong>수호동물의 특별 명언:</strong> <em>${mascot.quotes ? mascot.quotes[0] : '너의 직관과 결단을 믿어봐! 오늘은 감이 최고야 ✨'}</em>
+              </div>
+            </div>
+          </div>
+          <div class="p-3 rounded-xl bg-white border border-stone-200 text-xs font-sans space-y-1">
+            <strong class="text-stone-900 font-bold font-serif-kr block">🛡️ 12지신 수호동물의 수호 역할:</strong>
+            <p class="text-[11px] text-stone-600 leading-relaxed">
+              태어난 해의 지지(地支) 기운을 바탕으로 나와 가장 깊은 영적 인연을 맺은 파트너입니다.
+              마음이 흔들리거나 중요한 결정을 앞두고 있을 때, 수호동물의 맑고 총명한 기운을 상기하며 평정심을 유지하세요.
+            </p>
+          </div>
+        </div>
+      `;
     }
   },
 
@@ -3266,8 +3316,10 @@ const App = {
     if (incElements) navCategories.push({ id: "elements", name: "☯ 오행 & 용신 처방" });
     if (incSinsal) navCategories.push({ id: "sinsal", name: "🔮 8대 신살 해설" });
     if (incFuture) navCategories.push({ id: "future", name: "🧭 미래 & 재물 전략" });
+    const incMascot = (document.getElementById("exportCatMascot")?.checked ?? true);
     if (incTarot) navCategories.push({ id: "tarot", name: "🃏 3-Card 타로 점괘" });
     if (incAi) navCategories.push({ id: "ai", name: "🧙‍♂️ AI 도사 상담록" });
+    if (incMascot) navCategories.push({ id: "mascot", name: "🐾 12지신 수호동물" });
 
     if (navCategories.length === 0) {
       alert("최소 1개 이상의 카테고리를 선택해주세요.");
@@ -4011,6 +4063,36 @@ const App = {
     </section>
     ` : ''}
 
+    <!-- 8. 12지신 수호동물 카테고리 -->
+    ${incMascot ? `
+    <section id="panel-mascot" class="category-section ${firstCatId === 'mascot' ? 'active-panel' : ''}">
+      <div class="cat-title">
+        <span>🐾 나만의 12지신 수호동물 파트너</span>
+        <span class="badge" style="background:#fef3c7; color:#92400e;">평생의 수호신</span>
+      </div>
+      <div class="card-box" style="background: #fffbeb; border-color: #fde68a; display: flex; align-items: center; gap: 16px; margin-bottom: 12px; padding: 16px;">
+        <span style="font-size: 44px; line-height: 1;">${mascot.emoji}</span>
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+            <span class="badge" style="background: #fde68a; color: #78350f; font-size: 12px;">수호동물 ${safeStr(mascot.name)} ${mascot.emoji}</span>
+            <span style="font-size: 12px; color: #78716c;">${safeStr(name)} 도반의 평생 수호 파트너</span>
+          </div>
+          <p style="font-size: 14px; font-weight: 700; color: #1c1917;">"${safeStr(name)}님, ${safeStr(mascot.greeting)} 오늘 하루도 내가 든든하게 지켜줄게! 💖"</p>
+          <div style="background: rgba(255,255,255,0.85); border: 1px solid #fde68a; border-radius: 8px; padding: 8px 12px; margin-top: 8px; font-size: 12px; color: #92400e;">
+            💬 <strong>수호동물의 특별 명언:</strong> <em>${safeStr(mascot.quotes ? mascot.quotes[0] : '너의 직관과 결단을 믿어봐! 오늘은 감이 최고야 ✨')}</em>
+          </div>
+        </div>
+      </div>
+      <div class="card-box" style="background: #fafaf9;">
+        <strong style="color: #4a3525; font-size: 13px; display: block; margin-bottom: 6px;">🛡️ 12지신 수호동물의 수호 역할 & 에너지:</strong>
+        <p style="font-size: 12px; color: #57534e; line-height: 1.7;">
+          태어난 해의 지지(地支) 기운을 바탕으로 나와 가장 깊은 영적 인연을 맺은 파트너입니다.
+          마음이 흔들리거나 중요한 결정을 앞두고 있을 때, 수호동물의 맑고 총명한 기운을 상기하며 평정심을 유지하세요.
+        </p>
+      </div>
+    </section>
+    ` : ''}
+
   </div>
 
   <footer class="footer">
@@ -4034,7 +4116,9 @@ const App = {
       const target = document.getElementById('panel-' + catId);
       if (target) {
         target.classList.add('active-panel');
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const yOffset = -70;
+        const y = target.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
       }
     }
 

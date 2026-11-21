@@ -1625,45 +1625,79 @@
         <!-- 1. 포함할 카테고리 선택 -->
         <div>
           <div class="flex items-center justify-between mb-2">
-            <label class="block font-bold text-stone-900">포함할 카테고리 선택</label>
-            <div class="space-x-2">
+            <div>
+              <span class="block font-bold text-stone-900 text-xs sm:text-sm">1. 카테고리 선택 및 미리보기</span>
+              <span class="text-[11px] text-stone-500">원하시는 카테고리를 누르면 하단에 해당 내용이 즉시 출력되며, 체크 해제 시 내보내기에서 제외됩니다.</span>
+            </div>
+            <div class="space-x-2 shrink-0">
               <button type="button" onclick="App.toggleAllExportCategories(true)" class="text-[11px] text-[#8c1d1d] underline font-bold">전체 선택</button>
               <button type="button" onclick="App.toggleAllExportCategories(false)" class="text-[11px] text-stone-500 underline">선택 해제</button>
             </div>
           </div>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-            <label class="flex items-center space-x-1.5 p-2 rounded-lg bg-white border border-stone-200 cursor-pointer hover:bg-stone-50">
-              <input type="checkbox" id="exportCatDaily" checked class="rounded accent-[#8c1d1d]" onchange="App.updateExportPreview()">
-              <span class="font-bold">🌟 오늘의 운세</span>
-            </label>
-            <label class="flex items-center space-x-1.5 p-2 rounded-lg bg-white border border-stone-200 cursor-pointer hover:bg-stone-50">
-              <input type="checkbox" id="exportCatSaju" checked class="rounded accent-[#8c1d1d]" onchange="App.updateExportPreview()">
-              <span class="font-bold">📜 사주 원국 (4주8자)</span>
-            </label>
-            <label class="flex items-center space-x-1.5 p-2 rounded-lg bg-white border border-stone-200 cursor-pointer hover:bg-stone-50">
-              <input type="checkbox" id="exportCatElements" checked class="rounded accent-[#8c1d1d]" onchange="App.updateExportPreview()">
-              <span class="font-bold">☯ 오행 & 용신 처방</span>
-            </label>
-            <label class="flex items-center space-x-1.5 p-2 rounded-lg bg-white border border-stone-200 cursor-pointer hover:bg-stone-50">
-              <input type="checkbox" id="exportCatSinsal" checked class="rounded accent-[#8c1d1d]" onchange="App.updateExportPreview()">
-              <span class="font-bold">🔮 8대 신살 해설</span>
-            </label>
-            <label class="flex items-center space-x-1.5 p-2 rounded-lg bg-white border border-stone-200 cursor-pointer hover:bg-stone-50">
-              <input type="checkbox" id="exportCatFuture" checked class="rounded accent-[#8c1d1d]" onchange="App.updateExportPreview()">
-              <span class="font-bold">🧭 미래 & 재물 전략</span>
-            </label>
-            <label class="flex items-center space-x-1.5 p-2 rounded-lg bg-white border border-stone-200 cursor-pointer hover:bg-stone-50">
-              <input type="checkbox" id="exportCatTarot" checked class="rounded accent-[#8c1d1d]" onchange="App.updateExportPreview()">
-              <span class="font-bold">🃏 3-Card 타로 점괘</span>
-            </label>
-            <label class="flex items-center space-x-1.5 p-2 rounded-lg bg-white border border-stone-200 cursor-pointer hover:bg-stone-50">
-              <input type="checkbox" id="exportCatAi" checked class="rounded accent-[#8c1d1d]" onchange="App.updateExportPreview()">
-              <span class="font-bold">🧙‍♂️ AI 도사 상담 문답</span>
-            </label>
-            <label class="flex items-center space-x-1.5 p-2 rounded-lg bg-white border border-stone-200 cursor-pointer hover:bg-stone-50">
-              <input type="checkbox" id="exportCatMascot" checked class="rounded accent-[#8c1d1d]" onchange="App.updateExportPreview()">
-              <span class="font-bold">🐾 12지신 수호동물</span>
-            </label>
+            <div id="exportCard-daily" onclick="App.selectExportCategoryCard('daily', event)" class="export-category-card flex items-center justify-between p-2.5 rounded-xl bg-amber-100/80 border-2 border-[#8c1d1d] shadow-xs ring-1 ring-[#8c1d1d] cursor-pointer transition select-none">
+              <span class="font-bold text-stone-900 flex items-center space-x-1.5">
+                <span>🌟</span>
+                <span>오늘의 운세</span>
+              </span>
+              <input type="checkbox" id="exportCatDaily" checked class="rounded accent-[#8c1d1d] w-4 h-4 cursor-pointer" onclick="event.stopPropagation(); App.onExportCheckboxChange('daily')">
+            </div>
+
+            <div id="exportCard-saju" onclick="App.selectExportCategoryCard('saju', event)" class="export-category-card flex items-center justify-between p-2.5 rounded-xl bg-white border-2 border-stone-200 cursor-pointer hover:border-amber-400 transition select-none">
+              <span class="font-bold text-stone-900 flex items-center space-x-1.5">
+                <span>📜</span>
+                <span>사주 원국</span>
+              </span>
+              <input type="checkbox" id="exportCatSaju" checked class="rounded accent-[#8c1d1d] w-4 h-4 cursor-pointer" onclick="event.stopPropagation(); App.onExportCheckboxChange('saju')">
+            </div>
+
+            <div id="exportCard-element" onclick="App.selectExportCategoryCard('element', event)" class="export-category-card flex items-center justify-between p-2.5 rounded-xl bg-white border-2 border-stone-200 cursor-pointer hover:border-amber-400 transition select-none">
+              <span class="font-bold text-stone-900 flex items-center space-x-1.5">
+                <span>☯</span>
+                <span>오행·용신</span>
+              </span>
+              <input type="checkbox" id="exportCatElements" checked class="rounded accent-[#8c1d1d] w-4 h-4 cursor-pointer" onclick="event.stopPropagation(); App.onExportCheckboxChange('element')">
+            </div>
+
+            <div id="exportCard-sinsal" onclick="App.selectExportCategoryCard('sinsal', event)" class="export-category-card flex items-center justify-between p-2.5 rounded-xl bg-white border-2 border-stone-200 cursor-pointer hover:border-amber-400 transition select-none">
+              <span class="font-bold text-stone-900 flex items-center space-x-1.5">
+                <span>🔮</span>
+                <span>8대 신살</span>
+              </span>
+              <input type="checkbox" id="exportCatSinsal" checked class="rounded accent-[#8c1d1d] w-4 h-4 cursor-pointer" onclick="event.stopPropagation(); App.onExportCheckboxChange('sinsal')">
+            </div>
+
+            <div id="exportCard-future" onclick="App.selectExportCategoryCard('future', event)" class="export-category-card flex items-center justify-between p-2.5 rounded-xl bg-white border-2 border-stone-200 cursor-pointer hover:border-amber-400 transition select-none">
+              <span class="font-bold text-stone-900 flex items-center space-x-1.5">
+                <span>🧭</span>
+                <span>미래 전략</span>
+              </span>
+              <input type="checkbox" id="exportCatFuture" checked class="rounded accent-[#8c1d1d] w-4 h-4 cursor-pointer" onclick="event.stopPropagation(); App.onExportCheckboxChange('future')">
+            </div>
+
+            <div id="exportCard-tarot" onclick="App.selectExportCategoryCard('tarot', event)" class="export-category-card flex items-center justify-between p-2.5 rounded-xl bg-white border-2 border-stone-200 cursor-pointer hover:border-amber-400 transition select-none">
+              <span class="font-bold text-stone-900 flex items-center space-x-1.5">
+                <span>🃏</span>
+                <span>타로 점괘</span>
+              </span>
+              <input type="checkbox" id="exportCatTarot" checked class="rounded accent-[#8c1d1d] w-4 h-4 cursor-pointer" onclick="event.stopPropagation(); App.onExportCheckboxChange('tarot')">
+            </div>
+
+            <div id="exportCard-ai" onclick="App.selectExportCategoryCard('ai', event)" class="export-category-card flex items-center justify-between p-2.5 rounded-xl bg-white border-2 border-stone-200 cursor-pointer hover:border-amber-400 transition select-none">
+              <span class="font-bold text-stone-900 flex items-center space-x-1.5">
+                <span>🧙‍♂️</span>
+                <span>AI 도사</span>
+              </span>
+              <input type="checkbox" id="exportCatAi" checked class="rounded accent-[#8c1d1d] w-4 h-4 cursor-pointer" onclick="event.stopPropagation(); App.onExportCheckboxChange('ai')">
+            </div>
+
+            <div id="exportCard-mascot" onclick="App.selectExportCategoryCard('mascot', event)" class="export-category-card flex items-center justify-between p-2.5 rounded-xl bg-white border-2 border-stone-200 cursor-pointer hover:border-amber-400 transition select-none">
+              <span class="font-bold text-stone-900 flex items-center space-x-1.5">
+                <span>🐾</span>
+                <span>수호동물</span>
+              </span>
+              <input type="checkbox" id="exportCatMascot" checked class="rounded accent-[#8c1d1d] w-4 h-4 cursor-pointer" onclick="event.stopPropagation(); App.onExportCheckboxChange('mascot')">
+            </div>
           </div>
         </div>
 
@@ -1682,6 +1716,7 @@
             <button type="button" onclick="App.switchExportPreviewTab('future')" id="exportPrevTabBtn-future" class="px-2.5 py-1 rounded-md font-semibold text-stone-700 hover:text-black">🧭 미래 전략</button>
             <button type="button" onclick="App.switchExportPreviewTab('tarot')" id="exportPrevTabBtn-tarot" class="px-2.5 py-1 rounded-md font-semibold text-stone-700 hover:text-black">🃏 타로 점괘</button>
             <button type="button" onclick="App.switchExportPreviewTab('ai')" id="exportPrevTabBtn-ai" class="px-2.5 py-1 rounded-md font-semibold text-stone-700 hover:text-black">🧙‍♂️ AI 상담</button>
+            <button type="button" onclick="App.switchExportPreviewTab('mascot')" id="exportPrevTabBtn-mascot" class="px-2.5 py-1 rounded-md font-semibold text-stone-700 hover:text-black">🐾 수호동물</button>
           </div>
           <!-- 미리보기 내용 영역 -->
           <div id="exportPreviewContentBox" class="p-4 max-h-56 overflow-y-auto text-xs leading-relaxed bg-[#fdfbf7]">

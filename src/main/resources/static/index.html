@@ -73,6 +73,12 @@
           </button>
         </div>
 
+        <!-- 👑 최고관리자 전용 대시보드 버튼 (ROLE_ADMIN 로그인 시 노출) -->
+        <button type="button" id="headerAdminBtn" onclick="App.openAdminModal()" class="hidden text-xs font-extrabold px-2.5 py-1.5 rounded-md bg-gradient-to-b from-[#854d0e] to-[#713f12] text-[#fef08a] hover:from-[#a16207] hover:to-[#854d0e] transition items-center space-x-1 shadow-sm border border-[#fde047] font-serif-kr">
+          <span>👑</span>
+          <span>관리자 패널</span>
+        </button>
+
         <button type="button" id="headerVaultBtn" onclick="App.openHistoryModal()" class="hidden text-xs font-extrabold px-3 py-1.5 rounded-md bg-gradient-to-b from-[#991b1b] to-[#7f1d1d] text-[#fff6df] hover:from-[#b91c1c] hover:to-[#8c1d1d] transition items-center space-x-1.5 shadow-sm border border-[#d4a359] font-serif-kr">
           <span>📜</span>
           <span>내 결제·서책 보관함</span>
@@ -184,6 +190,14 @@
               <span id="loginAttemptCounterBadge" class="text-[11px] font-extrabold text-[#8c1d1d]">오류 횟수: 0 / 5회 (10회 시 휴면)</span>
             </div>
             <input type="password" id="loginPwInput" required autocomplete="current-password" placeholder="비밀번호를 입력하세요" class="w-full bg-[#faf6ee] border-2 border-[#cbb799] rounded-lg px-3.5 py-2.5 text-sm text-[#1b140e] focus:outline-none focus:border-[#8c1d1d] transition font-medium">
+          </div>
+
+          <!-- 👑 시스템 관리자 빠른 로그인 카드 -->
+          <div class="p-2.5 rounded-lg bg-[#fbf6ec] border border-[#d5c19e] flex items-center justify-between text-xs text-[#4a3525]">
+            <span class="font-serif-kr">👑 <strong>관리자 계정</strong>: <code class="bg-[#e8dcce] px-1 py-0.5 rounded text-[#8c1d1d] font-mono">admin</code> / <code class="bg-[#e8dcce] px-1 py-0.5 rounded text-[#8c1d1d] font-mono">admin1234!</code></span>
+            <button type="button" onclick="App.fillAdminCredentials()" class="px-2.5 py-1 rounded bg-[#231710] text-[#f7d88c] border border-[#b48a4e] text-[11px] font-bold hover:bg-[#362419] transition shrink-0">
+              자동 입력
+            </button>
           </div>
 
           <button type="submit" id="loginSubmitBtn" class="w-full py-3.5 rounded-lg font-black text-sm text-[#fff6df] bg-gradient-to-r from-[#8c1d1d] via-[#a31d1d] to-[#7f1d1d] hover:from-[#991b1b] hover:to-[#8c1d1d] transition shadow-md border-2 border-[#d4a359] flex items-center justify-center space-x-2">
@@ -1493,6 +1507,89 @@
     </div>
   </dialog>
 
+  <!-- 👑 MODAL 3: 천명(天命) 시스템 최고 관리자 통합 관제실 모달 -->
+  <dialog id="adminDialog" class="custom-modal" onclick="if(event.target===this) App.closeAdminModal()">
+    <div class="bg-[#fcf9f2] rounded-xl border-2 border-[#b48a4e] overflow-hidden shadow-2xl text-[#1b140e] font-serif-kr max-w-3xl w-full">
+      <div class="dancheong-bar"></div>
+      <div class="bg-[#1e1510] text-white px-5 py-4 flex items-center justify-between border-b-2 border-[#b48a4e]">
+        <div class="flex items-center space-x-2.5">
+          <span class="text-xl">👑</span>
+          <div>
+            <h3 class="text-sm sm:text-base font-black font-serif-kr text-[#f9e5b4]">천명(天命) 시스템 최고 관리자 관제실</h3>
+            <p class="text-[11px] text-[#d5c19e]">계정 보안 관리 · 휴면 계정 해제 · 결제 및 AI 상담 실시간 현황</p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button type="button" onclick="App.loadAdminDashboard()" class="text-xs px-2.5 py-1 rounded bg-[#2c1e16] border border-[#b48a4e] text-[#f7e6c4] hover:bg-[#4a3525] transition font-sans">
+            🔄 새로고침
+          </button>
+          <button type="button" onclick="App.closeAdminModal()" class="text-[#d5c19e] hover:text-white text-lg font-bold px-1.5">✕</button>
+        </div>
+      </div>
+
+      <div class="p-5 space-y-5 max-h-[78vh] overflow-y-auto text-xs">
+        <!-- 1. 핵심 지표 통계 카드 그리드 -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <div class="p-3 rounded-xl bg-gradient-to-br from-[#231710] to-[#362419] border border-[#b48a4e] text-white text-center">
+            <span class="text-[11px] text-[#d5c19e] block font-bold">총 가입 회원</span>
+            <span class="text-xl font-black text-[#facc15] font-sans" id="adminStatTotalAccounts">-</span>
+            <span class="text-[10px] text-stone-300 block">정상 <span id="adminStatActiveAccounts" class="text-emerald-400 font-bold">-</span>명</span>
+          </div>
+
+          <div class="p-3 rounded-xl bg-gradient-to-br from-[#450a0a] to-[#7f1d1d] border border-[#ef4444] text-white text-center">
+            <span class="text-[11px] text-rose-200 block font-bold">휴면·잠금 계정</span>
+            <span class="text-xl font-black text-rose-300 font-sans" id="adminStatDormantAccounts">-</span>
+            <span class="text-[10px] text-rose-200 block">비밀번호 10회 오류</span>
+          </div>
+
+          <div class="p-3 rounded-xl bg-gradient-to-br from-[#14532d] to-[#166534] border border-[#22c55e] text-white text-center">
+            <span class="text-[11px] text-emerald-200 block font-bold">500원 결제 누적</span>
+            <span class="text-xl font-black text-[#86efac] font-sans" id="adminStatTotalAmount">-</span>
+            <span class="text-[10px] text-emerald-200 block">총 <span id="adminStatTotalPayments" class="font-bold">-</span>건 승인</span>
+          </div>
+
+          <div class="p-3 rounded-xl bg-gradient-to-br from-[#1e1b4b] to-[#312e81] border border-[#6366f1] text-white text-center">
+            <span class="text-[11px] text-indigo-200 block font-bold">AI 도사 문답</span>
+            <span class="text-xl font-black text-[#a5b4fc] font-sans" id="adminStatTotalAi">-</span>
+            <span class="text-[10px] text-indigo-200 block">사주·꿈해몽 상담</span>
+          </div>
+        </div>
+
+        <!-- 2. 회원 계정 및 보안 잠금 관리 테이블 -->
+        <div class="bg-white rounded-xl border border-[#d5c19e] overflow-hidden shadow-xs">
+          <div class="bg-[#f5ecdd] px-4 py-2.5 border-b border-[#d5c19e] flex items-center justify-between">
+            <h4 class="font-bold text-[#2c1e16] flex items-center space-x-1.5">
+              <span>👥</span>
+              <span>등록 회원 계정 및 보안 상태 관리 (accounts 테이블)</span>
+            </h4>
+            <span class="text-[11px] text-[#5c4d3c] font-sans">실시간 PBKDF2 암호화 적용</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-[#faf4e8] border-b border-[#e6d5b8] text-[#5c4d3c] font-bold">
+                  <th class="py-2.5 px-3">ID</th>
+                  <th class="py-2.5 px-3">이름</th>
+                  <th class="py-2.5 px-3">연락처</th>
+                  <th class="py-2.5 px-3 text-center">권한</th>
+                  <th class="py-2.5 px-3 text-center">실패횟수</th>
+                  <th class="py-2.5 px-3 text-center">계정 상태</th>
+                  <th class="py-2.5 px-3 text-center">관리 조치</th>
+                </tr>
+              </thead>
+              <tbody id="adminAccountTableBody" class="divide-y divide-[#f0e3ce] font-sans">
+                <tr>
+                  <td colspan="7" class="py-6 text-center text-stone-500 font-serif-kr">회원 목록을 불러오는 중...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
   <!-- ======================================================================
        🧙‍♂️ 내장 AI 명리 도사 챗봇 플로팅 버튼 & 동적 대화창 위젯 (로그인 완료 후에만 노출)
        ====================================================================== -->
@@ -1580,14 +1677,14 @@
   </footer>
 
   <!-- Scripts with Cache Buster -->
-  <script src="js/engine/manseryeok.bundle.js?v=20261120_6"></script>
-  <script src="js/data/gapja60.js?v=20261120_6"></script>
-  <script src="js/data/sinsal.js?v=20261120_6"></script>
-  <script src="js/data/tarot.js?v=20261120_6"></script>
-  <script src="js/engine/calendar.js?v=20261120_6"></script>
-  <script src="js/engine/saju.js?v=20261120_6"></script>
-  <script src="js/engine/fortune.js?v=20261120_6"></script>
-  <script src="js/app.js?v=20261120_6"></script>
+  <script src="js/engine/manseryeok.bundle.js?v=20261121_admin"></script>
+  <script src="js/data/gapja60.js?v=20261121_admin"></script>
+  <script src="js/data/sinsal.js?v=20261121_admin"></script>
+  <script src="js/data/tarot.js?v=20261121_admin"></script>
+  <script src="js/engine/calendar.js?v=20261121_admin"></script>
+  <script src="js/engine/saju.js?v=20261121_admin"></script>
+  <script src="js/engine/fortune.js?v=20261121_admin"></script>
+  <script src="js/app.js?v=20261121_admin"></script>
 
 </body>
 </html>

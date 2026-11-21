@@ -165,6 +165,7 @@ const App = {
     const resultSec = document.getElementById("resultSection");
     const userBox = document.getElementById("headerUserBox");
     const vaultBtn = document.getElementById("headerVaultBtn");
+    const adminBtn = document.getElementById("headerAdminBtn");
     const headerAiBtn = document.getElementById("headerAiChatBtn");
     const aiFabBox = document.getElementById("aiChatbotFloatingContainer");
     const aiDrawer = document.getElementById("aiChatbotDrawer");
@@ -175,6 +176,10 @@ const App = {
     if (userBox) {
       userBox.classList.add("hidden");
       userBox.classList.remove("flex");
+    }
+    if (adminBtn) {
+      adminBtn.classList.add("hidden");
+      adminBtn.classList.remove("flex");
     }
     if (vaultBtn) {
       vaultBtn.classList.add("hidden");
@@ -203,6 +208,7 @@ const App = {
     const userBox = document.getElementById("headerUserBox");
     const userNameText = document.getElementById("headerUserNameText");
     const vaultBtn = document.getElementById("headerVaultBtn");
+    const adminBtn = document.getElementById("headerAdminBtn");
     const headerAiBtn = document.getElementById("headerAiChatBtn");
     const aiFabBox = document.getElementById("aiChatbotFloatingContainer");
     const aiDrawer = document.getElementById("aiChatbotDrawer");
@@ -215,8 +221,24 @@ const App = {
       userBox.classList.remove("hidden");
       userBox.classList.add("flex");
     }
+
+    const isAdmin = accountData.role === "ROLE_ADMIN";
+    if (adminBtn) {
+      if (isAdmin) {
+        adminBtn.classList.remove("hidden");
+        adminBtn.classList.add("flex");
+      } else {
+        adminBtn.classList.add("hidden");
+        adminBtn.classList.remove("flex");
+      }
+    }
+
     if (userNameText) {
-      userNameText.textContent = `👤 ${accountData.name}(${accountData.loginId}) 님`;
+      if (isAdmin) {
+        userNameText.innerHTML = `👑 <span class="text-[#facc15] font-black">${accountData.name}</span> <span class="text-[10px] text-[#fef08a] bg-[#713f12] px-1.5 py-0.5 rounded border border-[#eab308] font-bold">최고관리자</span>`;
+      } else {
+        userNameText.textContent = `👤 ${accountData.name}(${accountData.loginId}) 님`;
+      }
     }
     if (vaultBtn) {
       vaultBtn.classList.remove("hidden");
@@ -321,6 +343,15 @@ const App = {
     if (unlockId && this.latestSmsLoginId) unlockId.value = this.latestSmsLoginId;
     if (unlockCode && this.latestDemoSmsCode) unlockCode.value = this.latestDemoSmsCode;
     this.showAuthAlert("warning", "인증번호가 자동 입력되었습니다. 가입 시 등록한 휴대폰 번호를 입력하고 [SMS 인증번호 확인 및 계정 휴면·오류 초기화] 버튼을 눌러주세요.");
+  },
+
+  fillAdminCredentials() {
+    this.switchAuthTab("login");
+    const idInput = document.getElementById("loginIdInput");
+    const pwInput = document.getElementById("loginPwInput");
+    if (idInput) idInput.value = "admin";
+    if (pwInput) pwInput.value = "admin1234!";
+    this.showAuthAlert("warning", "👑 최고관리자(admin) 계정 정보가 입력되었습니다. [천명 만세력 로그인] 버튼을 누르세요.");
   },
 
   async checkDuplicateLoginId() {
@@ -1708,6 +1739,116 @@ const App = {
       dialog.close();
     } else {
       dialog.removeAttribute("open");
+    }
+  },
+
+  // ==========================================================================
+  // 👑 천명(天命) 최고 관리자 전용 대시보드 및 관제실 컨트롤러
+  // ==========================================================================
+  openAdminModal() {
+    const dialog = document.getElementById("adminDialog");
+    if (!dialog) return;
+    if (typeof dialog.showModal === "function") {
+      dialog.showModal();
+    } else {
+      dialog.setAttribute("open", "");
+    }
+    this.loadAdminDashboard();
+  },
+
+  closeAdminModal() {
+    const dialog = document.getElementById("adminDialog");
+    if (!dialog) return;
+    if (typeof dialog.close === "function") {
+      dialog.close();
+    } else {
+      dialog.removeAttribute("open");
+    }
+  },
+
+  async loadAdminDashboard() {
+    try {
+      // 1. 시스템 통합 통계 조회
+      const statsRes = await fetch("/api/admin/stats");
+      const statsJson = await statsRes.json();
+      if (statsJson.success && statsJson.data) {
+        const d = statsJson.data;
+        const totalEl = document.getElementById("adminStatTotalAccounts");
+        const activeEl = document.getElementById("adminStatActiveAccounts");
+        const dormantEl = document.getElementById("adminStatDormantAccounts");
+        const totalAmountEl = document.getElementById("adminStatTotalAmount");
+        const totalPayEl = document.getElementById("adminStatTotalPayments");
+        const totalAiEl = document.getElementById("adminStatTotalAi");
+
+        if (totalEl) totalEl.textContent = `${d.totalAccounts || 0}명`;
+        if (activeEl) activeEl.textContent = d.activeAccounts || 0;
+        if (dormantEl) dormantEl.textContent = `${d.dormantAccounts || 0}명`;
+        if (totalAmountEl) totalAmountEl.textContent = `${(d.totalPaymentAmount || 0).toLocaleString()}원`;
+        if (totalPayEl) totalPayEl.textContent = d.totalPayments || 0;
+        if (totalAiEl) totalAiEl.textContent = `${d.totalAiConsultations || 0}회`;
+      }
+
+      // 2. 전체 회원 목록 조회
+      const listRes = await fetch("/api/admin/accounts");
+      const listJson = await listRes.json();
+      const tbody = document.getElementById("adminAccountTableBody");
+      if (!tbody) return;
+
+      if (!listJson.success || !listJson.data || listJson.data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-stone-500 font-serif-kr">등록된 회원이 없습니다.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = listJson.data.map(acc => {
+        const isDormant = acc.accountStatus === "DORMANT_LOCKED";
+        const isWarn = acc.accountStatus === "WARNING_SMS_SENT";
+        const statusBadge = isDormant
+          ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-300">🔒 휴면잠금(10회)</span>`
+          : isWarn
+          ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-300">⚠️ 경고문자(5회+)</span>`
+          : `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">정상 ACTIVE</span>`;
+
+        const roleBadge = acc.role === "ROLE_ADMIN"
+          ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-black bg-amber-200 text-amber-900 border border-amber-400">👑 최고관리자</span>`
+          : `<span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-stone-100 text-stone-700">일반회원</span>`;
+
+        const actionBtn = (isDormant || acc.failedAttempts > 0)
+          ? `<button type="button" onclick="App.unlockAccountByAdmin(${acc.id}, '${acc.loginId}')" class="px-2.5 py-1 rounded bg-[#8c1d1d] hover:bg-[#a31d1d] text-white text-[10px] font-bold transition shadow-xs">🔓 잠금·오류 초기화</button>`
+          : `<span class="text-stone-400 text-[10px]">정상 유지</span>`;
+
+        return `
+          <tr class="hover:bg-[#fbf7ee] transition">
+            <td class="py-2.5 px-3 font-mono font-bold text-[#1b140e]">${acc.loginId}</td>
+            <td class="py-2.5 px-3 font-semibold text-stone-800">${acc.name}</td>
+            <td class="py-2.5 px-3 text-stone-600 font-mono text-[11px]">${acc.phoneNumber || "-"}</td>
+            <td class="py-2.5 px-3 text-center">${roleBadge}</td>
+            <td class="py-2.5 px-3 text-center font-bold ${acc.failedAttempts >= 5 ? 'text-rose-600' : 'text-stone-700'}">${acc.failedAttempts}회</td>
+            <td class="py-2.5 px-3 text-center">${statusBadge}</td>
+            <td class="py-2.5 px-3 text-center">${actionBtn}</td>
+          </tr>
+        `;
+      }).join("");
+
+    } catch (err) {
+      console.error("관리자 대시보드 로드 실패:", err);
+    }
+  },
+
+  async unlockAccountByAdmin(accId, loginId) {
+    if (!confirm(`계정 [${loginId}]의 오류 횟수 및 휴면 잠금을 즉시 초기화/해제하시겠습니까?`)) {
+      return;
+    }
+    try {
+      const res = await fetch(`/api/admin/accounts/${accId}/unlock`, { method: "POST" });
+      const json = await res.json();
+      if (json.success) {
+        alert(`✅ ${json.message}`);
+        this.loadAdminDashboard();
+      } else {
+        alert(`❌ 해제 실패: ${json.message}`);
+      }
+    } catch (err) {
+      alert("서버 통신 오류가 발생했습니다.");
     }
   },
 

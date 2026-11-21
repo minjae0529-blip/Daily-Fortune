@@ -138,6 +138,7 @@ CREATE TABLE IF NOT EXISTS accounts (
     birth_month INT NULL COMMENT '출생월',
     birth_day INT NULL COMMENT '출생일',
     failed_attempts INT NOT NULL DEFAULT 0 COMMENT '비밀번호 연속 실패 횟수 (5회 경고문자, 10회 휴면화)',
+    role VARCHAR(20) NOT NULL DEFAULT 'ROLE_USER' COMMENT '계정 권한 (ROLE_USER: 일반회원, ROLE_ADMIN: 최고관리자)',
     account_status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE' COMMENT '계정 상태 (ACTIVE, WARNING_SMS_SENT, DORMANT_LOCKED)',
     last_failed_at DATETIME NULL COMMENT '마지막 로그인 실패 일시',
     last_login_at DATETIME NULL COMMENT '마지막 로그인 성공 일시',

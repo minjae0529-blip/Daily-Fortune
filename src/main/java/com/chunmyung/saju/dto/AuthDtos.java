@@ -36,6 +36,7 @@ public class AuthDtos {
         private Integer birthYear;
         private Integer birthMonth;
         private Integer birthDay;
+        private String role;          // ROLE_USER, ROLE_ADMIN
         private int failedAttempts;
         private String accountStatus; // ACTIVE, WARNING_SMS_SENT, DORMANT_LOCKED
         private boolean smsSent;

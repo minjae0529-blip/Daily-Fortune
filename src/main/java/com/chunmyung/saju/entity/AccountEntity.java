@@ -48,6 +48,14 @@ public class AccountEntity {
     private Integer failedAttempts;
 
     /**
+     * 계정 권한:
+     * - ROLE_USER : 일반 회원
+     * - ROLE_ADMIN : 시스템 최고 관리자
+     */
+    @Column(name = "role", nullable = false, length = 20)
+    private String role;
+
+    /**
      * 계정 상태:
      * - ACTIVE : 정상 활성 계정 (실패 0~4회)
      * - WARNING_SMS_SENT : 비밀번호 5~9회 오류로 휴대폰 보안 문자(SMS)가 발송된 경고 상태
@@ -72,6 +80,9 @@ public class AccountEntity {
         }
         if (this.failedAttempts == null) {
             this.failedAttempts = 0;
+        }
+        if (this.role == null) {
+            this.role = "ROLE_USER";
         }
         if (this.accountStatus == null) {
             this.accountStatus = "ACTIVE";

@@ -83,6 +83,7 @@ public class AuthService {
                 .birthMonth(req.getBirthMonth() != null ? req.getBirthMonth() : 5)
                 .birthDay(req.getBirthDay() != null ? req.getBirthDay() : 15)
                 .failedAttempts(0)
+                .role("ROLE_USER")
                 .accountStatus("ACTIVE")
                 .build();
 
@@ -285,6 +286,7 @@ public class AuthService {
                 .birthYear(account.getBirthYear())
                 .birthMonth(account.getBirthMonth())
                 .birthDay(account.getBirthDay())
+                .role(account.getRole() != null ? account.getRole() : "ROLE_USER")
                 .failedAttempts(account.getFailedAttempts())
                 .accountStatus(account.getAccountStatus())
                 .smsSent(smsSent)

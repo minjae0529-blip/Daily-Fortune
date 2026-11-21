@@ -3459,6 +3459,13 @@ const App = {
       white-space: nowrap;
       transition: all 0.2s ease;
       font-family: 'Noto Serif KR', serif;
+      text-decoration: none;
+      display: inline-block;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .category-section:target {
+      display: block !important;
     }
     .tab-btn:hover {
       background: #f5ede0;
@@ -3572,6 +3579,12 @@ const App = {
       body { background: #fff !important; }
     }
   </style>
+  <noscript>
+    <style>
+      .category-section { display: block !important; margin-bottom: 24px; }
+      .nav-bar-container { position: relative !important; }
+    </style>
+  </noscript>
 </head>
 <body>
 
@@ -3586,17 +3599,25 @@ const App = {
     </div>
   </header>
 
+  <!-- 모바일 편의 안내 배너 -->
+  <div style="max-width: 860px; margin: 12px auto 0; padding: 0 20px;">
+    <div style="background: #fdf8ee; border: 1px solid #ebd9b8; border-radius: 10px; padding: 8px 14px; font-size: 11px; color: #78350f; display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+      <span>📱 <strong>모바일 팁:</strong> 카카오톡/파일 뷰어에서 탭 전환이 안 될 땐 <strong>[전체 보기]</strong>를 누르시거나 <strong>[브라우저(Safari/Chrome)로 열기]</strong>를 선택하세요.</span>
+      <button type="button" onclick="toggleAllView(document.getElementById('toggleViewBtn'))" style="font-size: 11px; font-weight: 700; padding: 4px 10px; background: #8c1d1d; color: #fff; border: none; border-radius: 6px; cursor: pointer;">📖 전체 보기</button>
+    </div>
+  </div>
+
   <!-- Navigation Bar (Sticky Tabs) -->
   <div class="nav-bar-container">
     <div class="nav-tabs">
       ${navCategories.map((c, idx) => `
-        <button type="button" class="tab-btn ${idx === 0 ? 'active' : ''}" onclick="selectCategory('${c.id}', this)">${c.name}</button>
+        <a href="#panel-${c.id}" class="tab-btn ${idx === 0 ? 'active' : ''}" onclick="selectCategory('${c.id}', this); return false;">${c.name}</a>
       `).join("")}
     </div>
   </div>
 
   <div class="view-control">
-    <button type="button" class="control-btn" onclick="toggleAllView(this)"><span>📖 전체 한눈에 보기</span></button>
+    <button type="button" id="toggleViewBtn" class="control-btn" onclick="toggleAllView(this)"><span>📖 전체 한눈에 보기</span></button>
     <button type="button" class="control-btn" onclick="window.print()"><span>🖨️ 인쇄하기</span></button>
     <button type="button" class="control-btn" onclick="copyReportText()"><span>📋 텍스트 복사</span></button>
   </div>

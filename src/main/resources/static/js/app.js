@@ -4433,6 +4433,86 @@ https://minjae0529-blip.github.io/Daily-Fortune/`;
 
   // ==========================================================================
   // ==========================================================================
+  // 🏮 [가상 광장 전용] 은하수 소원 연등 광장 탐험 (WASD / 방향키 이동)
+  // ==========================================================================
+  openWishPlaza() {
+    this.closeWishModal(); // Close modal if open
+    if (window.WishPlaza) {
+      window.WishPlaza.init("wishPlazaSection");
+      window.WishPlaza.start();
+      window.WishPlaza.showToast("✨ WASD 또는 방향키로 광장을 거닐며 연등에 다가가 소원을 읽어보세요!");
+    }
+  },
+
+  closeWishPlaza() {
+    if (window.WishPlaza) {
+      window.WishPlaza.close();
+    }
+  },
+
+  openPlazaLaunchModal() {
+    const dialog = document.getElementById("plazaLaunchModal");
+    if (!dialog) return;
+    const authorInput = document.getElementById("plazaWishAuthor");
+    if (authorInput && !authorInput.value) {
+      authorInput.value = this.currentAccount ? this.currentAccount.name : "";
+    }
+    if (typeof dialog.showModal === "function") {
+      dialog.showModal();
+    } else {
+      dialog.setAttribute("open", "");
+    }
+  },
+
+  submitPlazaWish() {
+    const catEl = document.getElementById("plazaWishCategory");
+    const authorEl = document.getElementById("plazaWishAuthor");
+    const textEl = document.getElementById("plazaWishText");
+
+    const category = catEl ? catEl.value : "🌿 건강·장수";
+    const author = (authorEl && authorEl.value.trim()) ? authorEl.value.trim() : (this.currentAccount ? this.currentAccount.name : "익명의 도반");
+    const text = textEl ? textEl.value.trim() : "";
+
+    if (!text) {
+      alert("소원 한마디를 입력해주세요.");
+      if (textEl) textEl.focus();
+      return;
+    }
+
+    const newWish = {
+      id: Date.now(),
+      category: category,
+      author: author,
+      text: text,
+      cheers: 1,
+      date: new Date().toLocaleDateString("ko-KR")
+    };
+
+    // 1. Add to WishPlaza engine world directly
+    if (window.WishPlaza) {
+      window.WishPlaza.addPlayerNewLantern(newWish);
+    }
+
+    // 2. Add to localStorage community & my wishes
+    this.initCommunityWishes();
+    this.communityWishes.unshift(newWish);
+    try {
+      localStorage.setItem("chunmyung_community_wishes", JSON.stringify(this.communityWishes.slice(0, 30)));
+      const mySaved = JSON.parse(localStorage.getItem("chunmyung_wishes") || "[]");
+      mySaved.unshift(newWish);
+      localStorage.setItem("chunmyung_wishes", JSON.stringify(mySaved.slice(0, 20)));
+    } catch (e) {}
+
+    // Close modal & reset inputs
+    const dialog = document.getElementById("plazaLaunchModal");
+    if (dialog) {
+      if (typeof dialog.close === "function") dialog.close();
+      else dialog.removeAttribute("open");
+    }
+    if (textEl) textEl.value = "";
+  },
+
+  // ==========================================================================
   // 🏮 소원 연등 띄우기 & 모두의 은하수 소원 광장 컨트롤러
   // ==========================================================================
   currentWishTab: "plaza",

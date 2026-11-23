@@ -59,10 +59,10 @@
           <span class="text-[#facc15] font-extrabold flex items-center space-x-1" id="bannerIljin"></span>
         </div>
 
-        <!-- 🏮 소원 연등 띄우기 버튼 -->
-        <button type="button" onclick="App.openWishModal()" class="text-xs font-extrabold px-2.5 py-1.5 rounded-md bg-gradient-to-b from-[#8c1d1d] to-[#6b1515] text-[#ffe8b3] hover:from-[#991b1b] hover:to-[#7f1d1d] transition flex items-center space-x-1 shadow-sm border border-[#d4a359] font-serif-kr shrink-0">
+        <!-- 🏮 은하수 소원 연등 광장 탐험 버튼 (WASD / 방향키) -->
+        <button type="button" onclick="App.openWishPlaza()" class="text-xs font-extrabold px-2.5 py-1.5 rounded-md bg-gradient-to-b from-[#8c1d1d] to-[#6b1515] text-[#ffe8b3] hover:from-[#991b1b] hover:to-[#7f1d1d] transition flex items-center space-x-1 shadow-sm border border-[#d4a359] font-serif-kr shrink-0 cursor-pointer" title="은하수 연등 광장 입장 (WASD / 방향키 탐험)">
           <span>🏮</span>
-          <span class="hidden sm:inline">소원 연등</span>
+          <span class="hidden sm:inline">연등 광장 (탐험)</span>
         </button>
 
         <!-- 상단 AI 도사 챗봇 호출 버튼 (로그인 후 노출) -->
@@ -2096,6 +2096,213 @@
     </form>
   </aside>
 
+  <!-- ======================================================================
+       🏮 [가상 광장 전용 화면] 천명(天命) 은하수 소원 연등 광장 (WASD / 방향키 탐험)
+       ====================================================================== -->
+  <section id="wishPlazaSection" class="hidden fixed inset-0 z-50 bg-[#040612] text-[#f7eedc] font-serif-kr flex flex-col select-none overflow-hidden">
+    
+    <!-- Plaza Canvas (Full Screen 60FPS) -->
+    <canvas id="wishPlazaCanvas" class="absolute inset-0 w-full h-full cursor-crosshair z-0"></canvas>
+
+    <!-- Plaza Top HUD Header -->
+    <header class="relative z-10 bg-gradient-to-b from-[#18100b]/95 via-[#18100b]/80 to-transparent px-4 sm:px-6 py-3 flex items-center justify-between border-b border-[#b48a4e]/40 backdrop-blur-xs">
+      <div class="flex items-center space-x-3">
+        <span class="text-2xl filter drop-shadow-[0_0_10px_rgba(251,191,36,0.9)] animate-pulse">🏮</span>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h2 class="text-sm sm:text-base font-black text-[#fce8bd] tracking-wide">천명(天命) 은하수 소원 연등 광장</h2>
+            <span class="px-2 py-0.5 rounded-full bg-[#8c1d1d] text-[#ffe8b3] text-[10px] font-bold border border-[#d4a359]">WASD / 방향키 탐험</span>
+          </div>
+          <p class="text-[11px] text-[#d6c0a0]">
+            밤하늘에 떠 있는 <strong class="text-amber-300 font-bold" id="wishPlazaTotalCount">0</strong>개의 소원 연등 · 다가가서 [E] 또는 클릭하여 소원을 읽고 응원해보세요 ✨
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <!-- Weekly Top Shrine Shortcut -->
+        <button type="button" onclick="WishPlaza.showWeeklyTopModal()" class="px-3 py-1.5 rounded-xl bg-[#2a170e]/90 hover:bg-[#3d1f11] text-[#fde047] border border-[#f59e0b] text-xs font-bold shadow flex items-center space-x-1.5 transition cursor-pointer">
+          <span>👑</span>
+          <span class="hidden sm:inline">주간 1위 소원 헌사</span>
+        </button>
+
+        <!-- Launch Wish in Plaza -->
+        <button type="button" onclick="App.openPlazaLaunchModal()" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#d97706] to-[#b45309] hover:from-[#f59e0b] hover:to-[#d97706] text-white border border-[#fde68a] text-xs font-black shadow flex items-center space-x-1.5 transition cursor-pointer">
+          <span>🏮</span>
+          <span>내 소원 띄우기</span>
+        </button>
+
+        <!-- Exit Button -->
+        <button type="button" onclick="App.closeWishPlaza()" class="px-3 py-1.5 rounded-xl bg-[#374151]/80 hover:bg-[#4b5563] text-stone-200 text-xs font-bold border border-stone-600 transition flex items-center space-x-1 cursor-pointer">
+          <span>✕</span>
+          <span class="hidden sm:inline">메인으로</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Plaza Bottom HUD Controls & Instructions -->
+    <footer class="relative z-10 mt-auto bg-gradient-to-t from-[#120a06]/95 via-[#120a06]/75 to-transparent px-4 py-3 flex items-center justify-between pointer-events-none text-xs">
+      <!-- Movement key badges -->
+      <div class="flex items-center space-x-2 text-[11px] text-stone-300 font-sans pointer-events-auto bg-[#1e140d]/85 px-3.5 py-1.5 rounded-xl border border-stone-700/80 backdrop-blur-xs">
+        <span class="text-amber-400 font-bold">⌨️ 이동 조작:</span>
+        <span class="font-mono bg-[#2a1b14] px-1.5 py-0.5 rounded border border-stone-600 text-[10px]">W A S D</span>
+        <span>또는</span>
+        <span class="font-mono bg-[#2a1b14] px-1.5 py-0.5 rounded border border-stone-600 text-[10px]">↑ ↓ ← →</span>
+        <span>|</span>
+        <span class="text-amber-300">소원 읽기:</span>
+        <span class="font-mono bg-[#2a1b14] px-1.5 py-0.5 rounded border border-stone-600 text-[10px]">E / 스페이스 / 마우스 클릭</span>
+      </div>
+
+      <!-- Mobile On-Screen D-Pad (Touch / Clickable) -->
+      <div class="pointer-events-auto flex items-center space-x-1 sm:hidden">
+        <button type="button" onmousedown="WishPlaza.keys.left=true" onmouseup="WishPlaza.keys.left=false" ontouchstart="WishPlaza.keys.left=true" ontouchend="WishPlaza.keys.left=false" class="w-9 h-9 rounded-lg bg-[#2a1b14] text-white border border-stone-600 font-bold flex items-center justify-center active:bg-amber-800">◀</button>
+        <div class="flex flex-col space-y-1">
+          <button type="button" onmousedown="WishPlaza.keys.up=true" onmouseup="WishPlaza.keys.up=false" ontouchstart="WishPlaza.keys.up=true" ontouchend="WishPlaza.keys.up=false" class="w-9 h-9 rounded-lg bg-[#2a1b14] text-white border border-stone-600 font-bold flex items-center justify-center active:bg-amber-800">▲</button>
+          <button type="button" onmousedown="WishPlaza.keys.down=true" onmouseup="WishPlaza.keys.down=false" ontouchstart="WishPlaza.keys.down=true" ontouchend="WishPlaza.keys.down=false" class="w-9 h-9 rounded-lg bg-[#2a1b14] text-white border border-stone-600 font-bold flex items-center justify-center active:bg-amber-800">▼</button>
+        </div>
+        <button type="button" onmousedown="WishPlaza.keys.right=true" onmouseup="WishPlaza.keys.right=false" ontouchstart="WishPlaza.keys.right=true" ontouchend="WishPlaza.keys.right=false" class="w-9 h-9 rounded-lg bg-[#2a1b14] text-white border border-stone-600 font-bold flex items-center justify-center active:bg-amber-800">▶</button>
+      </div>
+    </footer>
+
+    <!-- Plaza Toast Notification -->
+    <div id="wishPlazaToast" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-[#1e130c]/95 border-2 border-[#f59e0b] px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold text-[#fef08a] shadow-[0_0_20px_rgba(245,158,11,0.4)] opacity-0 pointer-events-none transition-all duration-300">
+      <!-- Dynamically filled -->
+    </div>
+  </section>
+
+  <!-- 🏮 MODAL: 연등 소원 상세 & 응원 모달 (광장에서 연등 접근 시) -->
+  <dialog id="wishCardDetailModal" class="custom-modal" onclick="if(event.target===this) this.close()">
+    <div class="bg-[#1e140d] rounded-2xl border-2 border-[#d4a359] overflow-hidden shadow-2xl text-[#f7eedc] font-serif-kr max-w-md w-full relative">
+      <div class="dancheong-bar"></div>
+      
+      <div class="bg-[#2a1b14] px-4 py-3 flex items-center justify-between border-b border-[#b48a4e]">
+        <div class="flex items-center space-x-2">
+          <span class="text-xl">🏮</span>
+          <span id="wishDetailTitle" class="font-bold text-amber-300 text-sm">소원 연등</span>
+        </div>
+        <button type="button" onclick="document.getElementById('wishCardDetailModal').close()" class="text-stone-400 hover:text-white font-bold text-lg px-1 cursor-pointer">✕</button>
+      </div>
+
+      <div class="p-5 space-y-4 text-xs font-sans">
+        <div class="flex items-center justify-between text-stone-400 text-[11px]">
+          <span class="text-stone-300 font-bold">작성자: <span id="wishDetailAuthor" class="text-amber-200"></span></span>
+          <span id="wishDetailDate" class="font-mono text-[10px]"></span>
+        </div>
+
+        <div class="p-4 rounded-xl bg-[#140b06] border border-amber-900/80 text-amber-100 font-serif-kr text-sm leading-relaxed font-medium">
+          <p id="wishDetailText">"..."</p>
+        </div>
+
+        <div class="flex items-center justify-between pt-2 border-t border-stone-800">
+          <div class="text-[11px] text-stone-400">
+            <span>받은 응원: </span>
+            <strong id="wishDetailCheerCount" class="text-amber-400 font-mono text-sm">0</strong>개
+          </div>
+          <button type="button" id="wishDetailCheerBtn" class="px-4 py-2 rounded-xl bg-gradient-to-r from-[#d97706] to-[#b45309] text-white font-bold text-xs flex items-center space-x-1 shadow transition cursor-pointer">
+            <span>🙏</span>
+            <span>따뜻한 응원 보내기</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 👑 MODAL: 주간 1위 소원 헌사 모달 (대연등 제단 접근 시) -->
+  <dialog id="wishWeeklyTopModal" class="custom-modal" onclick="if(event.target===this) this.close()">
+    <div class="bg-[#1c120a] rounded-2xl border-2 border-[#f59e0b] overflow-hidden shadow-2xl text-[#f7eedc] font-serif-kr max-w-lg w-full relative">
+      <div class="dancheong-bar"></div>
+      
+      <div class="bg-[#2c170d] px-5 py-4 flex items-center justify-between border-b border-[#b48a4e]">
+        <div class="flex items-center space-x-2.5">
+          <span class="text-2xl animate-bounce">👑</span>
+          <div>
+            <h3 class="text-base font-black text-[#fde047]">천명(天命) 주간 최다 응원 1위 연등</h3>
+            <p class="text-[11px] text-[#e2cbb0]">천명 은하수 광장에서 가장 많은 도반들의 사랑과 응원을 받은 소원</p>
+          </div>
+        </div>
+        <button type="button" onclick="document.getElementById('wishWeeklyTopModal').close()" class="text-stone-400 hover:text-white font-bold text-lg px-1 cursor-pointer">✕</button>
+      </div>
+
+      <div class="p-5 space-y-4 text-xs font-sans">
+        <div class="p-4 rounded-xl bg-[#140b07] border-2 border-amber-500/70 shadow-sm space-y-2">
+          <div class="flex items-center justify-between text-xs font-bold text-amber-300">
+            <span id="weeklyTopDetailTitle" class="flex items-center space-x-1">
+              <span>🏮</span>
+              <span>1위 소원</span>
+            </span>
+            <span class="px-2 py-0.5 rounded-full bg-[#8c1d1d] text-[#ffe8b3] text-[10px] font-mono">
+              ❤️ 응원 <span id="weeklyTopDetailCount">0</span>명
+            </span>
+          </div>
+          <p id="weeklyTopDetailText" class="text-sm font-serif-kr text-[#fff6df] leading-relaxed font-bold">
+            "..."
+          </p>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-[#7c1d1d]/40 border border-amber-500/40 text-amber-100 space-y-1">
+          <div class="font-bold text-[#fef08a] flex items-center space-x-1 text-xs">
+            <span>✨</span>
+            <span>천명(天命) 시스템 공식 축원 헌사</span>
+          </div>
+          <p class="text-[11px] leading-relaxed font-sans opacity-95">
+            천명 도반들의 따뜻한 마음과 간절한 기도가 모여 은하수 밤하늘을 가장 환하게 밝혔습니다.<br/>
+            이 소원이 기적처럼 이루어지시길 천명이 온 마음을 다해 간절히 응원하고 축원합니다! 🏮✨
+          </p>
+        </div>
+
+        <div class="text-center pt-1">
+          <button type="button" onclick="document.getElementById('wishWeeklyTopModal').close()" class="px-6 py-2 rounded-xl bg-[#2a170e] hover:bg-[#3d1f11] text-amber-200 border border-amber-700 text-xs font-bold transition cursor-pointer">
+            확인 및 광장으로 돌아가기
+          </button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- ✍️ MODAL: 광장 내 소원 띄우기 팝업 -->
+  <dialog id="plazaLaunchModal" class="custom-modal" onclick="if(event.target===this) this.close()">
+    <div class="bg-[#1e140d] rounded-2xl border-2 border-[#d4a359] overflow-hidden shadow-2xl text-[#f7eedc] font-serif-kr max-w-md w-full relative">
+      <div class="dancheong-bar"></div>
+      
+      <div class="bg-[#2a1b14] px-4 py-3 flex items-center justify-between border-b border-[#b48a4e]">
+        <div class="flex items-center space-x-2">
+          <span class="text-xl">🏮</span>
+          <h3 class="font-bold text-amber-300 text-sm">은하수 광장에 내 소원 띄우기</h3>
+        </div>
+        <button type="button" onclick="document.getElementById('plazaLaunchModal').close()" class="text-stone-400 hover:text-white font-bold text-lg px-1 cursor-pointer">✕</button>
+      </div>
+
+      <div class="p-4 space-y-3 text-xs font-sans">
+        <div>
+          <label class="block font-bold text-stone-200 mb-1 text-xs">소원 분야</label>
+          <select id="plazaWishCategory" class="w-full bg-[#140b06] border border-amber-900 rounded-lg p-2 text-amber-200 font-bold focus:outline-none focus:border-amber-500">
+            <option value="🌿 건강·장수">🌿 건강·장수</option>
+            <option value="🎓 시험·합격">🎓 시험·합격</option>
+            <option value="💰 사업·재물">💰 사업·재물</option>
+            <option value="💖 애정·인연">💖 애정·인연</option>
+            <option value="🏡 가족·화목">🏡 가족·화목</option>
+            <option value="🕊️ 마음·평안">🕊️ 마음·평안</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-bold text-stone-200 mb-1 text-xs">닉네임 / 이름</label>
+          <input type="text" id="plazaWishAuthor" maxlength="15" placeholder="예: 취준생 달빛, 소망하는 딸" class="w-full bg-[#140b06] border border-amber-900 rounded-lg px-3 py-2 text-amber-100 placeholder:text-stone-500 focus:outline-none focus:border-amber-500" />
+        </div>
+
+        <div>
+          <label class="block font-bold text-stone-200 mb-1 text-xs">소원 한마디</label>
+          <textarea id="plazaWishText" rows="3" maxlength="120" placeholder="간절한 소망을 적어 은하수 밤하늘에 띄워보세요..." class="w-full bg-[#140b06] border border-amber-900 rounded-lg p-2.5 text-amber-100 placeholder:text-stone-500 focus:outline-none focus:border-amber-500 leading-relaxed"></textarea>
+        </div>
+
+        <button type="button" onclick="App.submitPlazaWish()" class="w-full py-3 rounded-xl bg-gradient-to-r from-[#d97706] to-[#8c1d1d] hover:from-[#f59e0b] hover:to-[#991b1b] text-white font-black text-xs shadow-lg border border-[#fde68a] transition flex items-center justify-center space-x-1.5 cursor-pointer">
+          <span>🏮</span>
+          <span>소원 연등 은하수에 띄우기</span>
+        </button>
+      </div>
+    </div>
+  </dialog>
+
   <!-- Footer -->
   <footer class="border-t-2 border-[#b48a4e] bg-[#1e1510] text-[#d5c19e] font-serif-kr">
     <div class="dancheong-bar"></div>
@@ -2116,6 +2323,7 @@
   <script src="js/engine/calendar.js?v=20261121_admin"></script>
   <script src="js/engine/saju.js?v=20261121_admin"></script>
   <script src="js/engine/fortune.js?v=20261121_admin"></script>
+  <script src="js/engine/wish_plaza.js?v=20261123"></script>
   <script src="js/app.js?v=20261121_export"></script>
 
 </body>

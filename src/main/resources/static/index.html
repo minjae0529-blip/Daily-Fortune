@@ -2133,7 +2133,7 @@
         </button>
 
         <!-- Exit Button -->
-        <button type="button" onclick="App.closeWishPlaza()" class="px-3 py-1.5 rounded-xl bg-[#374151]/80 hover:bg-[#4b5563] text-stone-200 text-xs font-bold border border-stone-600 transition flex items-center space-x-1 cursor-pointer">
+        <button type="button" onclick="WishPlaza.promptExit()" class="px-3 py-1.5 rounded-xl bg-[#374151]/80 hover:bg-[#4b5563] text-stone-200 text-xs font-bold border border-stone-600 transition flex items-center space-x-1 cursor-pointer">
           <span>✕</span>
           <span class="hidden sm:inline">메인으로</span>
         </button>
@@ -2155,6 +2155,9 @@
         <span>|</span>
         <span class="text-amber-300 font-bold">🪷 대웅전 입장 & 삼배:</span>
         <span class="font-mono bg-[#2a1b14] px-1.5 py-0.5 rounded border border-stone-600 text-[10px] text-amber-200">E / 클릭</span>
+        <span>|</span>
+        <span class="text-stone-400">나가기:</span>
+        <span class="font-mono bg-[#2a1b14] px-1.5 py-0.5 rounded border border-stone-600 text-[10px] text-stone-300">ESC</span>
       </div>
 
       <!-- Mobile On-Screen D-Pad & Jump Button (Touch / Clickable) -->
@@ -2352,6 +2355,37 @@
           <span>🏮</span>
           <span>소원 연등 은하수에 띄우기</span>
         </button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 🚪 MODAL: 연등 광장 퇴장 확인 팝업 (ESC 및 퇴장 버튼 연동) -->
+  <dialog id="wishPlazaExitConfirmModal" class="custom-modal" onclick="if(event.target===this) WishPlaza.cancelExit()">
+    <div class="bg-[#1e140d] rounded-2xl border-2 border-[#d4a359] overflow-hidden shadow-2xl text-[#f7eedc] font-serif-kr max-w-sm w-full relative">
+      <div class="dancheong-bar"></div>
+      
+      <div class="p-6 text-center space-y-4 font-sans">
+        <div class="w-14 h-14 rounded-full bg-[#2a1b14] border-2 border-[#f59e0b] mx-auto flex items-center justify-center text-2xl shadow">
+          🏮
+        </div>
+        <div class="space-y-1.5 font-serif-kr">
+          <h3 class="text-base font-black text-[#fef08a]">정말 연등 광장에서 나가시겠습니까?</h3>
+          <p class="text-xs text-stone-300 leading-relaxed font-sans">
+            언제든 다시 산사 연등 광장으로 찾아와<br/>
+            소원을 빌고 마음의 평안을 얻으실 수 있습니다.
+          </p>
+        </div>
+
+        <div class="flex items-center space-x-3 pt-2">
+          <!-- 아니요 (머무르기) -->
+          <button type="button" onclick="WishPlaza.cancelExit()" class="flex-1 py-2.5 rounded-xl bg-[#2a1b14] hover:bg-[#3d271c] text-stone-300 border border-stone-600 font-bold text-xs transition cursor-pointer">
+            아니요 (머무르기)
+          </button>
+          <!-- 네 (나가기) -->
+          <button type="button" onclick="WishPlaza.confirmExit()" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-[#d97706] to-[#b45309] hover:from-[#f59e0b] hover:to-[#d97706] text-white font-bold text-xs border border-[#fde68a] shadow transition cursor-pointer">
+            네 (나가기)
+          </button>
+        </div>
       </div>
     </div>
   </dialog>

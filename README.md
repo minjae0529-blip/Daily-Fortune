@@ -1,10 +1,11 @@
-# 🌟 천명(天命) - 한국 정통 사주 만세력 · 오늘의 운세 · 타로 · AI 명리/꿈해몽 풀스택 웹 서비스
+# 🌟 천명(天命) : 3D 가상 사찰 메타버스 & 한국 정통 사주 만세력 · 오늘의 운세 · AI 도사 풀스택 웹 플랫폼
 
-> **한국천문연구원(KASI) 24절기 역법 기반 만세력 엔진 + 내장형 AI 명리·꿈해몽 도사 챗봇 + 보안 로그인(PBKDF2·SQL 인젝션 방어·SMS 휴면해제) + 500원 간편결제(토스·카카오·네이버페이) + Spring Boot 4.x & MySQL 8.x (JPA / JDBC) 연동 프로젝트**
+> **한국천문연구원(KASI) 24절기 역법 만세력 엔진 + Three.js 기반 3D 대형 산사(절) 은하수 연등 광장 메타버스 + 내장형 AI 명리·꿈해몽 도사 챗봇 + 3중 보안 게이트(PBKDF2·SQLi Guard·SMS) + 500원 간편결제(토스·카카오·네이버페이) + Spring Boot 4.1.2 & MySQL 8.x (JPA / JDBC) 엔터프라이즈 프로젝트**
 
 ![Java](https://img.shields.io/badge/Java-21%20LTS-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.2-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-8.x-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
+![Three.js](https://img.shields.io/badge/Three.js-3D%20WebGL%20Metaverse-black?style=for-the-badge&logo=threedotjs&logoColor=white)
 ![JDBC & JPA](https://img.shields.io/badge/Persistence-Spring%20JDBC%20%7C%20JPA-59666C?style=for-the-badge&logo=hibernate&logoColor=white)
 ![Security](https://img.shields.io/badge/Security-PBKDF2%20%7C%20SQLi%20Guard%20%7C%20SMS%20Auth-991B1B?style=for-the-badge&logo=springsecurity&logoColor=white)
 ![AI Counselor](https://img.shields.io/badge/Built--in%20AI-사주%20%C2%B7%20꿈해몽%20도사%20챗봇-D97706?style=for-the-badge)
@@ -12,51 +13,166 @@
 
 ---
 
-## 📑 목차
+## 📑 목차 (Table of Contents)
 
-1. [프로젝트 개요](#-1-프로젝트-개요)
-2. [서비스 시연 데모 영상 및 화면 프리뷰](#-서비스-시연-데모-영상-live-walkthrough-demo)
-3. [시스템 최고 관리자 계정 및 보안 관제실](#-시스템-최고-관리자-계정-및-보안-관제실-system-security--administration)
-4. [카테고리별 인터랙티브 서책 자료 내보내기 (독립형 뷰어)](#-카테고리별-인터랙티브-서책-자료-내보내기-pdf-대체-독립형-뷰어)
-5. [마음 치유 & 앞날 설계 부가 서비스 (꿈해몽·마음날씨·소원연등)](#-마음-치유--앞날-설계-부가-서비스-daily-wellness--guidance)
-6. [기술 스택 (Tech Stack)](#-2-기술-스택-tech-stack)
-7. [핵심 구현 아키텍처 및 세부 구현 방법](#-3-핵심-구현-아키텍처-및-세부-구현-방법)
-8. [요청-응답 처리 시퀀스 다이어그램](#-4-요청-응답-처리-시퀀스-다이어그램)
-9. [데이터베이스 ERD 및 11대 정규화 엔티티 명세](#-5-데이터베이스-erd-및-11대-정규화-엔티티-명세)
-10. [API별 상세 요청(Request) & 응답(Response) 명세](#-6-api별-상세-요청request--응답response-명세)
-11. [프로젝트 디렉토리 구조](#-7-프로젝트-디렉토리-구조)
-12. [IntelliJ IDEA & MySQL JDBC 연동 가이드](#-8-intellij-idea--mysql-jdbc-연동-가이드)
-13. [로컬 빌드 및 실행 방법](#-9-로컬-빌드-및-실행-방법)
-
----
-
-## 📖 1. 프로젝트 개요
-
-**천명(天命) 欽定萬歲曆**은 조선 왕실 규장각 만세력 고서(古書)와 궁중 단청(丹靑)·오방색(五方色) 전통 미학을 현대 웹으로 재해석한 **정통 사주팔자 · 오늘의 운세 · 3-Card 타로 · 내장 AI 명리/꿈해몽 도사 챗봇 풀스택 웹 서비스**입니다.
-
-단순 정적 페이지나 파일 저장 방식이 아니라 **Spring Boot 4.1.2 백엔드와 MySQL 8.x 데이터베이스를 Spring Data JPA 및 Spring JDBC(`JdbcTemplate`)로 연동**하여 회원 보안 계정, SMS 인증 이력, 사주 4주 8자 원장, 오행 밸런스, 8대 신살, 일일 운세, 2인 궁합, 타로 점괘, 500원 간편결제 원장, AI 상담 로그까지 **총 11개의 정규화 엔티티 테이블**로 세분화해 저장·관리합니다.
+1. [📌 프로젝트 개요 및 기획 배경 (Project Overview)](#1-📌-프로젝트-개요-및-기획-배경-project-overview)
+2. [🎬 서비스 시연 데모 영상 및 10대 핵심 워크플로우 (Live Demo & 10-Step Walkthrough)](#2-🎬-서비스-시연-데모-영상-및-10대-핵심-워크플로우-live-demo--10-step-walkthrough)
+3. [🏮 천명 3D 산사(절) 은하수 소원 연등 광장 메타버스 (Three.js WebGL 3D Virtual Temple)](#3-🏮-천명-3d-산사절-은하수-소원-연등-광장-메타버스-threejs-webgl-3d-virtual-temple)
+4. [👑 시스템 최고 관리자 계정 및 보안 관제실 (System Security & Administration)](#4-👑-시스템-최고-관리자-계정-및-보안-관제실-system-security--administration)
+5. [📥 카테고리별 인터랙티브 서책 자료 내보내기 (PDF 대체 독립형 뷰어)](#5-📥-카테고리별-인터랙티브-서책-자료-내보내기-pdf-대체-독립형-뷰어)
+6. [🔮 마음 치유 & 앞날 설계 부가 서비스 (동양 정통 꿈해몽 · 오늘의 마음 날씨)](#6-🔮-마음-치유--앞날-설계-부가-서비스-daily-wellness--guidance)
+7. [🛠 기술 스택 및 라이브러리 명세 (Tech Stack)](#7-🛠-기술-스택-및-라이브러리-명세-tech-stack)
+8. [🏗 핵심 아키텍처 및 도메인별 세부 구현 메커니즘 (System Architecture)](#8-🏗-핵심-아키텍처-및-도메인별-세부-구현-메커니즘-system-architecture)
+9. [🔄 요청-응답 처리 시퀀스 다이어그램 (4-Phase Flow)](#9-🔄-요청-응답-처리-시퀀스-다이어그램-4-phase-flow)
+10. [🗄 데이터베이스 ERD 및 11대 정규화 엔티티 설계 (Database ERD & Entity Specifications)](#10-🗄-데이터베이스-erd-및-11대-정규화-엔티티-설계-database-erd--entity-specifications)
+11. [📡 RESTful API 상세 명세 (API Specifications & Examples)](#11-📡-restful-api-상세-명세-api-specifications--examples)
+12. [📁 프로젝트 디렉토리 구조 (Directory Tree)](#12-📁-프로젝트-디렉토리-구조-directory-tree)
+13. [💻 개발 환경 설정 및 MySQL 연동 가이드 (Environment Setup)](#13-💻-개발-환경-설정-및-mysql-연동-가이드-environment-setup)
+14. [🚀 로컬 빌드 및 실행 가이드 (Build & Run Guide)](#14-🚀-로컬-빌드-및-실행-가이드-build--run-guide)
 
 ---
 
-## 🎬 서비스 시연 데모 영상 (Live Walkthrough Demo)
+## 1. 📌 프로젝트 개요 및 기획 배경 (Project Overview)
 
-> **자동 재생 데모 영상 (`assets/demo.gif`)** 및 **[🎥 고화질 H.264 MP4 데모 영상 원본 (`assets/demo.mp4`)](assets/demo.mp4)**
+**천명(天命) 欽定萬歲曆**은 조선 왕실 규장각 만세력 고서(古書)와 궁중 단청(丹靑)·오방색(五方色) 전통 미학을 현대 웹 기술로 재해석한 **풀스택 3D 가상 사찰 메타버스 & 정통 사주명리 힐링 플랫폼**입니다.
+
+사용자의 생년월일시를 기반으로 인생의 앞날을 분석하는 데 그치지 않고, 하루의 마음을 위로하고 지친 일상에 평온과 서원을 품을 수 있는 **입체적 가상 사찰 메타버스 공간(천명전 연등 광장)**을 결합하여 전통 명리학과 현대 웹 기술(Three.js WebGL)의 시너지를 극대화하였습니다.
+
+```mermaid
+flowchart TD
+    subgraph Core ["🌟 천명(天命) 4대 핵심 서비스 축"]
+        M1["📜 한국 정통 사주 만세력 & 일진<br/>• KASI 24절기 역법 만세력 계산<br/>• 4주 8자 · 오행 밸런스 · 8대 신살<br/>• 오늘의 운세(무료) / 정통 사주(500원)"]
+        M2["🏮 3D 대형 산사 은하수 연등 광장<br/>• Three.js WebGL 3D 가상 사찰 메타버스<br/>• 대웅전 실내 진입 & 황금 불상 참배<br/>• 합장 삼배(三拜) 절하기 & 싱잉볼 타종<br/>• 실시간 연등 소원 띄우기 & 주간 1위 제단"]
+        M3["🧙‍♂️ 내장형 AI 명리 · 꿈해몽 도사<br/>• 22대 고전 주공해몽 백과 실시간 검색<br/>• 사주·일주·용신 결합 1:1 맞춤형 상담<br/>• 실시간 타이핑 스트리밍 문답"]
+        M4["🛡️ 엔터프라이즈 보안 & 500원 BM<br/>• PBKDF2 단방향 해싱 + SQLi 2중 방어<br/>• 5회 오류 SMS 발송 / 10회 휴면 잠금<br/>• 토스/카카오/네이버페이 500원 간편결제<br/>• Spring Boot 4.1.2 & MySQL 8.x (11대 테이블)"]
+    end
+```
+
+### 🌟 프로젝트 핵심 가치 및 특징
+1. **정통 명리학 역법의 엄밀한 디지털화**: 한국천문연구원(KASI) 24절기 기준 시두법(時頭法)과 30분 동경시 차이 보정 로직을 탑재하여 분 단위의 정밀한 4주 8자와 10년 대운을 산출합니다.
+2. **Three.js WebGL 3D 가상 사찰 메타버스**: 2D 웹 화면의 한계를 넘어, 밤하늘 은하수와 별똥별이 흐르는 고즈넉한 대형 산사(절)를 3D로 구현하여 전각 내부 진입, 황금 석가모니불 참배, 합장 삼배 절하기, 소원 연등 띄우기 및 응원(추천) 시스템을 제공합니다.
+3. **금융 수준의 보안 아키텍처**: 비밀번호 65,536회 PBKDF2 해싱, SQL 인젝션 클라이언트/서버 2중 차단, 5회 비밀번호 오류 시 휴대폰 SMS 보안 경고 문자 발송, 10회 오류 시 자동 휴면화(DORMANT_LOCKED) 및 SMS 6자리 인증 해제 메커니즘을 적용했습니다.
+4. **마이크로 결제(500원) 비즈니스 모델**: 오늘의 운세와 타로는 무료로 개방하고, 정통 사주 원국과 대운 심층 리포트는 토스페이·카카오페이·네이버페이 500원 간편결제 승인 게이트를 통과해야 열람할 수 있도록 설계했습니다.
+5. **엔터프라이즈급 데이터 거버넌스**: Spring Boot 4.1.2 및 MySQL 8.x 환경에서 JPA와 JDBC(`JdbcTemplate`)를 결합하여 11개의 정규화 엔티티 테이블로 데이터를 무결하게 관리합니다.
+
+---
+
+## 2. 🎬 서비스 시연 데모 영상 및 10대 핵심 워크플로우 (Live Demo & 10-Step Walkthrough)
+
+> **자동 순환 재생 데모 영상 (`assets/demo.gif`)** 및 **[🎥 고화질 H.264 MP4 데모 영상 원본 (`assets/demo.mp4`)](assets/demo.mp4)**
 
 <p align="center">
-  <img src="assets/demo.gif" alt="천명(天命) 전체 서비스 시연 데모 영상" width="760" />
+  <img src="assets/demo.gif" alt="천명(天命) 10대 핵심 워크플로우 전체 시연 데모 영상" width="780" />
 </p>
 
-### 🖼️ 단계별 주요 화면 프리뷰 (6대 핵심 플로우)
+### 🖼️ 10대 단계별 핵심 플로우 및 기능 명세
 
 | Step 1. 보안 로그인 · 회원가입 · SMS 휴면해제 | Step 2. 한국 전통 한지·단청 사주명식 입력 | Step 3. 500원 간편결제 게이트 (토스·카카오·네이버) |
 | :---: | :---: | :---: |
-| <img src="assets/step1_auth_login.png" width="280" alt="보안 로그인 게이트" /> | <img src="assets/step2_main_hanji_form.png" width="280" alt="전통 한지 입력 화면" /> | <img src="assets/step3_payment_modal_500krw.png" width="280" alt="500원 간편결제 모달" /> |
+| <img src="assets/step1_auth_login.png" width="280" alt="Step 1 보안 로그인 게이트" /><br/>• PBKDF2 단방향 암호화<br/>• 5회 오류 시 SMS 보안문자 발송<br/>• 10회 오류 시 계정 휴면화 및 SMS 인증 해제 | <img src="assets/step2_main_hanji_form.png" width="280" alt="Step 2 전통 한지 입력 화면" /><br/>• 조선 왕실 규장각 한지·단청 미학<br/>• 양력/음력/윤달/시간모름 지원<br/>• 30분 동경시 시차 자동 보정 체크 | <img src="assets/step3_payment_modal_500krw.png" width="280" alt="Step 3 500원 간편결제 모달" /><br/>• 오늘의 운세·타로는 100% 무료<br/>• 정통 사주팔자 500원 결제 게이트<br/>• 토스 · 카카오 · 네이버페이 지원 |
 | **Step 4. 결제 완료 영수증 & 사주·대운 리포트** | **Step 5. 3-Card 타로 & 카테고리 전환 재셔플** | **Step 6. 내장 AI 명리 · 꿈해몽 도사 챗봇** |
-| <img src="assets/step4_saju_unlocked_report.png" width="280" alt="사주 리포트 잠금해제" /> | <img src="assets/step5_tarot_3card_spread.png" width="280" alt="3-Card 타로 점괘" /> | <img src="assets/step6_ai_counselor_chatbot.png" width="280" alt="내장 AI 명리·꿈해몽 도사 챗봇" /> |
+| <img src="assets/step4_saju_unlocked_report.png" width="280" alt="Step 4 사주 리포트 잠금해제" /><br/>• 결제 승인 후 영수증 즉시 발급<br/>• 4주 8자 만세력 & 10년 대운 표<br/>• 오행 밸런스 바 & 8대 신살 정밀 해설 | <img src="assets/step5_tarot_3card_spread.png" width="280" alt="Step 5 3-Card 타로 점괘" /><br/>• 과거-현재-미래 3-Card 스프레드<br/>• 연애·금전·진로·치유 4대 분야<br/>• 카테고리 전환 시 12장 자동 재셔플 | <img src="assets/step6_ai_counselor_chatbot.png" width="280" alt="Step 6 내장 AI 명리·꿈해몽 도사 챗봇" /><br/>• 로그인 후 전용 플로팅 도사 버튼<br/>• 내 사주·일주·용신 결합 1:1 상담<br/>• 22대 고전 주공해몽 즉시 판정 및 문답 |
+| **Step 7. 천명 3D 산사 은하수 연등 광장** | **Step 8. 대웅전 실내 진입 & 황금 불상 참배** | **Step 9. 합장 삼배(三拜) 절하기 애니메이션** |
+| <img src="assets/step7_wish_plaza_3d.png" width="280" alt="Step 7 천명 3D 은하수 연등 광장" /><br/>• Three.js WebGL 3D 가상 사찰<br/>• 은하수·보름달·실시간 별똥별<br/>• W,A,S,D 보행 & 스페이스바 점프<br/>• 실시간 연등 총 개수 HUD & 소원 띄우기 | <img src="assets/step8_temple_interior_buddha.png" width="280" alt="Step 8 대웅전 실내 진입 & 황금 불상 참배" /><br/>• 2층 중층 대웅보전(천명전) 실내 진입<br/>• 우물마루 바닥, 붉은 내진주, 서까래<br/>• 3단 수미단, 대형 황금 석가모니불<br/>• 피어오르는 향연기 파티클, 촛불, 법고 | <img src="assets/step9_bow_prostration.png" width="280" alt="Step 9 합장 삼배 절하기 애니메이션" /><br/>• 불단 앞 연화문 방석에서 [E] 키/클릭<br/>• 아바타 상체/하체 오체투지 3회 모션<br/>• Web Audio API 사찰 싱잉볼 타종<br/>• 3배 완결 축원문 모달 자동 팝업 |
+| **Step 10. ESC 키 & 안전 퇴장 확인 모달** | **—** | **—** |
+| <img src="assets/step10_exit_confirm_modal.png" width="280" alt="Step 10 ESC 안전 퇴장 확인 모달" /><br/>• ESC 키 또는 [✕ 메인으로] 클릭 시 호출<br/>• 실수로 닫히지 않는 안전 모달 구조<br/>• [아니오 (머무르기)] ➔ 광장 유지<br/>• [네 (나가기)] ➔ 안전하게 메인 복귀 | — | — |
 
 ---
 
-## 👑 시스템 최고 관리자 계정 및 보안 관제실 (System Security & Administration)
+## 3. 🏮 천명 3D 산사(절) 은하수 소원 연등 광장 메타버스 (Three.js WebGL 3D Virtual Temple)
+
+천명(天命) 서비스의 핵심 차별화 기능 중 하나인 **3D 대형 산사 은하수 소원 연등 광장**은 Three.js(WebGL) 엔진을 기반으로 구축된 독립형 가상 사찰 메타버스 공간입니다. 브라우저에서 별도의 플러그인 설치 없이 60fps 이상의 부드러운 3D 그래픽을 렌더링하며, 사용자가 직접 도반 아바타를 조작하여 사찰 경내를 거닐고 부처님께 삼배를 올리며 소원을 띄울 수 있습니다.
+
+```mermaid
+graph TB
+    subgraph Engine ["🎮 Three.js WebGL 3D Engine (`wish_plaza.js`)"]
+        Render["3D Scene / PerspectiveCamera / WebGLRenderer<br/>(그림자 맵 · 안개 · DirectionalLight · AmbientLight)"]
+        Physics["물리 & 충돌 감지 엔진 (No-Clipping)<br/>• AABB & 원형 Collider (대웅전 벽체, 석탑, 불단, 연못)<br/>• X/Z축 독립 분할 충돌 검사 & 벽면 미끄러짐(Sliding)"]
+        Elevation["지형 고도 맵 (Elevation Tracking)<br/>• 평지(y=0) ➔ 홍예교(y=0.35~0.9) ➔ 9단계단(y=0~3.8) ➔ 마루(y=3.8)"]
+        Audio["Web Audio API 사찰 음향 엔진<br/>• 싱잉볼(Singing Bowl) 배음 합성 (Oscillator + Gain)<br/>• 풍경소리 · 빗소리 · 타종음"]
+    end
+
+    subgraph TempleSpace ["🏯 한국 정통 가상 사찰 공간 구성"]
+        OutCourtyard["경외 및 경내 마당<br/>• 2,800개 천구 별무리 & 보름달 & 실시간 별똥별<br/>• 연화지(연못) & 홍예교(아치교) & 삼층석탑<br/>• 범종각 & 명부전 & 회랑 & 해태상 & 8기 석등"]
+        Daeungjeon["대웅보전 (천명전) 실내 공간<br/>• 폭 56m, 높이 38m 2층 중층 전각 (12개 배흘림 기둥)<br/>• 우물마루 목재 바닥 & 붉은 내진주 & 천장 단청 서까래<br/>• 3단 조각 수미단 & 대형 황금 석가모니불 좌상 (황금 광배)<br/>• 실시간 피어오르는 향연기 파티클, 황금 촛대, 법고, 목탁"]
+    end
+
+    subgraph UserActions ["🧘 사용자 인터랙션 & 예법"]
+        Move["W, A, S, D / 방향키 보행<br/>스페이스바 점프 (중력/도약)"]
+        View["마우스 상하좌우 360도 Orbit 회전<br/>마우스 휠 줌 인/아웃"]
+        Bow["합장 삼배(三拜) 3회 풀 애니메이션<br/>(상체 피벗 오체투지 + 싱잉볼 타종)"]
+        Lantern["소원 연등 띄우기 & 열람<br/>따뜻한 응원(추천) & 주간 1위 대연등 제단"]
+        ExitSafe["ESC 키 안전 퇴장 확인 모달<br/>(정말 나가시겠습니까? 네 / 아니오)"]
+    end
+
+    Engine --> TempleSpace
+    TempleSpace --> UserActions
+```
+
+### 1) 웅장한 가상 사찰 공간 아키텍처
+- **대웅보전(천명전) 실내 전면 개방**:
+  - 한국 전통 궁궐 및 사찰 건축양식을 반영한 **폭 56m, 높이 38m의 웅장한 중층(2층) 대웅보전**이 구현되어 있습니다.
+  - 정면 대석계단(9단)을 걸어 올라가면 정면 대문이 활짝 열려 있어, 전각 내부로 끊김 없이 자연스럽게 걸어 들어갈 수 있습니다.
+- **전각 실내 목조 건축 및 정통 불교 장엄**:
+  - 바닥은 깊은 광택을 머금은 격자형 **우물마루 목재 텍스처**로 시공되었으며, 천장에는 단청 서까래와 대들보, 실내를 받치는 4기의 거대한 붉은 내진주가 웅장하게 서 있습니다.
+  - 전각 중앙 북벽에는 정교하게 조각된 **3단 목조 수미단(불단)** 위에 연화대좌에 결가부좌를 튼 **대형 황금 석가모니불 좌상**이 항마촉지인 수인을 맺고 자비로운 모습으로 도반을 맞이합니다.
+  - 불상 후방에는 신성함을 더하는 **황금 광배(신광·두광)**와 천장 전용 골드 스포트라이트(`SpotLight`)가 배치되어 있습니다.
+  - 불단 위에는 실시간으로 피어오르는 **향연기 입자(Incense Smoke Particles)**를 뿜어내는 청동 향로, 좌우에서 아늑하게 흔들리는 황금 촛대 불빛, 목탁과 목탁채, 동편의 거대한 법고(사찰 북)가 배치되어 사찰 고유의 경건한 분위기를 극대화합니다.
+- **경외 경내 시설**:
+  - 연꽃이 핀 연화지(연못)와 이를 가로지르는 아치형 홍예교, 중앙 삼층대석탑, 범종각, 명부전, 둘레 회랑, 잡귀를 쫓는 수호 해태상, 8기의 석등이 사찰 경내를 조화롭게 구성합니다.
+
+### 2) 100% 건물·조형물 관통 방지 충돌 감지 엔진 (No-Clipping Collision & Sliding)
+- **AABB & 원형 충돌체(Collider)**:
+  - 대웅전 4면 외벽(후벽, 좌우벽, 정면 출입구 좌우벽), 수미단 불단, 중앙 석탑, 범종각, 명부전, 회랑, 해태상, 8기 석등, 연못 수면에 정밀한 충돌 경계 영역을 구축하였습니다.
+  - 캐릭터가 벽면이나 조형물을 뚫고 지나가는 클리핑 현상(Clipping)을 100% 원천 차단하였습니다.
+- **X/Z축 독립 분할 검증 & 부드러운 벽면 미끄러짐(Sliding)**:
+  - 벽면에 비스듬히 부딪혔을 때 동작이 멈추지 않고 벽면을 따라 자연스럽게 미끄러지도록 X축과 Z축 이동을 독립적으로 계산하고 속도에 따른 서브스텝(Substep) 분할 충돌 감지를 적용했습니다.
+
+### 3) 실시간 지형 고도 맵 (Elevation Tracking)
+- 연화지 아치형 홍예교를 건널 때의 부드러운 포물선 고도(`0.35m ~ 0.9m`), 대웅전 9단 대석계단을 오를 때의 경사 고도(`0m ~ 3.8m`), 전각 내부 목재 마루 바닥(`3.8m`)을 발걸음에 맞춰 실시간으로 추적하여 계단을 딛고 오르내리는 자연스러운 보행을 구현했습니다.
+
+### 4) 캐릭터 제어 & 3D 물리 엔진
+- **키보드 조작**:
+  - `[W]` / `[↑]`: 카메라 시선 방향으로 **앞(전진)** 이동
+  - `[S]` / `[↓]`: 카메라 반대 방향으로 **뒤(후진)** 이동
+  - `[A]` / `[←]`: 카메라 기준 **왼쪽(좌측)** 이동
+  - `[D]` / `[→]`: 카메라 기준 **오른쪽(우측)** 이동
+  - `[Space]`: **3D 캐릭터 점프(Jump)** (수직 초속도, 중력 가속도, 지형 고도 착지 판정)
+  - 갓과 도포 차림의 3D 도반 아바타가 이동 방향에 맞춰 부드럽게 몸을 회전하며 팔다리를 흔드는 보행 애니메이션 적용
+- **마우스 시점 제어**:
+  - 마우스 드래그로 **위(하늘/보름달/처마 올려다보기), 아래(지면/캐릭터 내려다보기), 양옆(좌우 360도 회전)** 전방위 Orbit 시점 전환
+  - 마우스 휠로 8m ~ 36m 자유 줌 인/아웃 지원 (실내 진입 시 벽과 천장을 뚫지 않도록 쾌적한 실내 시점 자동 보정)
+  - 마우스 지면 클릭 시 레이캐스팅(Raycasting) 목표 지점으로 자동 보행 및 모바일 화면 가상 패드 동시 지원
+
+### 5) 합장 삼배(三拜) 정성 절하기 풀 애니메이션 & 사찰 싱잉볼 타종
+- **삼배(三拜) 3회 오체투지 모션**:
+  - 불단 앞 3좌의 연화문 방석에 서서 `[E]` 키를 누르거나 마우스로 방석/불상을 클릭하면 카메라가 부처님과 아바타를 가장 아름답게 비추는 시네마틱 3/4 앵글로 부드럽게 전환됩니다.
+  - 아바타 허리(Waist Pivot)와 팔다리 관절이 정밀하게 구동되어, 무릎을 꿇고 허리를 깊숙이 숙이며 두 손과 이마를 바닥에 조아리는 **전통 오체투지(五體投地) 절하기를 3회(1배 ➔ 2배 ➔ 3배)**에 걸쳐 정성스레 수행합니다.
+- **Web Audio API 싱잉볼 음향 합성 & 파티클 연출**:
+  - 1배, 2배, 3배가 진행될 때마다 사찰 특유의 그윽한 **사찰 싱잉볼(Singing Bowl) 타종음**이 오디오 신시사이저로 합성되어 울려 퍼집니다.
+  - 캐릭터 주변으로 황금빛 연꽃 파티클이 분수처럼 피어오르며, 실시간 발원문 토스트(`[1배] 모든 번뇌를 내려놓습니다`, `[2배] 지혜와 자비로운 마음을 청합니다`, `[3배] 간절한 소원이 이루어지길 축원합니다`)가 표출됩니다.
+  - 삼배가 모두 완결되면 **부처님의 자비 축원 헌사 모달**이 열려 정서적 치유와 깊은 안식을 전합니다.
+
+### 6) ESC 키 & 안전 퇴장 확인 모달 (Safe Exit Confirmation)
+- 3D 가상 공간을 탐험하는 도중 실수로 키보드 `[ESC]` 키를 누르거나 화면 우측 상단의 `[✕ 메인으로]` 버튼을 눌렀을 때 화면이 갑자기 닫히는 불쾌한 경험을 방지합니다.
+- 조작 즉시 **`"정말 연등 광장에서 나가시겠습니까?"`** 확인 다이얼로그 모달이 팝업됩니다.
+- 사용자가 **`[아니오 (머무르기)]`**를 누르면 모달만 닫히고 광장 탐험을 계속 이어갈 수 있으며, **`[네 (나가기)]`**를 눌러야만 메인 화면으로 안전하게 복귀합니다.
+- 소원 상세 모달이나 삼배 축원 모달이 열려 있는 상태에서 ESC를 누르면 해당 서브 모달만 먼저 닫히는 지능형 모달 스택 관리가 적용되어 있습니다.
+
+### 7) 소원 연등 상호작용 & 주간 최다 응원 1위 명예의 제단
+- **실시간 연등 총 개수 카운터 HUD**: 화면 상단에 현재 광장에 떠 있는 전체 소원 연등 수가 실시간으로 집계되어 표시됩니다.
+- **3D 부유 연등 & 따뜻한 응원(추천)**:
+  - 한지(韓紙) 질감과 내부 점광원(`PointLight`)을 머금은 3D 연등들이 밤하늘과 경내 마당 위에 유영하며, 연등에 다가가면 지면에 황금빛 펄스 링이 표시됩니다.
+  - `[E]` 키 또는 클릭으로 다른 사용자가 띄운 소원을 열람하고, **`[🙏 따뜻한 응원 보내기]`** 버튼을 누르면 3D 황금 불꽃이 터지며 실시간 추천수가 카운트업됩니다.
+- **👑 중앙 성소 주간 1위 대황금연등 제단**:
+  - 삼층석탑 상공에 금관을 쓴 **거대한 황금 대연등**이 자리잡고 있습니다.
+  - 일주일간 가장 많은 도반들의 추천을 받은 1위 소원이 헌액되며, 시스템 공식 명예 축원문이 상시 낭독됩니다.
+- **3D 밤하늘 & 실시간 유성(별똥별)**:
+  - 2,800여 개의 3D 천구 별무리(Starfield)와 은은한 달빛의 보름달, 대각선 궤적을 그리며 떨어지는 유성(Shooting Stars)이 낭만적이고 신비로운 밤하늘 분위기를 완성합니다.
+
+---
+
+## 4. 👑 시스템 최고 관리자 계정 및 보안 관제실 (System Security & Administration)
 
 천명(天命) 서비스는 엔터프라이즈급 시스템 보안 관제 및 실시간 운영을 위해 **최고 관리자(ROLE_ADMIN) 계정과 전용 통합 관제실 모달**을 기본 탑재하고 있습니다. 서버 구동 시 `AdminInitializer`(`ApplicationRunner`)가 실행되어 데이터베이스 내 관리자 계정 유무를 자동 감지하고 최신 보안 규격으로 안전하게 생성·유지합니다.
 
@@ -89,7 +205,7 @@
 
 ---
 
-## 📥 카테고리별 인터랙티브 서책 자료 내보내기 (PDF 대체 독립형 뷰어)
+## 5. 📥 카테고리별 인터랙티브 서책 자료 내보내기 (PDF 대체 독립형 뷰어)
 
 정적이고 딱딱한 PDF 인쇄 방식의 한계를 극복하고, 사용자가 브라우저에서 **각 카테고리별 탭을 직접 클릭하여 자유롭게 열람할 수 있는 독립형 인터랙티브 디지털 서책(`.html`) 내보내기** 기능을 제공합니다.
 
@@ -110,20 +226,18 @@
 
 ---
 
-## 🔮 마음 치유 & 앞날 설계 부가 서비스 (Daily Wellness & Guidance)
+## 6. 🔮 마음 치유 & 앞날 설계 부가 서비스 (Daily Wellness & Guidance)
 
-사용자의 **하루의 기분(心象)을 치유하고 앞날에 실질적인 희망과 통찰을 전하는 3대 힐링 부가 기능**을 독자적으로 구축하였습니다.
+사용자의 **하루의 기분(心象)을 치유하고 앞날에 실질적인 희망과 통찰을 전하는 부가 기능**을 독자적으로 구축하였습니다.
 
 ```mermaid
-flowchart TD
-    subgraph Wellness ["🌿 천명(天命) 3대 마음 치유 & 미래 설계 부가 서비스"]
+flowchart LR
+    subgraph Wellness ["🌿 천명(天命) 마음 치유 & 미래 설계 부가 서비스"]
         Dream["🌙 동양 정통 꿈해몽 백과 & 검색기<br/>• 6대 길흉 카테고리 & 22대 고전 해몽<br/>• 초성/키워드 실시간 필터 & AI 도사 연계"]
         Mood["🧘 오늘의 마음 날씨 & 오행 힐링 처방소<br/>• 5대 감정 기상도(맑음·구름·비·번개·안개)<br/>• 오행 심리 진단 · 힐링 한방차 · 긍정 확언"]
-        Wish["🏮 소원 연등 띄우기 (소원 보관함)<br/>• 6대 소원 분야(건강·재물·애정·합격 등)<br/>• 밤하늘 은하수 부유 애니메이션 · 소원 저장"]
     end
     Dream --> AI["🧙‍♂️ AI 명리·해몽 도사 챗봇 1:1 심층 상담"]
     Mood --> AI
-    Wish --> Storage["📜 로컬 영구 보관함 (언제든 열람)"]
 ```
 
 ### 1) 🌙 동양 정통 꿈해몽 (夢兆) 백과사전 & 실시간 검색기
@@ -150,54 +264,9 @@ flowchart TD
   - 감정 상태를 사주 오행의 기운 순환과 연계하여 심리 상태를 과학적·철학적으로 위로
   - 매일 마음을 다잡고 앞날을 밝혀주는 영감 넘치는 긍정 확언 문구 탑재
 
-### 3) 🏮 천명(天命) 3D 대형 산사(절) 은하수 소원 연등 광장 (Three.js 기반 3D 가상 사찰 메타버스)
-- **대웅보전(천명전) 실내 진입 & 정통 불교 사찰 대웅전 공간 구현 (Three.js WebGL Engine)**:
-  - 웅장한 규모의 **중층(2층) 대웅보전(폭 56m, 높이 38m, 12개 배흘림 기둥, 9쌍의 창호문)**의 정면 대문이 활짝 열려 있어, 대석계단을 올라 전각 내부로 직접 걸어 들어갈 수 있습니다.
-  - 전각 내부는 깊은 광택의 **우물마루 목재 바닥**, 4기의 거대한 내진주(붉은 기둥), 천장 단청 서까래 및 대들보가 웅장하게 펼쳐집니다.
-- **정통 불교 장엄 (대형 황금 불상 · 수미단 · 향연기 · 촛불 · 목탁 · 법고)**:
-  - **대형 황금 석가모니불 좌상**: 3단 목조 조각 수미단(불단) 위 연화대좌에 결가부좌를 튼 거대한 황금 불상이 항마촉지인 수인을 맺고 자비로운 미소로 도반을 맞이하며, 후방에는 빛나는 황금 광배(신광·두광)와 전용 천장 스포트라이트가 신성한 기운을 연출합니다.
-  - **불단 공양물 & 실시간 연출**: 피어오르는 향연기 입자(Incense Smoke Particles)를 내뿜는 청동 향로, 좌우에서 일렁이는 황금 촛대 불빛, 목탁과 목탁채, 동편에 자리한 거대한 법고(사찰 북), 천장에 매달린 오색 장엄 인등(연등)이 사찰 고유의 고즈넉한 정취를 극대화합니다.
-  - **🪷 합장 삼배(三拜) 3회 정성 절하기 풀 애니메이션 & 싱잉볼 타종 (E키 / 클릭)**:
-    - 불단 앞 3좌의 연화문 방석에 서서 `[E]` 키를 누르면 카메라가 부처님과 아바타를 한눈에 비추는 시네마틱 3/4 앵글로 전환됩니다.
-    - 아바타가 방석 위에 무릎을 꿇고 엎드려 머리와 양손을 조아리는 **전통 오체투지(五體投地) 절하기 모션**을 3회(1배 ➔ 2배 ➔ 3배)에 걸쳐 정성스레 수행합니다.
-    - 각 배마다 Web Audio API로 합성된 그윽한 **사찰 싱잉볼/종소리**와 황금빛 연꽃 파티클이 방출되며, 실시간 참회·발원문 토스트(`[1배] 번뇌 내려놓음`, `[2배] 지혜와 자비`, `[3배] 소원 성취`)가 흐르고 3배 완료 시 축원 모달이 표시됩니다.
-- **🚪 ESC 키 & 상단 퇴장 버튼 확인 팝업 (Safe Exit Confirmation)**:
-  - 3D 탐험 중 키보드 `[ESC]` 키를 누르거나 우측 상단 `[✕ 메인으로]` 버튼을 누르면 즉시 꺼지지 않고, **`"정말 연등 광장에서 나가시겠습니까?"`** 확인 다이얼로그가 호출됩니다.
-  - 사용자가 **`[네 (나가기)]`**를 누르면 메인 화면으로 나가고, **`[아니오 (머무르기)]`**를 누르면 3D 사찰 광장 화면에 안전하게 머무릅니다.
-  - 하위 모달(소원 상세, 주간 1위, 삼배 축원 모달)이 열려 있을 때 ESC를 누르면 해당 모달만 닫혀 조작 실수를 원천 방지합니다.
-- **건물 및 조형물 관통 100% 방지 충돌 감지 엔진 (No-Clipping Collision & Sliding)**:
-  - 대웅전 외벽(후벽, 좌우벽, 정면 좌우벽), 수미단 불단, 중앙 삼층대석탑, 범종각, 명부전, 둘레 회랑, 수호 해태상, 8기의 석등, 연화지 연못(다리 통로만 통행 가능)에 엄격한 **AABB 및 원형 충돌체(Collider)**를 적용하여 캐릭터가 건물을 뚫고 지나가는 현상을 완벽 차단하였습니다.
-  - X축과 Z축 충돌을 독립적으로 검증하고 보행 속도에 맞춘 서브스텝(Substep) 분할을 적용하여 벽면에 닿아도 부자연스럽게 멈추지 않고 **부드러운 벽면 미끄러짐(Sliding)**을 지원합니다.
-- **지형 고도 맵 (홍예교 아치 & 9단 대석계단 & 2단 월대 마루 보행)**:
-  - 연화지 아치형 홍예교의 완만한 곡면 고도(`0.35m ~ 0.9m`), 대웅전 앞 9단 대석계단을 오르는 부드러운 경사 고도(`0m ~ 3.8m`), 전각 내부 목재 마루(`3.8m`)를 자연스럽게 걸어 올라가고 내려올 수 있도록 실시간 고도 추적 엔진을 구현하였습니다.
-- **카메라 기준 3D 캐릭터 보행 & 스페이스바 점프 물리 엔진 (W, S, A, D / 방향키 / Space)**:
-  - **`[W]` / `[↑]`**: 카메라 시선 방향으로 **앞(전진)** 이동
-  - **`[S]` / `[↓]`**: 카메라 반대 방향으로 **뒤(후진)** 이동
-  - **`[A]` / `[←]`**: 카메라 기준 **왼쪽(좌측)** 이동
-  - **`[D]` / `[→]`**: 카메라 기준 **오른쪽(우측)** 이동
-  - **`[스페이스바]`**: **3D 캐릭터 점프(Jump)** 구현 (중력 가속도, 수직 도약 속도, 지형 고도 기반 자연스러운 착지)
-  - 갓과 도포 차림의 3D 도반 아바타가 이동 방향에 맞춰 부드럽게 몸을 돌리며 팔다리를 흔드는 3D 보행 및 점프 모션 적용
-  - 마우스 클릭 시 지면 레이캐스팅(Raycasting)을 통해 해당 3D 위치로 걸어가는 기능 및 모바일 가상 D-Pad/점프/삼배 버튼 동시 지원
-- **마우스 위/아래/양옆 360도 자유 시점 제어 (Mouse Up/Down/Left/Right Orbit Control)**:
-  - 마우스 드래그로 **위(하늘/보름달/처마 올려다보기), 아래(지면/캐릭터 내려다보기), 양옆(좌우 360도 회전)** 자유 시점 전환
-  - 마우스 휠 줌 인/아웃(8m ~ 36m) 지원 (전각 내부 진입 시 카메라가 천장과 벽을 뚫지 않도록 쾌적한 실내 시점 자동 유지)
-- **실시간 소원 연등 총 개수 HUD & 3D 부유 연등**:
-  - 화면 상단 HUD에 현재 광장에 떠 있는 **전체 소원 연등의 실시간 개수** 집계
-  - 한지(韓紙) 질감과 은은한 내부 포인트 조명(`PointLight`)을 품은 3D 연등들이 밤하늘과 사찰 마당 위에 부드럽게 떠오르며 살랑거리는 소원지가 흔들림
-- **근접 감지 인터랙션 & 소원 열람 & 따뜻한 응원(추천)**:
-  - 3D 연등에 다가가면 지면에 황금빛 펄스 링과 함께 `[E]` 키 또는 3D 연등을 마우스로 직접 클릭하여 소원 상세 모달 오픈
-  - **`[🙏 따뜻한 응원 보내기]`** 클릭 시 3D 황금 불꽃 파티클 방출 및 실시간 추천수 증가
-- **👑 중앙 성소: 주간 최다 응원 1위 연등 제단 & 대황금연등**:
-  - 삼층석탑 상공에 위치한 **황금빛 대연등(금관 착용)**
-  - 접근 또는 클릭 시 일주일간 가장 많은 도반들의 사랑과 응원을 받은 1위 소원을 헌액하며 시스템 공식 축원 헌사 낭독
-- **3D 밤하늘 & 신비로운 보름달 & 실시간 별똥별(유성)**:
-  - 2,800여 개의 3D 천구 별무리(Starfield)와 은은한 달빛을 비추는 3D 보름달(Full Moon)
-  - 대각선 궤적을 그리며 밤하늘을 가로지르는 3D 유성(Shooting Stars) 실시간 생성
-  - `[🏮 내 소원 띄우기]` 시 내 캐릭터 바로 앞에서 새로운 3D 연등이 밤하늘로 서서히 피어오르며 전체 연등 카운트 즉시 반영
-
 ---
 
-## 🛠 6. 기술 스택 (Tech Stack)
+## 7. 🛠 기술 스택 및 라이브러리 명세 (Tech Stack)
 
 | 영역 | 기술 / 라이브러리 | 버전 | 적용 및 구현 역할 |
 | :---: | :--- | :---: | :--- |
@@ -206,6 +275,8 @@ flowchart TD
 | **Database** | MySQL | `8.x` | `utf8mb4` 기반 11대 정규화 엔티티 테이블 영구 저장 및 트랜잭션 관리 |
 | **ORM / JPA** | Spring Data JPA (Hibernate) | `7.4.x` | 엔티티 매핑, `@OneToOne`/`@OneToMany` 영속성 전이(`CascadeType.ALL`) |
 | **JDBC** | Spring JDBC (`JdbcTemplate`) | `7.0.x` | `DataSource` 커넥션 메타데이터 진단, 다중 테이블 SQL JOIN 직접 쿼리 |
+| **3D Engine** | Three.js (WebGL) | `0.160+` | 3D 가상 사찰 메타버스, 대웅전 실내, 황금 불상, 합장 삼배 애니메이션, 충돌/고도 맵 |
+| **Audio Engine**| Web Audio API | `Standard` | 사찰 싱잉볼(Singing Bowl) 타종음 합성 및 파티클 연동 |
 | **Security** | `PBKDF2WithHmacSHA256` & `SecurityUtils` | `Custom` | 16바이트 랜덤 Salt 해싱, SQL 인젝션 시그니처 차단, XSS 정화, SMS 휴면해제 |
 | **Payment BM** | 토스페이 · 카카오페이 · 네이버페이 모달 | `500 KRW` | 오늘의 운세 무료 / 정통 사주 500원 결제 승인 후 화면 전환 게이트키핑 |
 | **Built-in AI** | `AiCounselorService` (명리·꿈해몽 AI) | `Built-in` | 사주·일진·용신 실시간 컨텍스트 결합 1:1 상담 및 동양 정통 주공해몽(꿈해몽) |
@@ -214,25 +285,27 @@ flowchart TD
 
 ---
 
-## 🏗 3. 핵심 구현 아키텍처 및 세부 구현 방법
+## 8. 🏗 핵심 아키텍처 및 도메인별 세부 구현 메커니즘 (System Architecture)
 
-### 3-1. 전체 시스템 계층형 아키텍처 (Layered Architecture)
+### 8-1. 전체 시스템 계층형 아키텍처 (Layered Architecture)
 
 ```mermaid
 flowchart LR
-    subgraph Client ["🏯 한국 전통 한지·단청 프론트엔드 (Browser)"]
+    subgraph Client ["🏯 한국 전통 한지·단청 프론트엔드 & 3D 메타버스 (Browser)"]
         AuthUI["회원가입 · 보안 로그인 게이트<br/>(5회 SMS 경고 / 10회 휴면해제)"]
         MainUI["오늘의 운세(무료) · 사주(500원) · 타로<br/>(index.html / style.css / app.js)"]
         PayUI["500원 간편결제 게이트 모달<br/>(토스페이 · 카카오페이 · 네이버페이)"]
         AiUI["내장 AI 명리·꿈해몽 도사 챗봇<br/>(로그인 후 활성화 · 실시간 타이핑)"]
+        PlazaUI["🏮 3D 산사 은하수 연등 광장<br/>(Three.js / wish_plaza.js / WebGL)"]
         AuthUI --> MainUI
         MainUI --> PayUI
         MainUI --> AiUI
+        MainUI --> PlazaUI
     end
 
     subgraph SpringBoot ["🍃 Spring Boot 4.1.2 백엔드 (Port: 8085)"]
         SecGuard["SecurityUtils<br/>(SQLi 차단 · PBKDF2+Salt · XSS 방어)"]
-        Controllers["REST Controllers<br/>(AuthApi / SajuApi / AiChat)"]
+        Controllers["REST Controllers<br/>(AuthApi / SajuApi / AiChat / AdminApi)"]
         Services["Transactional Services<br/>(AuthService / SajuService / AiCounselorService)"]
         Repos["Persistence Layer<br/>(JPA Repositories 9종 + SajuJdbcRepository)"]
         SecGuard --> Controllers --> Services --> Repos
@@ -251,7 +324,7 @@ flowchart LR
     Repos -- "PreparedStatement SQL" --> Database
 ```
 
-### 3-2. 6대 핵심 도메인별 세부 구현 내용
+### 8-2. 6대 핵심 도메인별 세부 구현 내용
 
 | 구분 | 담당 클래스 / 파일 | 세부 구현 메커니즘 및 핵심 로직 |
 | :---: | :--- | :--- |
@@ -260,17 +333,17 @@ flowchart LR
 | **3. 오늘의 운세 작동 메커니즘 (100% 무료)** | `fortune.js`<br/>`calendar.js`<br/>`saju.js` | • 상용 운세 플랫폼(포스텔러·점신)의 일진 알고리즘을 반영하여 **[사용자 본원 일간·일지·용신]**과 **[당일 60갑자 일진]**을 매칭합니다.<br/>• **① 십신(十神) 작용**, **② 12운성(十二運星: 장생·관대·건록·제왕 등 12단계 에너지 바이오리듬)**, **③ 천간합·지지육합·천간충·지지충 실시간 신호등 트리거**, **④ 시두법(時頭法) 4대 시간대별 흐름**, **⑤ 결핍 오행/용신 기반 개운 음식·컬러·하도 수리 숫자·방위**를 결정론적 알고리즘으로 산출합니다. |
 | **4. 사주팔자 500원 유료화 게이트 & 3사 간편결제** | `SajuApiController`<br/>`SajuService`<br/>`PaymentEntity` | • **무료/유료 분리**: 오늘의 운세와 타로는 무료(`FREE`)로 즉시 열람되며, 정통 사주팔자는 **500원 유료(`500원`)** 서비스로 운영됩니다.<br/>• **결제 후 화면 전환 게이트키핑**: 사주팔자 모드에서 조회 버튼을 누르면 결과 화면으로 넘어가지 않고 입력 화면 위에서 **`"💳 500원 결제를 진행하시겠습니까?"`** 모달이 먼저 팝업됩니다. 결제 취소 시 입력 화면에 머무르며, **토스페이(`TOSS_PAY`) · 카카오페이(`KAKAO_PAY`) · 네이버페이(`NAVER_PAY`)** 중 하나를 선택해 최종 결제 승인(`POST /api/payment/checkout`)을 완료해야만 MySQL `payments` 테이블에 영수증(`ORD-YYYYMMDD-XXXXXX`)이 기록되면서 사주 결과 화면으로 전환됩니다. |
 | **5. 내장형 AI 명리 · 꿈해몽 도사 챗봇** | `AiChatController`<br/>`AiCounselorService`<br/>`AiChatLogEntity` | • **로그인 후 전용 노출**: 로그인 전에는 챗봇 버튼과 드로어가 완전히 숨겨지며, 로그인 완료 후에만 우측 하단 플로팅 도사 버튼과 상단 헤더 버튼이 활성화됩니다.<br/>• **사주 컨텍스트 실시간 연동**: 사용자의 일주, 수호동물, 신강/신약, 용신, 오늘의 십신·12운성·점수를 실시간으로 결합하여 재물·연애·이직·오늘의 비책·용신 개운법을 1:1로 상담합니다.<br/>• **동양 정통 꿈해몽(周公解夢)**: 돼지·똥·황금(`대대길몽 98점`), 용·호랑이·태양(`제왕길몽 97점`), 활활 타는 불(`번창길몽 94점`), 죽음·시체·피(`역몽 대길조 93점`), 조상님(`음덕예지몽 92점`), 뱀·맑은 물·잉어(`지혜·재원 길몽 90점`), 치아 빠짐·쫓기는 꿈(`신중경고몽·심몽`)을 내 사주 일진과 대조해 해몽하고 MySQL `ai_chat_logs` 테이블에 저장합니다. |
-| **6. 한국 전통 단청·한지 디자인 & 타로 카테고리 재셔플** | `index.html`<br/>`style.css`<br/>`app.js` | • **한국 전통 미학**: 궁중 단청 5색 상·하단 띠(`.dancheong-bar`), 조선 왕실 규장각 현판 헤더, 사괘(`☰ ☲ ☵ ☷`) 및 오방색(`靑·赤·黃·白·黑`) 장식, 한지 고서 이중 창살 테두리, 주칠 낙관 인장(`天命`, `四柱命式`), 실시간 천기 마퀴 전광판을 적용했습니다.<br/>• **타로 카테고리 전환 재셔플**: 타로에서 카테고리(`연애`, `진로`, `금전`, `치유`)를 바꾸면 이전 선택 카드를 재사용하지 않고 `resetTarotSpread()`를 호출해 12장 덱을 즉시 새로 셔플하고 3장을 다시 뽑게 합니다. |
+| **6. 3D 가상 사찰 메타버스 & 연등 광장** | `wish_plaza.js`<br/>`index.html`<br/>`Three.js WebGL` | • **Three.js WebGL 렌더링**: 대웅보전 실내 진입, 우물마루 바닥, 황금 석가모니불, 수미단, 향연기 파티클, 촛불, 법고, 2,800개 별무리 및 별똥별 연출.<br/>• **물리 및 충돌 엔진**: 건물·조형물 관통 100% 방지 AABB 충돌체 및 X/Z 독립 슬라이딩, 지형 고도 맵(홍예교·계단·마루) 추적.<br/>• **인터랙션 & 예법**: W,A,S,D 보행, Space 점프, 마우스 360도 Orbit 회전/휠 줌, 합장 삼배(三拜) 3회 오체투지 애니메이션, Web Audio API 사찰 싱잉볼 타종, ESC 키 안전 퇴장 모달. |
 
 ---
 
-## 🔄 4. 요청-응답 처리 시퀀스 다이어그램
+## 9. 🔄 요청-응답 처리 시퀀스 다이어그램 (4-Phase Flow)
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor User as 👤 사용자
-    participant FE as 🏯 프론트엔드 (app.js)
+    participant FE as 🏯 프론트엔드 (app.js / wish_plaza.js)
     participant AUTH as 🛡️ AuthApiController
     participant SAJU as 🎮 SajuApiController
     participant AI as 🧙‍♂️ AiChatController
@@ -296,7 +369,7 @@ sequenceDiagram
         else 비밀번호 일치 (정상 로그인)
             AUTH->>DB: UPDATE accounts SET failed_attempts=0, last_login_at=NOW()
             AUTH-->>FE: 200 OK (authenticated: true, HttpSession 발급)
-            FE-->>User: 사주·운세 메인 화면 진입 & 🧙‍♂️ AI 도사 챗봇 버튼 활성화
+            FE-->>User: 사주·운세 메인 화면 진입 & 🧙‍♂️ AI 도사 챗봇 & 🏮 연등광장 활성화
         end
     end
 
@@ -322,13 +395,26 @@ sequenceDiagram
         AI-->>FE: 200 OK (ChatResponse JSON)
         FE-->>User: 실시간 타이핑 스트리밍 애니메이션으로 맞춤형 해몽·명리 처방 출력
     end
+
+    rect rgb(255, 250, 240)
+        Note over User,DB: [Phase 4] 🏮 3D 산사 연등 광장 탐험 & 합장 삼배 & ESC 안전 퇴장
+        User->>FE: 상단 [🏮 은하수 소원 연등 광장] 클릭
+        FE->>FE: WishPlaza.init() ➔ Three.js 씬 구축 & 아바타 스폰
+        FE-->>User: 3D 가상 사찰 메타버스 오픈 (W,A,S,D 보행 / Space 점프 / 마우스 회전)
+        User->>FE: 대웅전 실내 진입 후 방석 앞에서 [E] 키 입력 (합장 삼배 요청)
+        FE->>FE: 시네마틱 카메라 전환 ➔ 오체투지 3회 풀모션 ➔ 싱잉볼 타종 ➔ 축원 모달 표출
+        User->>FE: 키보드 [ESC] 키 입력
+        FE-->>User: "정말 연등 광장에서 나가시겠습니까?" 확인 다이얼로그 모달 오픈
+        User->>FE: [아니오 (머무르기)] 클릭 ➔ 3D 광장 안전 유지
+        User->>FE: [네 (나가기)] 클릭 ➔ WishPlaza 리소스 정리 및 메인 화면 복귀
+    end
 ```
 
 ---
 
-## 🗄 5. 데이터베이스 ERD 및 11대 정규화 엔티티 명세
+## 10. 🗄 데이터베이스 ERD 및 11대 정규화 엔티티 설계 (Database ERD & Entity Specifications)
 
-### 5-1. MySQL 데이터베이스 ERD (`chunmyung_saju`)
+### 10-1. MySQL 데이터베이스 ERD (`chunmyung_saju`)
 
 ```mermaid
 erDiagram
@@ -457,7 +543,7 @@ erDiagram
     }
 ```
 
-### 5-2. 11대 엔티티 클래스 및 테이블 매핑 요약
+### 10-2. 11대 엔티티 클래스 및 테이블 매핑 요약
 
 > 패키지 경로: `com.chunmyung.saju.entity`
 
@@ -477,7 +563,7 @@ erDiagram
 
 ---
 
-## 📡 6. API별 상세 요청(Request) & 응답(Response) 명세
+## 11. 📡 RESTful API 상세 명세 (API Specifications & Examples)
 
 모든 REST API 응답은 아래 `ApiResponseDto<T>` 공통 포맷으로 반환됩니다.
 
@@ -746,22 +832,7 @@ erDiagram
 
 ---
 
-### ⑥ 사주팔자 4주 8자 · 오행 · 신살 통합 저장 API (`POST /api/saju/save`)
-
-| 구분 | 필드명 | 타입 | 필수 | 설명 |
-| :-: | :--- | :---: | :-: | :--- |
-| **사용자** | `name`, `gender`, `birthType` | `String` | Y | 이름, 성별(`"M"`/`"F"`), 역법(`"SOLAR"`/`"LUNAR"`) |
-| **사용자** | `birthYear`, `birthMonth`, `birthDay` | `Integer` | Y | 출생 연·월·일 |
-| **사용자** | `birthHour`, `birthMinute` | `Integer` | N | 출생 시·분 (시간 모름일 경우 `null`) |
-| **사주원장** | `yearCheongan` ~ `timeJiji` | `String` | Y | 년·월·일·시주 천간(天干) 및 지지(地支) 8글자 |
-| **사주원장** | `dayMaster`, `iljuName`, `zodiacAnimal` | `String` | Y | 본원 일간, 60갑자 일주명, 수호동물 |
-| **오행밸런스** | `woodRatio` ~ `waterRatio` | `BigDecimal` | Y | 목·화·토·금·수 오행 비율 (`0.00` ~ `100.00`) |
-| **오행밸런스** | `strengthStatus`, `yongsin` | `String` | Y | 신강·신약 판정 및 추천 용신 |
-| **신살목록** | `sinsals` | `List<SinsalDto>` | N | 기둥(`pillarType`), 신살명(`sinsalName`), 길흉, 해설 배열 |
-
----
-
-### ⑦ 기타 조회 및 저장 엔드포인트 요약
+### ⑥ 기타 조회 및 저장 엔드포인트 요약
 
 | HTTP Method | Endpoint | 설명 | 사용 기술 |
 | :---: | :--- | :--- | :--- |
@@ -769,6 +840,7 @@ erDiagram
 | `POST` | `/api/auth/sms/send` | 휴면·잠금 해제용 6자리 휴대폰 SMS 인증번호 발송 | `Spring Data JPA` |
 | `GET` | `/api/auth/me` | 현재 브라우저 `HttpSession` 로그인 세션 상태 확인 | `HttpSession` |
 | `POST` | `/api/auth/logout` | 세션 무효화 및 로그아웃 처리 | `HttpSession` |
+| `POST` | `/api/saju/save` | 사주 4주 8자, 오행 비율, 8대 신살 통합 저장 | `Spring Data JPA` |
 | `POST` | `/api/fortune/save` | 오늘의 일일 운세 점수 및 행운 아이템 Upsert 저장 | `Spring Data JPA` |
 | `POST` | `/api/compatibility/save` | 2인 사주 궁합 점수 및 천간·지지 합충 결과 저장 | `Spring Data JPA` |
 | `POST` | `/api/tarot/save` | 3-Card 타로 점괘 결과 저장 | `Spring Data JPA` |
@@ -778,13 +850,26 @@ erDiagram
 
 ---
 
-## 🗂 7. 프로젝트 디렉토리 구조
+## 12. 📁 프로젝트 디렉토리 구조 (Directory Tree)
 
 ```text
 Daily Fortune/
 ├── pom.xml
 ├── mvnw
 ├── mvnw.cmd
+├── assets/
+│   ├── demo.gif                          # 10대 핵심 워크플로우 순환 데모 GIF (1.28MB)
+│   ├── demo.mp4                          # H.264 고화질 데모 동영상
+│   ├── step1_auth_login.png              # Step 1. 보안 로그인·회원가입·SMS 게이트
+│   ├── step2_main_hanji_form.png         # Step 2. 한국 전통 한지 사주명식 입력
+│   ├── step3_payment_modal_500krw.png    # Step 3. 500원 간편결제 모달
+│   ├── step4_saju_unlocked_report.png    # Step 4. 사주·대운 심층 리포트 잠금해제
+│   ├── step5_tarot_3card_spread.png      # Step 5. 3-Card 타로 점괘
+│   ├── step6_ai_counselor_chatbot.png    # Step 6. 내장 AI 명리·꿈해몽 도사 챗봇
+│   ├── step7_wish_plaza_3d.png           # Step 7. 천명 3D 은하수 연등 광장 경내
+│   ├── step8_temple_interior_buddha.png  # Step 8. 대웅보전 실내 진입 & 황금 불상 참배
+│   ├── step9_bow_prostration.png         # Step 9. 합장 삼배(三拜) 정성 절하기 풀 애니메이션
+│   └── step10_exit_confirm_modal.png     # Step 10. ESC 안전 퇴장 확인 모달
 └── src/
     └── main/
         ├── java/com/chunmyung/saju/
@@ -792,20 +877,25 @@ Daily Fortune/
         │   ├── config/
         │   │   └── WebConfig.java
         │   ├── security/
-        │   │   └── SecurityUtils.java
+        │   │   ├── SecurityUtils.java
+        │   │   └── AdminInitializer.java
         │   ├── controller/
         │   │   ├── AuthApiController.java
         │   │   ├── SajuApiController.java
-        │   │   └── AiChatController.java
+        │   │   ├── AiChatController.java
+        │   │   └── AdminApiController.java
         │   ├── service/
         │   │   ├── AuthService.java
         │   │   ├── SajuService.java
-        │   │   └── AiCounselorService.java
+        │   │   ├── AiCounselorService.java
+        │   │   └── AdminService.java
         │   ├── repository/
         │   │   ├── AccountRepository.java
         │   │   ├── SmsVerificationRepository.java
         │   │   ├── UserRepository.java
         │   │   ├── SajuRecordRepository.java
+        │   │   ├── FiveElementsRepository.java
+        │   │   ├── SinsalRepository.java
         │   │   ├── DailyFortuneRepository.java
         │   │   ├── CompatibilityRepository.java
         │   │   ├── TarotRepository.java
@@ -838,24 +928,25 @@ Daily Fortune/
             ├── application.yml
             ├── schema.sql
             └── static/
-                ├── index.html
+                ├── index.html                   # 메인 SPA + 3D 연등광장 + ESC 모달
                 ├── css/
-                │   └── style.css
+                │   └── style.css                # 단청·한지·3D 캔버스 오버레이 스타일
                 └── js/
-                    ├── app.js
+                    ├── app.js                   # 메인 프론트엔드 컨트롤러
                     ├── data/
                     │   ├── gapja60.js
                     │   ├── sinsal.js
                     │   └── tarot.js
                     └── engine/
-                        ├── calendar.js
-                        ├── saju.js
-                        └── fortune.js
+                        ├── calendar.js          # 만세력 24절기 역법 엔진
+                        ├── saju.js              # 사주 4주 8자 산출 엔진
+                        ├── fortune.js           # 오늘의 운세 & 일진 엔진
+                        └── wish_plaza.js        # 🏮 Three.js 3D 가상 사찰 메타버스 & 물리/삼배/ESC 엔진
 ```
 
 ---
 
-## 💻 8. IntelliJ IDEA & MySQL JDBC 연동 가이드
+## 13. 💻 개발 환경 설정 및 MySQL 연동 가이드 (Environment Setup)
 
 | 단계 | 설정 항목 | 설정 값 및 실행 방법 |
 | :-: | :--- | :--- |
@@ -867,7 +958,7 @@ Daily Fortune/
 
 ---
 
-## 🚀 9. 로컬 빌드 및 실행 방법
+## 14. 🚀 로컬 빌드 및 실행 가이드 (Build & Run Guide)
 
 ### 1. MySQL 스키마 초기화
 ```bash
@@ -884,8 +975,9 @@ mysql -u root -p chunmyung_saju < src/main/resources/schema.sql
 
 | 서비스 항목 | 접속 주소 (URL) | 비고 |
 | :--- | :--- | :--- |
-| **천명(天命) 메인 웹 서비스** | `http://localhost:8085/` | 최초 접속 시 로그인/회원가입 게이트 노출 |
-| **Swagger OpenAPI 문서** | `http://localhost:8085/swagger-ui.html` | 전체 API 명세 조회 및 즉시 호출 테스트 |
+| **천명(天命) 메인 웹 서비스 & 3D 연등 광장** | `http://localhost:8085/` | 최초 접속 시 로그인 게이트 노출, 로그인 후 상단 탭에서 3D 광장 진입 |
+| **Swagger OpenAPI 문서** | `http://localhost:8085/swagger-ui.html` | 전체 API 명세 시각화 및 즉시 호출 테스트 |
+| **최고 관리자 전용 관제실** | `http://localhost:8085/` (관리자 로그인 시) | 최고관리자(`admin`) 로그인 시 상단 👑 관제실 버튼 활성화 |
 | **JDBC 연결 진단 API** | `http://localhost:8085/api/jdbc/check` | MySQL JDBC 커넥션 상태 확인 |
 | **최근 500원 결제 내역 조회 API** | `http://localhost:8085/api/payment/history` | 토스·카카오·네이버페이 결제 원장 조회 |
 | **최근 AI 도사 상담 로그 조회 API** | `http://localhost:8085/api/ai/history` | 사주 상담 및 꿈해몽 문답 이력 조회 |

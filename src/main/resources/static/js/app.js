@@ -92,7 +92,11 @@ const ZODIAC_MASCOTS = {
 };
 
 const App = {
-  currentMode: "daily", // 'daily', 'saju', 'tarot'
+  currentMode: "daily", // 'daily', 'saju', 'tarot', 'dream', 'mood'
+  currentDreamCategory: "all",
+  currentDreamSearchQuery: "",
+  currentMoodKey: "sunny",
+  currentWishCategory: "health",
   activeTab: "daily",
   userSaju: null,
   dailyFortune: null,
@@ -124,6 +128,9 @@ const App = {
     this.populateDateSelects();
     this.initRealtimeBanner();
     this.initTarotDeck();
+    this.renderDreamList();
+    this.renderMoodPrescription();
+    this.renderWishHistory();
     this.setMode("daily");
     this.checkAuthSession();
 
@@ -350,8 +357,11 @@ const App = {
     const idInput = document.getElementById("loginIdInput");
     const pwInput = document.getElementById("loginPwInput");
     if (idInput) idInput.value = "admin";
-    if (pwInput) pwInput.value = "admin1234!";
-    this.showAuthAlert("warning", "👑 최고관리자(admin) 계정 정보가 입력되었습니다. [천명 만세력 로그인] 버튼을 누르세요.");
+    if (pwInput) {
+      pwInput.value = "";
+      pwInput.focus();
+    }
+    this.showAuthAlert("warning", "👑 관리자 계정 ID(admin)가 입력되었습니다. 관리자 전용 비밀번호를 입력해주세요.");
   },
 
   async checkDuplicateLoginId() {
@@ -602,41 +612,60 @@ const App = {
     fillOptions("partnerDay", 1, 31, 20, false, "일");
   },
 
-  // 3대 서비스 모드 변경 (오늘의 운세 / 사주 / 타로)
+  // 5대 서비스 모드 변경 (오늘의 운세 / 사주 / 타로 / 꿈해몽 / 마음날씨)
   setMode(mode) {
     this.currentMode = mode;
     const btnDaily = document.getElementById("modeBtnDaily");
     const btnSaju = document.getElementById("modeBtnSaju");
     const btnTarot = document.getElementById("modeBtnTarot");
+    const btnDream = document.getElementById("modeBtnDream");
+    const btnMood = document.getElementById("modeBtnMood");
 
     const heroTitle = document.getElementById("heroTitle");
     const heroSubtitle = document.getElementById("heroSubtitle");
     const sajuFormCard = document.getElementById("sajuFormCard");
     const tarotStandAloneCard = document.getElementById("tarotStandAloneCard");
+    const dreamStandAloneCard = document.getElementById("dreamStandAloneCard");
+    const moodStandAloneCard = document.getElementById("moodStandAloneCard");
+
     const advFields = document.getElementById("advancedSajuFields");
     const partnerFields = document.getElementById("partnerSection");
     const submitBtnText = document.getElementById("submitBtnText");
     const formBadgeText = document.getElementById("formBadgeText");
     const formTitleText = document.getElementById("formTitleText");
 
-    const activeBtnClass = "py-3 px-2 rounded-md text-xs sm:text-sm font-bold transition flex items-center justify-center space-x-1.5 bg-[#231710] text-[#f7d88c] shadow-md border border-[#b48a4e]";
-    const inactiveBtnClass = "py-3 px-2 rounded-md text-xs sm:text-sm font-semibold transition flex items-center justify-center space-x-1.5 text-[#36281c] hover:text-black";
+    const activeBtnClass = "py-2.5 px-1 rounded-lg text-xs font-bold transition flex flex-col items-center justify-center bg-[#231710] text-[#f7d88c] shadow-md border border-[#b48a4e]";
+    const inactiveBtnClass = "py-2.5 px-1 rounded-lg text-xs font-semibold transition flex flex-col items-center justify-center text-[#36281c] hover:text-black";
 
     if (btnDaily) btnDaily.className = (mode === "daily") ? activeBtnClass : inactiveBtnClass;
     if (btnSaju) btnSaju.className = (mode === "saju") ? activeBtnClass : inactiveBtnClass;
     if (btnTarot) btnTarot.className = (mode === "tarot") ? activeBtnClass : inactiveBtnClass;
+    if (btnDream) btnDream.className = (mode === "dream") ? activeBtnClass : inactiveBtnClass;
+    if (btnMood) btnMood.className = (mode === "mood") ? activeBtnClass : inactiveBtnClass;
 
-    if (mode === "tarot") {
-      // 🃏 타로 전용 뷰 활성화
-      if (sajuFormCard) sajuFormCard.classList.add("hidden");
-      if (tarotStandAloneCard) tarotStandAloneCard.classList.remove("hidden");
+    // View Cards visibility
+    if (sajuFormCard) sajuFormCard.classList.toggle("hidden", mode !== "daily" && mode !== "saju");
+    if (tarotStandAloneCard) tarotStandAloneCard.classList.toggle("hidden", mode !== "tarot");
+    if (dreamStandAloneCard) dreamStandAloneCard.classList.toggle("hidden", mode !== "dream");
+    if (moodStandAloneCard) moodStandAloneCard.classList.toggle("hidden", mode !== "mood");
+
+    if (mode === "dream") {
+      // 🌙 꿈해몽 백과 뷰 활성화
+      if (heroTitle) heroTitle.textContent = "동양 정통 꿈해몽 (夢兆) 백과";
+      if (heroSubtitle) heroSubtitle.textContent = "어젯밤 꾼 꿈의 상징을 검색하고 길몽·흉몽 여부와 오행 기반의 현실 실천 조언을 확인하세요.";
+      this.renderDreamList();
+    } else if (mode === "mood") {
+      // 🧘 마음 날씨 힐링 뷰 활성화
+      if (heroTitle) heroTitle.textContent = "마음 날씨 & 오행 힐링 처방소";
+      if (heroSubtitle) heroSubtitle.textContent = "오늘 도반님의 감정 날씨를 짚어보고, 사주 오행 밸런스에 맞춘 심리 처방과 하루 긍정 확언을 만나보세요.";
+      this.selectMoodWeather(this.currentMoodKey || "sunny");
+    } else if (mode === "tarot") {
+      // 🔮 타로 전용 뷰 활성화
       if (heroTitle) heroTitle.textContent = "마음을 비추는 3-Card 타로";
       if (heroSubtitle) heroSubtitle.textContent = "질문 주제를 선택하고, 펼쳐진 카드 중 3장을 직접 골라 과거·현재·미래의 현실적 조언을 확인하세요.";
       this.resetTarotSpread();
     } else if (mode === "daily") {
       // ☀️ 오늘의 운세 뷰 활성화
-      if (sajuFormCard) sajuFormCard.classList.remove("hidden");
-      if (tarotStandAloneCard) tarotStandAloneCard.classList.add("hidden");
       if (advFields) advFields.classList.add("hidden");
       if (partnerFields) partnerFields.classList.remove("expanded");
       if (heroTitle) heroTitle.textContent = "하늘의 기운과 오늘의 천기(天氣)";
@@ -646,8 +675,6 @@ const App = {
       if (submitBtnText) submitBtnText.textContent = "오늘의 일진 & 운세 무료 풀이 보기 ☀️";
     } else {
       // 📜 정통 사주 뷰 활성화 (연애운·앞으로 나아갈 방향·대운 포함)
-      if (sajuFormCard) sajuFormCard.classList.remove("hidden");
-      if (tarotStandAloneCard) tarotStandAloneCard.classList.add("hidden");
       if (advFields) advFields.classList.remove("hidden");
       if (partnerFields) partnerFields.classList.add("expanded");
       if (heroTitle) heroTitle.textContent = "정통 만세력 사주팔자(四柱八字)";
@@ -4221,7 +4248,313 @@ https://minjae0529-blip.github.io/Daily-Fortune/`;
         alert("웹 서비스 링크가 클립보드에 복사되었습니다!");
       });
     }
-  }
+  },
+  // ==========================================================================
+  // 🌙 동양 정통 꿈해몽 백과사전 & 실시간 검색 컨트롤러
+  // ==========================================================================
+  filterDreamCategory(cat) {
+    this.currentDreamCategory = cat;
+    const cats = ["all", "wealth", "auspicious", "health", "nature", "success", "caution"];
+    cats.forEach(c => {
+      const btn = document.getElementById(`dreamCatBtn-${c}`);
+      if (btn) {
+        if (c === cat) {
+          btn.className = "px-2.5 py-1 rounded-full font-bold bg-[#231710] text-[#f7d88c] whitespace-nowrap shadow-xs border border-[#b48a4e]";
+        } else {
+          btn.className = "px-2.5 py-1 rounded-full font-semibold bg-stone-100 text-stone-700 hover:bg-stone-200 whitespace-nowrap border border-stone-200";
+        }
+      }
+    });
+    this.renderDreamList();
+  },
+
+  onDreamSearchInput(query) {
+    this.currentDreamSearchQuery = (query || "").trim();
+    const clearBtn = document.getElementById("dreamSearchClearBtn");
+    if (clearBtn) {
+      clearBtn.classList.toggle("hidden", !this.currentDreamSearchQuery);
+    }
+    this.renderDreamList();
+  },
+
+  clearDreamSearch() {
+    const input = document.getElementById("dreamSearchInput");
+    if (input) input.value = "";
+    this.onDreamSearchInput("");
+  },
+
+  renderDreamList() {
+    const container = document.getElementById("dreamResultContainer");
+    if (!container) return;
+
+    const list = window.DreamDictionary || [];
+    const cat = this.currentDreamCategory || "all";
+    const q = (this.currentDreamSearchQuery || "").toLowerCase();
+
+    const filtered = list.filter(d => {
+      const matchCat = (cat === "all") || (d.category === cat);
+      if (!matchCat) return false;
+      if (!q) return true;
+      const inTitle = d.title.toLowerCase().includes(q);
+      const inDesc = d.desc.toLowerCase().includes(q);
+      const inKeywords = d.keywords.some(k => k.toLowerCase().includes(q));
+      return inTitle || inDesc || inKeywords;
+    });
+
+    if (filtered.length === 0) {
+      container.innerHTML = `
+        <div class="p-8 text-center text-stone-500 font-serif-kr bg-white rounded-xl border border-dashed border-stone-300 space-y-2">
+          <span class="text-3xl block">🌙</span>
+          <strong class="text-stone-800 text-xs block">'${this.currentDreamSearchQuery}'에 일치하는 전통 꿈해몽 데이터가 없습니다.</strong>
+          <p class="text-[11px] text-stone-500 font-sans">
+            하단의 <strong>[🧙‍♂️ AI 도사에게 질문하기]</strong> 버튼을 누르시면<br>
+            AI 명리 도사가 도반님의 꿈을 즉시 심층 분석해드립니다.
+          </p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = filtered.map(d => `
+      <div class="p-3.5 rounded-xl bg-white border border-[#e2d5c3] shadow-xs space-y-2 font-serif-kr hover:border-amber-400 transition">
+        <div class="flex items-start justify-between gap-2">
+          <div class="flex items-center space-x-2">
+            <span class="text-2xl shrink-0 select-none">${d.symbol}</span>
+            <div>
+              <h4 class="text-xs sm:text-sm font-bold text-stone-900">${d.title}</h4>
+              <span class="text-[10px] text-stone-500">${d.categoryName}</span>
+            </div>
+          </div>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-black shrink-0 border ${d.badgeColor}">
+            ${d.badge}
+          </span>
+        </div>
+        <p class="text-[11px] text-amber-950 font-bold font-sans bg-amber-50/70 p-2 rounded-lg border border-amber-200/80 leading-relaxed">
+          ✨ <strong>핵심 해몽:</strong> ${d.summary}
+        </p>
+        <p class="text-[11px] text-stone-600 font-sans leading-relaxed pt-0.5">
+          ${d.desc}
+        </p>
+        <div class="flex items-center justify-between pt-1 border-t border-stone-100 text-[10px]">
+          <span class="text-emerald-800 font-bold font-sans">💡 실천 조언: ${d.advice}</span>
+          <button type="button" onclick="App.openAiChatWithPrompt('${d.title}에 대해 더 자세히 해몽해주세요')" class="text-[10px] text-purple-700 hover:text-purple-900 font-bold underline shrink-0 font-sans">
+            도사에게 더 묻기 ➔
+          </button>
+        </div>
+      </div>
+    `).join("");
+  },
+
+  openAiChatWithPrompt(promptText) {
+    if (!this.isAiDrawerOpen) {
+      this.toggleAiChatbot();
+    }
+    const input = document.getElementById("aiChatInput");
+    if (input) {
+      input.value = promptText;
+      input.focus();
+    }
+  },
+
+  // ==========================================================================
+  // 🧘 오늘의 마음 날씨 & 오행 힐링 처방소 컨트롤러
+  // ==========================================================================
+  selectMoodWeather(moodKey) {
+    this.currentMoodKey = moodKey;
+    const keys = ["sunny", "cloudy", "rainy", "stormy", "foggy"];
+    keys.forEach(k => {
+      const btn = document.getElementById(`moodBtn-${k}`);
+      if (btn) {
+        if (k === moodKey) {
+          btn.className = "mood-weather-btn p-2 rounded-xl border-2 border-[#8c1d1d] bg-amber-100/90 shadow-sm ring-1 ring-[#8c1d1d] transition flex flex-col items-center justify-center space-y-0.5";
+        } else {
+          btn.className = "mood-weather-btn p-2 rounded-xl border-2 border-stone-200 bg-white hover:border-amber-400 transition flex flex-col items-center justify-center space-y-0.5";
+        }
+      }
+    });
+    this.renderMoodPrescription();
+  },
+
+  renderMoodPrescription() {
+    const box = document.getElementById("moodPrescriptionBox");
+    if (!box) return;
+
+    const data = window.MoodHealingData ? window.MoodHealingData[this.currentMoodKey || "sunny"] : null;
+    if (!data) return;
+
+    box.innerHTML = `
+      <div class="flex items-center justify-between pb-2 border-b border-amber-300">
+        <div class="flex items-center space-x-2">
+          <span class="text-2xl">${data.emoji}</span>
+          <div>
+            <h4 class="text-sm font-black text-amber-950">${data.name}</h4>
+            <span class="text-[10px] text-amber-800 font-bold bg-amber-100 px-2 py-0.5 rounded">${data.element}</span>
+          </div>
+        </div>
+        <span class="text-[10px] text-stone-500 font-sans">감정 조율 처방</span>
+      </div>
+
+      <div class="p-2.5 rounded-xl bg-white/90 border border-amber-200 text-xs font-sans text-stone-700 leading-relaxed">
+        <strong>마음 상태 진단:</strong> ${data.stateDesc}
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-sans">
+        <div class="p-2.5 rounded-xl bg-white border border-stone-200 space-y-1">
+          <strong class="text-amber-950 block text-[11px] font-bold">🍵 추천 힐링 차 & 음식:</strong>
+          <p class="text-[11px] text-stone-700">${data.prescription.tea}</p>
+        </div>
+        <div class="p-2.5 rounded-xl bg-white border border-stone-200 space-y-1">
+          <strong class="text-amber-950 block text-[11px] font-bold">🎨 마음 밸런스 행운 컬러:</strong>
+          <p class="text-[11px] text-stone-700">${data.prescription.color}</p>
+        </div>
+      </div>
+
+      <div class="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-sans space-y-1">
+        <strong class="text-emerald-950 block text-[11px] font-bold">🧘 마음 챙김 실천 행동:</strong>
+        <p class="text-[11px] text-emerald-900 leading-relaxed">${data.prescription.action}</p>
+      </div>
+
+      <div class="p-3 rounded-xl bg-gradient-to-r from-amber-100 to-orange-100 border border-amber-300 text-xs font-serif-kr space-y-1">
+        <span class="text-[10px] font-black text-amber-900 block">✨ 오늘의 마음 치유 긍정 확언 (Daily Affirmation):</span>
+        <p class="text-xs text-amber-950 font-bold leading-relaxed italic">"${data.prescription.affirmation}"</p>
+      </div>
+
+      <div class="pt-1 flex items-center justify-between text-xs font-sans">
+        <span class="text-[11px] text-stone-500">마음이 버거울 땐 혼자 앓지 마세요.</span>
+        <button type="button" onclick="App.openAiChatWithPrompt('오늘 제 기분이 [${data.name}] 상태인데, 마음을 편안하게 다스릴 수 있는 따뜻한 위로와 조언 부탁드립니다.')" class="px-3 py-1.5 rounded-lg bg-[#231710] text-[#f7d88c] font-bold text-[11px] hover:bg-[#362419] transition flex items-center space-x-1 shadow-xs">
+          <span>🧙‍♂️</span>
+          <span>도사에게 위로받기 ➔</span>
+        </button>
+      </div>
+    `;
+  },
+
+  // ==========================================================================
+  // 🏮 소원 연등 띄우기 (소원 성취 기원) 컨트롤러
+  // ==========================================================================
+  openWishModal() {
+    const dialog = document.getElementById("wishDialog");
+    if (!dialog) return;
+    if (typeof dialog.showModal === "function") {
+      dialog.showModal();
+    } else {
+      dialog.setAttribute("open", "");
+    }
+    this.renderWishHistory();
+  },
+
+  closeWishModal() {
+    const dialog = document.getElementById("wishDialog");
+    if (!dialog) return;
+    if (typeof dialog.close === "function") {
+      dialog.close();
+    } else {
+      dialog.removeAttribute("open");
+    }
+  },
+
+  selectWishCategory(cat) {
+    this.currentWishCategory = cat;
+    const cats = ["health", "wealth", "love", "career", "family", "peace"];
+    cats.forEach(c => {
+      const btn = document.getElementById(`wishCat-${c}`);
+      if (btn) {
+        if (c === cat) {
+          btn.className = "wish-cat-btn py-2 px-1 rounded-lg border border-amber-500 bg-[#362419] text-amber-200 font-bold";
+        } else {
+          btn.className = "wish-cat-btn py-2 px-1 rounded-lg border border-stone-700 bg-[#231710] text-stone-300 font-medium hover:border-amber-700";
+        }
+      }
+    });
+  },
+
+  launchWishLantern() {
+    const input = document.getElementById("wishTextInput");
+    const wishText = input ? input.value.trim() : "";
+    if (!wishText) {
+      alert("소원 한마디를 입력해주세요.");
+      if (input) input.focus();
+      return;
+    }
+
+    const catMap = {
+      health: "🌿 건강·장수",
+      wealth: "💰 재물·번창",
+      love: "💖 애정·인연",
+      career: "🎓 시험·합격",
+      family: "🏡 가족·화목",
+      peace: "🕊️ 마음·평안"
+    };
+
+    const lantern = document.getElementById("floatingLanternEl");
+    const skyText = document.getElementById("wishSkyText");
+
+    if (lantern) {
+      lantern.classList.add("animate-lantern-float");
+    }
+    if (skyText) {
+      skyText.textContent = "소원 연등이 은하수를 타고 하늘 높이 날아오릅니다... ✨";
+      skyText.className = "absolute bottom-2 text-[10px] text-amber-300 font-bold animate-pulse";
+    }
+
+    if (window.confetti) {
+      try {
+        window.confetti({ particleCount: 60, spread: 80, origin: { y: 0.65 } });
+      } catch (e) {}
+    }
+
+    // Save wish to localStorage
+    const newWish = {
+      id: Date.now(),
+      category: catMap[this.currentWishCategory || "health"] || "기원",
+      text: wishText,
+      date: new Date().toLocaleDateString("ko-KR")
+    };
+
+    try {
+      const saved = JSON.parse(localStorage.getItem("chunmyung_wishes") || "[]");
+      saved.unshift(newWish);
+      localStorage.setItem("chunmyung_wishes", JSON.stringify(saved.slice(0, 15)));
+    } catch (e) {}
+
+    setTimeout(() => {
+      if (input) input.value = "";
+      if (lantern) {
+        lantern.classList.remove("animate-lantern-float");
+      }
+      if (skyText) {
+        skyText.textContent = "도반님의 소원이 하늘에 닿았습니다. 앞날에 밝은 복록이 함께합니다 🏮";
+        skyText.className = "absolute bottom-2 text-[10px] text-emerald-300 font-bold font-sans";
+      }
+      this.renderWishHistory();
+    }, 2600);
+  },
+
+  renderWishHistory() {
+    const container = document.getElementById("wishHistoryContainer");
+    if (!container) return;
+
+    let wishes = [];
+    try {
+      wishes = JSON.parse(localStorage.getItem("chunmyung_wishes") || "[]");
+    } catch (e) {}
+
+    if (wishes.length === 0) {
+      container.innerHTML = `<div class="text-stone-500 py-2 text-center text-[10px]">아직 띄운 소원 연등이 없습니다. 첫 소원을 빌어보세요!</div>`;
+      return;
+    }
+
+    container.innerHTML = wishes.map(w => `
+      <div class="p-2 rounded-lg bg-[#2a1c15] border border-amber-900/80 flex items-start justify-between gap-2">
+        <div>
+          <span class="text-amber-400 font-bold text-[10px] mr-1.5">[${w.category}]</span>
+          <span class="text-stone-200">${w.text}</span>
+        </div>
+        <span class="text-stone-500 text-[9px] shrink-0 font-mono">${w.date}</span>
+      </div>
+    `).join("");
+  },
+
 };
 
 document.addEventListener("DOMContentLoaded", () => {

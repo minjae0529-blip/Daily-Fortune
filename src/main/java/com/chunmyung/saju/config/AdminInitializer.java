@@ -5,6 +5,7 @@ import com.chunmyung.saju.repository.AccountRepository;
 import com.chunmyung.saju.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
@@ -13,25 +14,31 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 
 /**
- * 시스템 구동 시 최고 관리자(ADMIN) 기본 계정을 자동 생성 및 점검하는 초기화 컴포넌트
- * - 관리자 아이디: admin
- * - 관리자 비밀번호: admin1234! (PBKDF2WithHmacSHA256 단방향 해싱 + 고유 Salt)
- * - 권한: ROLE_ADMIN
+ * 시스템 구동 시 최고 관리자(ADMIN) 기본 계정을 안전하게 초기화 및 점검하는 컴포넌트
+ * - 관리자 아이디 및 비밀번호는 환경변수(ADMIN_ID, ADMIN_PASSWORD)로 주입 가능
+ * - 비밀번호는 PBKDF2WithHmacSHA256 (65,536회 반복 + 16바이트 Salt) 단방향 암호화 해싱 적용
+ * - 보안 강화를 위해 로그 및 클라이언트에 평문 비밀번호 노출 차단
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class AdminInitializer implements ApplicationRunner {
 
-    public static final String DEFAULT_ADMIN_ID = "admin";
-    public static final String DEFAULT_ADMIN_PASSWORD = "admin1234!";
+    @Value("${chunmyung.security.admin-id:admin}")
+    private String adminId;
+
+    @Value("${chunmyung.security.admin-password:admin1234!}")
+    private String adminPassword;
 
     private final AccountRepository accountRepository;
 
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
-        accountRepository.findByLoginId(DEFAULT_ADMIN_ID).ifPresentOrElse(admin -> {
+        final String targetAdminId = (adminId != null && !adminId.isBlank()) ? adminId.trim() : "admin";
+        final String targetAdminPw = (adminPassword != null && !adminPassword.isBlank()) ? adminPassword : "admin1234!";
+
+        accountRepository.findByLoginId(targetAdminId).ifPresentOrElse(admin -> {
             boolean updated = false;
             if (!"ROLE_ADMIN".equals(admin.getRole())) {
                 admin.setRole("ROLE_ADMIN");
@@ -44,16 +51,16 @@ public class AdminInitializer implements ApplicationRunner {
             }
             if (updated) {
                 accountRepository.save(admin);
-                log.info("🛡️ [관리자 계정 갱신] 아이디: {}, 권한: ROLE_ADMIN", DEFAULT_ADMIN_ID);
+                log.info("🛡️ [관리자 계정 상태 갱신] 아이디: {}, 권한: ROLE_ADMIN", targetAdminId);
             } else {
-                log.info("🛡️ [관리자 계정 확인] 아이디: {}, 권한: ROLE_ADMIN 정상 가동 중", DEFAULT_ADMIN_ID);
+                log.info("🛡️ [관리자 계정 확인] 아이디: {}, 권한: ROLE_ADMIN 정상 가동 중", targetAdminId);
             }
         }, () -> {
             String salt = SecurityUtils.generateSalt();
-            String passwordHash = SecurityUtils.hashPassword(DEFAULT_ADMIN_PASSWORD, salt);
+            String passwordHash = SecurityUtils.hashPassword(targetAdminPw, salt);
 
             AccountEntity admin = AccountEntity.builder()
-                    .loginId(DEFAULT_ADMIN_ID)
+                    .loginId(targetAdminId)
                     .passwordHash(passwordHash)
                     .passwordSalt(salt)
                     .name("천명 최고관리자")
@@ -70,10 +77,9 @@ public class AdminInitializer implements ApplicationRunner {
 
             accountRepository.save(admin);
             log.info("==================================================================");
-            log.info("👑 [천명(天命) 최고 관리자 계정 생성 완료]");
-            log.info("👉 관리자 아이디   : {}", DEFAULT_ADMIN_ID);
-            log.info("👉 관리자 비밀번호 : {}", DEFAULT_ADMIN_PASSWORD);
-            log.info("👉 관리자 이름     : 천명 최고관리자");
+            log.info("👑 [천명(天命) 시스템 최고 관리자 계정 초기화 완료]");
+            log.info("👉 관리자 아이디   : {}", targetAdminId);
+            log.info("👉 관리자 비밀번호 : [보안 처리됨 - 환경변수 ADMIN_PASSWORD로 안전하게 변경 가능]");
             log.info("👉 관리자 권한     : ROLE_ADMIN");
             log.info("👉 암호화 알고리즘 : PBKDF2WithHmacSHA256 (65,536 iters + 16B Salt)");
             log.info("==================================================================");

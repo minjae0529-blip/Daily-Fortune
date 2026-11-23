@@ -323,6 +323,42 @@ class WishPlaza3DEngine {
     mctx.arc(128, 128, 18, 0, Math.PI * 2);
     mctx.fill();
     this.textures.mural = new THREE.CanvasTexture(muralCanvas);
+
+    // 6. Japanese Chochin (提灯) Washi Ribbed Texture with 奉納 Calligraphy
+    const chochinCanvas = document.createElement("canvas");
+    chochinCanvas.width = 256;
+    chochinCanvas.height = 256;
+    const cctx = chochinCanvas.getContext("2d");
+    cctx.fillStyle = "#fffbf0";
+    cctx.fillRect(0, 0, 256, 256);
+
+    // Horizontal bamboo ribbing (다케히고 竹ひご)
+    cctx.strokeStyle = "rgba(40, 25, 15, 0.22)";
+    cctx.lineWidth = 2.5;
+    for (let y = 10; y < 256; y += 15) {
+      cctx.beginPath();
+      cctx.moveTo(0, y);
+      cctx.lineTo(256, y);
+      cctx.stroke();
+    }
+
+    // Vertical washi paper fibers
+    for (let i = 0; i < 180; i++) {
+      cctx.strokeStyle = "rgba(180, 130, 80, 0.08)";
+      cctx.beginPath();
+      cctx.moveTo(Math.random() * 256, Math.random() * 256);
+      cctx.lineTo(Math.random() * 256, Math.random() * 256);
+      cctx.stroke();
+    }
+
+    // Traditional Japanese Temple Kanji: 奉納 (Hōnō)
+    cctx.fillStyle = "rgba(22, 12, 6, 0.92)";
+    cctx.font = "bold 64px 'Noto Serif JP', 'Noto Serif KR', serif";
+    cctx.textAlign = "center";
+    cctx.textBaseline = "middle";
+    cctx.fillText("奉", 128, 75);
+    cctx.fillText("納", 128, 175);
+    this.textures.chochin = new THREE.CanvasTexture(chochinCanvas);
   }
 
   buildLighting() {
@@ -1496,82 +1532,104 @@ class WishPlaza3DEngine {
   }
 
   /* ==========================================================================
-     사찰 조명 및 소원 연등 시스템 (건축 배치 슬롯 · 기본 조명 완비 · 소원 대체 구조)
+     사찰 조명 및 소원 연등 시스템 (일본 절 느낌 · 내부 최소화 2기 · 정제된 16대 슬롯)
      ========================================================================== */
   initLanternSlots() {
     this.lanternSlots = [];
     let slotIdx = 0;
 
-    // 1. 대웅전 실내 천장 장엄 연등 (16기 - 대형화된 대웅전 내부를 은은하고 성스럽게 밝힘)
-    // World coordinates: x: [-16, -5.5, 5.5, 16], z: [-63, -55, -47, -39], y: 11.2
-    const hallXs = [-16, -5.5, 5.5, 16];
-    const hallZs = [-63, -55, -47, -39];
-    for (const z of hallZs) {
-      for (const x of hallXs) {
-        this.lanternSlots.push({
-          slotIndex: slotIdx++,
-          x: x, y: 11.2, z: z,
-          zone: "대웅전 실내 천장",
-          type: "hanging",
-          cordLen: 2.5
-        });
-      }
-    }
+    // 1. 대웅전(본당) 실내: 불단 좌우를 은은하게 밝히는 2위의 츠리도로(釣燈籠) [내부 최소화!]
+    // World coordinates: x = ±7.0, y = 8.2, z = -59.5 (flanking the sacred triad altar)
+    this.lanternSlots.push({
+      slotIndex: slotIdx++,
+      x: -7.0, y: 8.2, z: -59.5,
+      zone: "본당 내진 불단 츠리도로 (좌)",
+      type: "hanging",
+      cordLen: 3.2
+    });
+    this.lanternSlots.push({
+      slotIndex: slotIdx++,
+      x: 7.0, y: 8.2, z: -59.5,
+      zone: "본당 내진 불단 츠리도로 (우)",
+      type: "hanging",
+      cordLen: 3.2
+    });
 
-    // 2. 대웅전 월대 및 중앙 대석계단 유도등 (6기 - 계단 양옆과 전면 테라스 조명)
-    const stairPoints = [
-      { x: -9.8, y: 2.2, z: -23.5 }, { x: 9.8, y: 2.2, z: -23.5 },
-      { x: -9.8, y: 3.4, z: -27.0 }, { x: 9.8, y: 3.4, z: -27.0 },
-      { x: -9.8, y: 4.8, z: -30.5 }, { x: 9.8, y: 4.8, z: -30.5 }
+    // 2. 본당 정면 대문 처마: 일본 사찰 특유의 정면 대형 쵸칭(提灯) 2기
+    // World coordinates: x = ±5.0, y = 8.8, z = -33.2 (hanging under the entrance eave)
+    this.lanternSlots.push({
+      slotIndex: slotIdx++,
+      x: -5.0, y: 8.8, z: -33.2,
+      zone: "본당 정문 대형 제등 (좌)",
+      type: "hanging",
+      cordLen: 2.0
+    });
+    this.lanternSlots.push({
+      slotIndex: slotIdx++,
+      x: 5.0, y: 8.8, z: -33.2,
+      zone: "본당 정문 대형 제등 (우)",
+      type: "hanging",
+      cordLen: 2.0
+    });
+
+    // 3. 중앙 대석계단 입구: 좌우 석주 유도등 2기
+    // World coordinates: x = ±10.2, y = 2.2, z = -23.5
+    this.lanternSlots.push({
+      slotIndex: slotIdx++,
+      x: -10.2, y: 2.2, z: -23.5,
+      zone: "대석계단 유도등 (좌)",
+      type: "post"
+    });
+    this.lanternSlots.push({
+      slotIndex: slotIdx++,
+      x: 10.2, y: 2.2, z: -23.5,
+      zone: "대석계단 유도등 (우)",
+      type: "post"
+    });
+
+    // 4. 중앙 어도(참배로): 고즈넉한 석판길 양편 4기
+    const pathPoints = [
+      { x: -5.2, y: 3.2, z: -15.0 }, { x: 5.2, y: 3.2, z: -15.0 },
+      { x: -5.2, y: 3.2, z: -3.0 },  { x: 5.2, y: 3.2, z: -3.0 }
     ];
-    for (const p of stairPoints) {
+    for (const p of pathPoints) {
       this.lanternSlots.push({
         slotIndex: slotIdx++,
         x: p.x, y: p.y, z: p.z,
-        zone: "대석계단 유도등",
+        zone: "참배로 석등",
         type: "post"
       });
     }
 
-    // 3. 어도(중앙 보행로) 연등 행렬 (8기 - 석탑에서 계단으로 이어지는 참배길 조명)
-    const pathZs = [-17.0, -11.0, -5.0, 1.0];
-    for (const z of pathZs) {
-      for (const x of [-5.2, 5.2]) {
-        this.lanternSlots.push({
-          slotIndex: slotIdx++,
-          x: x, y: 3.4, z: z,
-          zone: "중앙 어도 연등로",
-          type: "post"
-        });
-      }
-    }
-
-    // 4. 삼층석탑 탑돌이 연등원 (8기 - 중앙 성소 석탑을 원형으로 밝힘)
-    for (let k = 0; k < 8; k++) {
-      const rad = (k / 8) * Math.PI * 2;
-      this.lanternSlots.push({
-        slotIndex: slotIdx++,
-        x: Math.cos(rad) * 7.2,
-        y: 3.2,
-        z: 10.0 + Math.sin(rad) * 7.2,
-        zone: "삼층석탑 탑돌이등",
-        type: "post"
-      });
-    }
-
-    // 5. 연화지 수중 부유 연화등 (6기 - 연못 수면을 떠다니며 신비로운 물빛 연출)
-    const pondPoints = [
-      { x: -6.0, z: 25.0 }, { x: -7.8, z: 31.0 }, { x: -5.5, z: 37.0 },
-      { x: 5.5, z: 25.0 },  { x: 7.8, z: 31.0 },  { x: 6.0, z: 37.0 }
+    // 5. 삼층석탑 둘레: 4방위 정갈한 등불 4기
+    const pagodaPoints = [
+      { x: 0,    z: 2.8,  name: "석탑 북측 등" },
+      { x: 0,    z: 17.2, name: "석탑 남측 등" },
+      { x: -7.2, z: 10.0, name: "석탑 서측 등" },
+      { x: 7.2,  z: 10.0, name: "석탑 동측 등" }
     ];
-    for (const p of pondPoints) {
+    for (const p of pagodaPoints) {
       this.lanternSlots.push({
         slotIndex: slotIdx++,
-        x: p.x, y: 0.35, z: p.z,
-        zone: "연화지 수중 연화등",
-        type: "float"
+        x: p.x, y: 3.2, z: p.z,
+        zone: p.name,
+        type: "post"
       });
     }
+
+    // 6. 연화지 수면: 고요한 부유 연화등 2기
+    this.lanternSlots.push({
+      slotIndex: slotIdx++,
+      x: -6.5, y: 0.35, z: 31.0,
+      zone: "연화지 수중등 (좌)",
+      type: "float"
+    });
+    this.lanternSlots.push({
+      slotIndex: slotIdx++,
+      x: 6.5, y: 0.35, z: 31.0,
+      zone: "연화지 수중등 (우)",
+      type: "float"
+    });
   }
 
   initLanterns() {
@@ -1594,9 +1652,9 @@ class WishPlaza3DEngine {
       communityData = [];
     }
 
-    // Populate all 44 architectural slots:
+    // Populate the 16 architectural slots:
     // If communityData has wishes, the first N slots become user wishes.
-    // The remaining slots (or all 44 slots if 0 wishes) are serene Temple Lamps (기본 조명) that light the plaza!
+    // The remaining slots (or all slots if 0 wishes) are serene Japanese Temple Lamps (기본 奉納 제등)!
     this.lanternSlots.forEach((slot, idx) => {
       if (idx < communityData.length) {
         // User Wish Lantern
@@ -1604,12 +1662,12 @@ class WishPlaza3DEngine {
         const lanternObj = this.createLanternMesh(wish, slot, false);
         this.lanterns.push(lanternObj);
       } else {
-        // Serene Default Temple Lighting Lamp (사찰 정진 조명등)
+        // Serene Default Japanese Temple Lighting Lamp (일본식 사찰 奉納 제등)
         const defaultWish = {
           id: 9000 + idx,
-          category: "🕊️ 사찰 정진등 (조명)",
+          category: "🕊️ 사찰 제등 (奉納)",
           author: "천명 사찰 수호 도반",
-          text: "온 세상 모든 인연의 평안과 안녕을 기원하며 사찰을 은은하게 밝힌 정진 인등입니다. [내 소원 띄우기]로 소원을 올리시면 이 등불이 도반님의 소원 연등으로 환하게 대체되어 영구히 빛납니다.",
+          text: "일본 사찰의 고즈넉한 정취를 담아 경내를 은은하게 밝힌 봉납 제등(奉納 提灯)입니다. [내 소원 띄우기]로 소원을 올리시면 이 등불이 도반님의 소원 연등으로 단정하게 대체되어 영구히 빛납니다.",
           cheers: 0,
           date: "사찰 상시 조명",
           isDefaultLight: true
@@ -1626,8 +1684,9 @@ class WishPlaza3DEngine {
     const group = new THREE.Group();
     group.position.set(slot.x, slot.y, slot.z);
 
-    let hexColor = 0xffb84d; // Warm Amber Temple Light
-    let emissiveColor = 0xff8800;
+    // Warm Candlelight Amber Glow (일본식 화지 온등)
+    let hexColor = 0xffd175;
+    let emissiveColor = 0xff9922;
 
     if (!isDefaultLight) {
       const cat = wishData.category || "";
@@ -1646,24 +1705,32 @@ class WishPlaza3DEngine {
 
     // 1. Structural Mount / Stand based on slot type
     if (slot.type === "hanging") {
-      const cordLen = slot.cordLen || 2.5;
+      const cordLen = slot.cordLen || 2.2;
       const cordGeo = new THREE.CylinderGeometry(0.015, 0.015, cordLen, 4);
-      const cordMat = new THREE.MeshStandardMaterial({ color: 0x851717, roughness: 0.5 });
+      const cordMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.6 });
       const cord = new THREE.Mesh(cordGeo, cordMat);
-      cord.position.set(0, 0.7 + cordLen / 2, 0);
+      cord.position.set(0, 0.75 + cordLen / 2, 0);
       group.add(cord);
+
+      // Brass suspension ring (금구 / 츠리토로 고리)
+      const ringGeo = new THREE.TorusGeometry(0.12, 0.03, 8, 16);
+      const ringMat = new THREE.MeshStandardMaterial({ color: 0xd4a359, metalness: 0.85, roughness: 0.25 });
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.position.set(0, 0.78, 0);
+      group.add(ring);
     } else if (slot.type === "post") {
       const postHeight = slot.y - 0.2;
+      // Dark Hinoki / Blackened wood post with square plinth
       const postBase = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.35, 0.45, 0.35, 8),
-        new THREE.MeshStandardMaterial({ color: 0x3d352e, roughness: 0.9 })
+        new THREE.BoxGeometry(0.48, 0.35, 0.48),
+        new THREE.MeshStandardMaterial({ color: 0x221a14, roughness: 0.85 })
       );
       postBase.position.set(0, -postHeight + 0.17, 0);
       group.add(postBase);
 
       const postPole = new THREE.Mesh(
         new THREE.CylinderGeometry(0.08, 0.1, postHeight, 8),
-        new THREE.MeshStandardMaterial({ color: 0x3a2012, roughness: 0.6 })
+        new THREE.MeshStandardMaterial({ color: 0x1a120b, roughness: 0.6 })
       );
       postPole.position.set(0, -postHeight / 2, 0);
       group.add(postPole);
@@ -1676,29 +1743,33 @@ class WishPlaza3DEngine {
       group.add(leaf);
     }
 
-    // 2. Hanji Lantern Body (Octagonal Lotus Temple Lantern)
-    const bodyGeo = new THREE.CylinderGeometry(0.72, 0.62, 1.3, 8);
+    // 2. Japanese Chochin (提灯) Body: softly rounded oblong washi paper lantern with black lacquer collars
+    const bodyGeo = new THREE.CylinderGeometry(0.70, 0.62, 1.45, 16);
     const bodyMat = new THREE.MeshStandardMaterial({
       color: hexColor,
       emissive: emissiveColor,
-      emissiveIntensity: isDefaultLight ? 0.65 : 0.85,
-      map: this.textures.hanji,
-      roughness: 0.38
+      emissiveIntensity: isDefaultLight ? 0.62 : 0.82,
+      map: isDefaultLight ? this.textures.chochin : this.textures.hanji,
+      roughness: 0.35
     });
     const body = new THREE.Mesh(bodyGeo, bodyMat);
     body.castShadow = true;
     group.add(body);
 
-    const capGeo = new THREE.CylinderGeometry(0.8, 0.8, 0.1, 8);
-    const capMat = new THREE.MeshStandardMaterial({ color: 0x1f140e, roughness: 0.5 });
-    const topCap = new THREE.Mesh(capGeo, capMat);
-    topCap.position.y = 0.7;
-    const botCap = new THREE.Mesh(capGeo, capMat);
-    botCap.position.y = -0.7;
+    // Black Lacquered Collars (黒漆 縁) top and bottom
+    const collarMat = new THREE.MeshStandardMaterial({
+      color: 0x111111,
+      roughness: 0.35,
+      metalness: 0.15
+    });
+    const topCap = new THREE.Mesh(new THREE.CylinderGeometry(0.76, 0.76, 0.12, 16), collarMat);
+    topCap.position.y = 0.76;
+    const botCap = new THREE.Mesh(new THREE.CylinderGeometry(0.68, 0.68, 0.12, 16), collarMat);
+    botCap.position.y = -0.76;
     group.add(topCap);
     group.add(botCap);
 
-    // 3. Hanging Streamer (소원지) or Silk Tassel (술)
+    // 3. Hanging Streamer (소원지) or Minimalist Silk Tassel (술)
     let streamer = null;
     if (!isDefaultLight) {
       const streamerGeo = new THREE.PlaneGeometry(0.36, 1.15);
@@ -1720,24 +1791,24 @@ class WishPlaza3DEngine {
         transparent: true
       });
       streamer = new THREE.Mesh(streamerGeo, streamerMat);
-      streamer.position.set(0, -1.35, 0);
+      streamer.position.set(0, -1.38, 0);
       group.add(streamer);
     } else {
-      const tasselGeo = new THREE.CylinderGeometry(0.04, 0.12, 0.75, 8);
-      const tasselMat = new THREE.MeshStandardMaterial({ color: 0x991b1b, roughness: 0.5 });
+      const tasselGeo = new THREE.CylinderGeometry(0.04, 0.12, 0.65, 8);
+      const tasselMat = new THREE.MeshStandardMaterial({ color: 0x851717, roughness: 0.6 });
       const tassel = new THREE.Mesh(tasselGeo, tasselMat);
       tassel.position.set(0, -1.1, 0);
       group.add(tassel);
     }
 
-    // 4. Illumination Point Light (소원/조명이 직접 주변 사찰 공간을 밝힘)
-    const pLight = new THREE.PointLight(hexColor, isDefaultLight ? 1.15 : 1.5, 12.0);
+    // 4. Illumination Point Light (소원/조명이 직접 주변 사찰 공간을 은은하게 비춤)
+    const pLight = new THREE.PointLight(hexColor, isDefaultLight ? 1.2 : 1.5, 14.0);
     pLight.castShadow = false;
     group.add(pLight);
 
-    // 5. Billboard Name Sprite
+    // 5. Billboard Name Sprite (정갈한 일본 사찰 명패)
     const labelSprite = this.createWishLabelSprite(wishData, isDefaultLight);
-    labelSprite.position.set(0, 1.35, 0);
+    labelSprite.position.set(0, 1.45, 0);
     group.add(labelSprite);
 
     this.scene.add(group);
@@ -1755,10 +1826,10 @@ class WishPlaza3DEngine {
       streamer: streamer,
       pLight: pLight,
       baseY: slot.y,
-      floatSpeed: 0.6 + Math.random() * 0.4,
-      floatAmp: slot.type === "hanging" ? 0.08 : (slot.type === "float" ? 0.12 : 0.0),
+      floatSpeed: 0.5 + Math.random() * 0.3,
+      floatAmp: slot.type === "hanging" ? 0.06 : (slot.type === "float" ? 0.10 : 0.0),
       floatOffset: Math.random() * Math.PI * 2,
-      rotSpeed: (Math.random() - 0.5) * 0.2
+      rotSpeed: (Math.random() - 0.5) * 0.15
     };
   }
 
@@ -1769,8 +1840,8 @@ class WishPlaza3DEngine {
     const ctx = canvas.getContext("2d");
 
     if (isDefaultLight) {
-      ctx.fillStyle = "rgba(18, 14, 10, 0.75)";
-      ctx.strokeStyle = "#d97706";
+      ctx.fillStyle = "rgba(18, 14, 10, 0.78)";
+      ctx.strokeStyle = "#d4a359";
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.roundRect(8, 8, 240, 48, 8);
@@ -1778,10 +1849,10 @@ class WishPlaza3DEngine {
       ctx.stroke();
 
       ctx.fillStyle = "#fef3c7";
-      ctx.font = "bold 14px 'Noto Serif KR', sans-serif";
+      ctx.font = "bold 14px 'Noto Serif JP', 'Noto Serif KR', sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText("🕊️ 사찰 정진등 (조명)", 128, 32);
+      ctx.fillText("🕊️ 사찰 제등 (奉納)", 128, 32);
     } else {
       ctx.fillStyle = "rgba(22, 14, 9, 0.88)";
       ctx.strokeStyle = "#f59e0b";
@@ -1792,7 +1863,7 @@ class WishPlaza3DEngine {
       ctx.stroke();
 
       ctx.fillStyle = "#fed7aa";
-      ctx.font = "bold 14px 'Noto Serif KR', sans-serif";
+      ctx.font = "bold 14px 'Noto Serif JP', 'Noto Serif KR', sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(`${wishData.category} · ${wishData.author}`, 128, 32);
@@ -1814,15 +1885,12 @@ class WishPlaza3DEngine {
     if (defaultIndex !== -1) {
       replacedLantern = this.lanterns[defaultIndex];
       targetSlot = replacedLantern.slot;
-      // Remove old default lamp mesh
       if (replacedLantern.group) this.scene.remove(replacedLantern.group);
 
-      // Create new wish lantern at this designated architectural lighting slot
       const newLanternObj = this.createLanternMesh(newWish, targetSlot, false);
       newLanternObj.isNew = true;
       this.lanterns[defaultIndex] = newLanternObj;
     } else {
-      // If all 44 slots are already occupied by user wishes, place as ascending lantern
       const spawnPos = {
         x: this.player.x + Math.sin(this.player.rotationY) * 2.5,
         y: 2.5,
@@ -1835,7 +1903,6 @@ class WishPlaza3DEngine {
       this.lanterns.unshift(newLanternObj);
     }
 
-    // Play sparkling sound & burst particles
     this.playTempleBellSound();
     this.spawnCheerSparkles({
       x: targetSlot ? targetSlot.x : this.player.x,
@@ -1844,9 +1911,8 @@ class WishPlaza3DEngine {
     });
 
     this.updateHudCount();
-    this.showToast("🏮 도반님의 소원이 사찰 조명을 대체하여 환한 소원 연등으로 밝혀졌습니다!");
+    this.showToast("🏮 도반님의 소원이 사찰 제등을 대체하여 환한 소원 연등으로 밝혀졌습니다!");
 
-    // Save actual user wishes to localStorage
     try {
       const activeWishes = this.lanterns
         .filter((l) => !l.isDefaultLight)

@@ -1,13 +1,12 @@
 /**
  * ============================================================================
- * 천명(天命) 3D 산사(절) 은하수 소원 연등 광장 엔진 (Three.js 3D Virtual Temple)
+ * 천명(天命) 3D 산사(절) 은하수 소원 연등 광장 엔진 (Three.js 3D Grand Virtual Temple)
  * ============================================================================
- * - 한국 전통 사찰(대웅보전, 삼층석탑, 석등, 연화지, 홍예교, 소나무, 대나무) 3D 구현
- * - 3D 밤하늘 별무리(Starfield), 보름달(Full Moon), 실시간 유성(Shooting Stars)
- * - W(앞), S(뒤), A(좌), D(우) & 방향키 카메라 기준 3D 캐릭터 보행 이동
- * - 마우스 드래그 / 터치 드래그 3D 360도 시점 회전 및 줌
- * - 3D 부유 연등(Wish Lanterns) & 주간 1위 소원 대황금연등 제단
- * - 근접 인터랙션([E] 키 / 마우스 3D Raycast 클릭) & 실시간 연등 띄우기
+ * - 웅장한 대형 한국 전통 사찰 대웅보전(중층 전각), 동편 범종각, 서편 명부전, 회랑
+ * - 스페이스바 점프(Jump Physics: 중력, 점프속도, 착지)
+ * - 마우스 이동/드래그 상·하·좌·우(위, 아래, 양옆) 360도 자유 시점 제어
+ * - W(앞), S(뒤), A(좌), D(우) & 방향키 카메라 시점 기준 3D 캐릭터 보행
+ * - 삼층대석탑 & 주간 1위 대황금연등 제단, 3D 한지 연등, 연화지, 홍예교, 석등, 소나무숲
  * ============================================================================
  */
 
@@ -29,29 +28,33 @@ class WishPlaza3DEngine {
       right: false  // D or ArrowRight (Strafe Right)
     };
 
-    // Camera control state (Orbit around player)
+    // Camera Orbit around player (Free Mouse Look Up/Down/Left/Right)
     this.cameraOrbit = {
-      azimuth: 0.0,         // Horizontal rotation around player
-      elevation: 0.38,      // Vertical angle (radians)
-      distance: 14.5,       // Distance from player
+      azimuth: 0.0,         // Horizontal rotation (radians)
+      elevation: 0.32,      // Vertical angle (radians) - pitch
+      distance: 16.0,       // Distance from player
       isDragging: false,
       prevMouseX: 0,
       prevMouseY: 0
     };
 
-    // Player state
+    // Player state with JUMP physics
     this.player = {
       mesh: null,
       nameTagSprite: null,
       lanternMesh: null,
       handLight: null,
       x: 0,
-      y: 0,
+      y: 0,                 // Elevation (0 = grounded)
       z: 16,                // Start in courtyard near entrance
+      vy: 0,                // Vertical velocity for jumping
+      isGrounded: true,
+      jumpSpeed: 10.5,      // Initial upward velocity on jump
+      gravity: 25.0,        // Downward gravity acceleration
       targetX: null,
       targetZ: null,
       rotationY: 0,
-      speed: 10.5,
+      speed: 11.5,
       walkPhase: 0,
       isMoving: false,
       leftLeg: null,
@@ -89,7 +92,6 @@ class WishPlaza3DEngine {
     this.canvas = document.getElementById("wishPlazaCanvas");
     if (!this.canvas) return;
 
-    // Ensure Three.js is loaded
     if (typeof THREE === "undefined") {
       console.error("Three.js is not loaded.");
       return;
@@ -115,29 +117,30 @@ class WishPlaza3DEngine {
       this.renderer.shadowMap.enabled = true;
       this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      this.renderer.toneMappingExposure = 1.1;
+      this.renderer.toneMappingExposure = 1.15;
     }
 
     // 2. Scene & Camera setup
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x050713); // Deep midnight Korean indigo
-    this.scene.fog = new THREE.FogExp2(0x070b1a, 0.0075);
+    this.scene.background = new THREE.Color(0x040612); // Midnight temple sky
+    this.scene.fog = new THREE.FogExp2(0x060918, 0.0055);
 
     this.camera = new THREE.PerspectiveCamera(
-      52,
+      54,
       window.innerWidth / window.innerHeight,
       0.1,
-      800
+      950
     );
 
-    // 3. Procedural procedural textures
+    // 3. Procedural textures
     this.initProceduralTextures();
 
-    // 4. Build 3D Korean Temple World
+    // 4. Build Grand 3D Korean Temple Complex
     this.buildLighting();
     this.buildSkyAndStars();
     this.buildGroundAndCourtyard();
-    this.buildTempleMainHall();
+    this.buildGrandTempleHall();       // Significantly enlarged 2-story Daeungjeon
+    this.buildSidePavilionsAndCorridor(); // Flanking East Bell Tower & West Hall
     this.buildStonePagodaAndShrine();
     this.buildStoneLanterns();
     this.buildLotusPondAndBridge();
@@ -160,7 +163,7 @@ class WishPlaza3DEngine {
     }
     this.resize();
 
-    // Update player nickname from logged in account
+    // Set player nickname from account if logged in
     if (window.App && window.App.currentAccount && window.App.currentAccount.name) {
       this.player.name = window.App.currentAccount.name;
     } else {
@@ -194,7 +197,17 @@ class WishPlaza3DEngine {
   }
 
   /* ==========================================================================
-     절(사찰) 텍스처 및 조명 빌더
+     점프 (Jump Physics) 액션
+     ========================================================================== */
+  jump() {
+    if (this.player.isGrounded) {
+      this.player.vy = this.player.jumpSpeed;
+      this.player.isGrounded = false;
+    }
+  }
+
+  /* ==========================================================================
+     절 텍스처 및 조명 빌더
      ========================================================================== */
   initProceduralTextures() {
     // 1. Granite Pavement Texture (절마당 화강암 박석)
@@ -202,23 +215,17 @@ class WishPlaza3DEngine {
     stoneCanvas.width = 512;
     stoneCanvas.height = 512;
     const sctx = stoneCanvas.getContext("2d");
-    sctx.fillStyle = "#2b2520";
+    sctx.fillStyle = "#2d2621";
     sctx.fillRect(0, 0, 512, 512);
 
-    // Stone tile joints
-    sctx.strokeStyle = "#16120e";
+    sctx.strokeStyle = "#17120e";
     sctx.lineWidth = 4;
     const tileSize = 64;
     for (let x = 0; x < 512; x += tileSize) {
       for (let y = 0; y < 512; y += tileSize) {
-        // Subtle granite speckles
         const noise = Math.floor(Math.random() * 25 - 12);
-        const r = Math.min(255, Math.max(0, 48 + noise));
-        const g = Math.min(255, Math.max(0, 42 + noise));
-        const b = Math.min(255, Math.max(0, 36 + noise));
-        sctx.fillStyle = `rgb(${r},${g},${b})`;
+        sctx.fillStyle = `rgb(${48 + noise},${42 + noise},${36 + noise})`;
         sctx.fillRect(x + 2, y + 2, tileSize - 4, tileSize - 4);
-
         for (let k = 0; k < 18; k++) {
           sctx.fillStyle = Math.random() > 0.5 ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.15)";
           sctx.fillRect(x + Math.random() * tileSize, y + Math.random() * tileSize, 2, 2);
@@ -228,10 +235,10 @@ class WishPlaza3DEngine {
     const stoneTex = new THREE.CanvasTexture(stoneCanvas);
     stoneTex.wrapS = THREE.RepeatWrapping;
     stoneTex.wrapT = THREE.RepeatWrapping;
-    stoneTex.repeat.set(16, 16);
+    stoneTex.repeat.set(24, 24);
     this.textures.stone = stoneTex;
 
-    // 2. Korean Traditional Dancheong Tile Texture (처마 단청)
+    // 2. Korean Dancheong Texture (단청)
     const dancheongCanvas = document.createElement("canvas");
     dancheongCanvas.width = 256;
     dancheongCanvas.height = 64;
@@ -264,29 +271,27 @@ class WishPlaza3DEngine {
   }
 
   buildLighting() {
-    // Soft moonlight ambient
-    const ambientLight = new THREE.AmbientLight(0x283250, 1.4);
+    const ambientLight = new THREE.AmbientLight(0x2d3655, 1.5);
     this.scene.add(ambientLight);
 
-    // Directional moonlight from the full moon
-    const moonLight = new THREE.DirectionalLight(0xaad0ff, 1.8);
-    moonLight.position.set(-60, 90, -110);
+    const moonLight = new THREE.DirectionalLight(0xb2d6ff, 2.0);
+    moonLight.position.set(-80, 120, -130);
     moonLight.castShadow = true;
     moonLight.shadow.mapSize.width = 2048;
     moonLight.shadow.mapSize.height = 2048;
     moonLight.shadow.camera.near = 0.5;
-    moonLight.shadow.camera.far = 300;
-    const d = 55;
+    moonLight.shadow.camera.far = 400;
+    const d = 80;
     moonLight.shadow.camera.left = -d;
     moonLight.shadow.camera.right = d;
     moonLight.shadow.camera.top = d;
     moonLight.shadow.camera.bottom = -d;
-    moonLight.shadow.bias = -0.0005;
+    moonLight.shadow.bias = -0.0004;
     this.scene.add(moonLight);
 
-    // Warm temple sanctuary ambient fill
-    const templeSanctuaryLight = new THREE.PointLight(0xffa238, 2.4, 60);
-    templeSanctuaryLight.position.set(0, 8, -32);
+    // Warm sanctuary light radiating from Daeungjeon
+    const templeSanctuaryLight = new THREE.PointLight(0xffa83e, 3.2, 90);
+    templeSanctuaryLight.position.set(0, 14, -44);
     this.scene.add(templeSanctuaryLight);
   }
 
@@ -294,32 +299,29 @@ class WishPlaza3DEngine {
      밤하늘, 별무리, 보름달, 별똥별(유성)
      ========================================================================== */
   buildSkyAndStars() {
-    // 1. Starfield (2200 stars)
-    const starCount = 2200;
+    const starCount = 2800;
     const starGeo = new THREE.BufferGeometry();
     const positions = new Float32Array(starCount * 3);
     const colors = new Float32Array(starCount * 3);
 
     for (let i = 0; i < starCount; i++) {
-      // Upper hemisphere distribution
       const u = Math.random();
       const v = Math.random();
       const theta = u * 2.0 * Math.PI;
-      const phi = Math.acos(2.0 * v - 1.0) * 0.5; // upper hemisphere
-      const r = 320 + Math.random() * 80;
+      const phi = Math.acos(2.0 * v - 1.0) * 0.5;
+      const r = 380 + Math.random() * 100;
 
       positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
       positions[i * 3 + 1] = Math.abs(r * Math.cos(phi)) + 15;
       positions[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
 
-      // Star color tones (white, warm golden, cyan blue)
       const tone = Math.random();
       if (tone > 0.8) {
         colors[i * 3] = 1.0; colors[i * 3 + 1] = 0.92; colors[i * 3 + 2] = 0.75; // Gold
       } else if (tone > 0.6) {
         colors[i * 3] = 0.78; colors[i * 3 + 1] = 0.88; colors[i * 3 + 2] = 1.0; // Cyan
       } else {
-        colors[i * 3] = 0.96; colors[i * 3 + 1] = 0.96; colors[i * 3 + 2] = 1.0; // Pure white
+        colors[i * 3] = 0.96; colors[i * 3 + 1] = 0.96; colors[i * 3 + 2] = 1.0; // White
       }
     }
 
@@ -327,7 +329,7 @@ class WishPlaza3DEngine {
     starGeo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
 
     const starMat = new THREE.PointsMaterial({
-      size: 1.8,
+      size: 1.9,
       vertexColors: true,
       transparent: true,
       opacity: 0.92
@@ -335,24 +337,22 @@ class WishPlaza3DEngine {
     this.starPoints = new THREE.Points(starGeo, starMat);
     this.scene.add(this.starPoints);
 
-    // 2. Full Moon (신비로운 보름달)
-    const moonGeo = new THREE.SphereGeometry(12, 32, 32);
-    const moonMat = new THREE.MeshBasicMaterial({
-      color: 0xfff5dd
-    });
+    // Full Moon (보름달)
+    const moonGeo = new THREE.SphereGeometry(15, 32, 32);
+    const moonMat = new THREE.MeshBasicMaterial({ color: 0xfff7e4 });
     const moon = new THREE.Mesh(moonGeo, moonMat);
-    moon.position.set(-75, 105, -145);
+    moon.position.set(-95, 130, -170);
     this.scene.add(moon);
 
-    // Moon halo / glow
-    const haloGeo = new THREE.PlaneGeometry(55, 55);
+    // Moon halo
+    const haloGeo = new THREE.PlaneGeometry(75, 75);
     const haloCanvas = document.createElement("canvas");
     haloCanvas.width = 128;
     haloCanvas.height = 128;
     const hctx = haloCanvas.getContext("2d");
     const grad = hctx.createRadialGradient(64, 64, 0, 64, 64, 64);
-    grad.addColorStop(0, "rgba(255, 244, 210, 0.75)");
-    grad.addColorStop(0.35, "rgba(254, 215, 140, 0.28)");
+    grad.addColorStop(0, "rgba(255, 246, 218, 0.75)");
+    grad.addColorStop(0.35, "rgba(254, 215, 140, 0.3)");
     grad.addColorStop(0.7, "rgba(147, 197, 253, 0.08)");
     grad.addColorStop(1, "rgba(0, 0, 0, 0)");
     hctx.fillStyle = grad;
@@ -372,14 +372,13 @@ class WishPlaza3DEngine {
   }
 
   spawnShootingStar() {
-    // Diagonal 3D shooting star with particle trail
-    const startX = (Math.random() - 0.5) * 140 - 20;
-    const startY = 75 + Math.random() * 35;
-    const startZ = -120 - Math.random() * 50;
+    const startX = (Math.random() - 0.5) * 160 - 20;
+    const startY = 85 + Math.random() * 40;
+    const startZ = -140 - Math.random() * 60;
 
     const linePoints = [
       new THREE.Vector3(startX, startY, startZ),
-      new THREE.Vector3(startX - 18, startY - 11, startZ + 14)
+      new THREE.Vector3(startX - 22, startY - 13, startZ + 16)
     ];
     const lineGeo = new THREE.BufferGeometry().setFromPoints(linePoints);
     const lineMat = new THREE.LineBasicMaterial({
@@ -393,9 +392,9 @@ class WishPlaza3DEngine {
 
     this.shootingStars.push({
       mesh: line,
-      vx: -2.8,
-      vy: -1.7,
-      vz: 2.1,
+      vx: -3.2,
+      vy: -1.9,
+      vz: 2.3,
       life: 1.0,
       maxLife: 1.0
     });
@@ -405,8 +404,7 @@ class WishPlaza3DEngine {
      절 마당(Courtyard) 및 바닥
      ========================================================================== */
   buildGroundAndCourtyard() {
-    // 1. Granite Ground Plane
-    const groundGeo = new THREE.PlaneGeometry(160, 160);
+    const groundGeo = new THREE.PlaneGeometry(240, 240);
     const groundMat = new THREE.MeshStandardMaterial({
       map: this.textures.stone,
       roughness: 0.85,
@@ -417,8 +415,8 @@ class WishPlaza3DEngine {
     ground.receiveShadow = true;
     this.scene.add(ground);
 
-    // 2. Central Ceremonial Pathway (답도 / 어도)
-    const pathGeo = new THREE.PlaneGeometry(5.2, 70);
+    // Central Ceremonial Pathway (답도 / 어도)
+    const pathGeo = new THREE.PlaneGeometry(7.5, 95);
     const pathCanvas = document.createElement("canvas");
     pathCanvas.width = 128;
     pathCanvas.height = 512;
@@ -430,12 +428,12 @@ class WishPlaza3DEngine {
     pctx.strokeRect(6, 6, 116, 500);
     for (let y = 16; y < 512; y += 32) {
       pctx.beginPath();
-      pctx.arc(64, y, 6, 0, Math.PI * 2);
+      pctx.arc(64, y, 7, 0, Math.PI * 2);
       pctx.stroke();
     }
     const pathTex = new THREE.CanvasTexture(pathCanvas);
     pathTex.wrapT = THREE.RepeatWrapping;
-    pathTex.repeat.set(1, 4);
+    pathTex.repeat.set(1, 6);
 
     const pathMat = new THREE.MeshStandardMaterial({
       map: pathTex,
@@ -444,49 +442,70 @@ class WishPlaza3DEngine {
     });
     const path = new THREE.Mesh(pathGeo, pathMat);
     path.rotation.x = -Math.PI / 2;
-    path.position.set(0, 0.03, -4);
+    path.position.set(0, 0.03, -8);
     path.receiveShadow = true;
     this.scene.add(path);
   }
 
   /* ==========================================================================
-     한국 전통 대웅전 (천명전 大雄寶殿) 3D 빌더
+     대형 한국 전통 사찰 대웅전 (중층 전각 天命殿) - 크기 대폭 확장
      ========================================================================== */
-  buildTempleMainHall() {
+  buildGrandTempleHall() {
     const hallGroup = new THREE.Group();
-    hallGroup.position.set(0, 0, -36);
+    hallGroup.position.set(0, 0, -48);
 
-    // 1. Stone Foundation Platform (기단)
-    const platformGeo = new THREE.BoxGeometry(32, 2.2, 22);
-    const stoneMat = new THREE.MeshStandardMaterial({ color: 0x3a322c, roughness: 0.9 });
-    const platform = new THREE.Mesh(platformGeo, stoneMat);
-    platform.position.y = 1.1;
-    platform.castShadow = true;
-    platform.receiveShadow = true;
-    hallGroup.add(platform);
+    const stoneMat = new THREE.MeshStandardMaterial({ color: 0x3d352e, roughness: 0.9 });
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x221711, roughness: 0.8 });
+    const pillarMat = new THREE.MeshStandardMaterial({ color: 0x851717, roughness: 0.6 }); // Dancheong Vermilion
+    const roofMat = new THREE.MeshStandardMaterial({ color: 0x182028, roughness: 0.72, metalness: 0.25 }); // Korean Clay Tile
 
-    // Stone Steps (기단 석계단)
-    for (let i = 0; i < 4; i++) {
-      const stepGeo = new THREE.BoxGeometry(10 - i * 0.8, 0.35, 1.2);
-      const step = new THREE.Mesh(stepGeo, stoneMat);
-      step.position.set(0, 0.18 + i * 0.35, 11.2 + (3 - i) * 0.8);
+    // 1. Double-deck Stone Platform (기단 & 월대) - Width: 60m, Depth: 38m
+    const lowerPlatform = new THREE.Mesh(new THREE.BoxGeometry(64, 2.0, 42), stoneMat);
+    lowerPlatform.position.y = 1.0;
+    lowerPlatform.castShadow = true;
+    lowerPlatform.receiveShadow = true;
+    hallGroup.add(lowerPlatform);
+
+    const upperPlatform = new THREE.Mesh(new THREE.BoxGeometry(56, 1.8, 34), stoneMat);
+    upperPlatform.position.y = 2.9;
+    upperPlatform.castShadow = true;
+    upperPlatform.receiveShadow = true;
+    hallGroup.add(upperPlatform);
+
+    // Grand Ceremonial Stairs (중앙 대석계단)
+    for (let i = 0; i < 7; i++) {
+      const step = new THREE.Mesh(new THREE.BoxGeometry(16 - i * 0.7, 0.45, 1.3), stoneMat);
+      step.position.set(0, 0.22 + i * 0.45, 17.2 + (6 - i) * 0.9);
       step.castShadow = true;
       step.receiveShadow = true;
       hallGroup.add(step);
     }
 
-    // 2. Hall Walls (회벽 & 창호문)
-    const wallGeo = new THREE.BoxGeometry(28, 8.5, 18);
-    const wallMat = new THREE.MeshStandardMaterial({ color: 0x241812, roughness: 0.8 });
-    const walls = new THREE.Mesh(wallGeo, wallMat);
-    walls.position.y = 2.2 + 4.25;
-    walls.castShadow = true;
-    walls.receiveShadow = true;
-    hallGroup.add(walls);
+    // 2 Guardian Stone Lions (해태/사자상) flanking the stairs
+    for (let s of [-9.2, 9.2]) {
+      const lionBase = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.2, 2.2), stoneMat);
+      lionBase.position.set(s, 0.6, 21.0);
+      hallGroup.add(lionBase);
 
-    // Traditional Paper Lattice Doors (꽃살 창호문 with warm inner glow)
-    for (let d = -3; d <= 3; d++) {
-      const doorGeo = new THREE.PlaneGeometry(2.8, 6.2);
+      const lionBody = new THREE.Mesh(new THREE.BoxGeometry(1.3, 1.8, 1.6), stoneMat);
+      lionBody.position.set(s, 2.1, 21.0);
+      hallGroup.add(lionBody);
+
+      const lionHead = new THREE.Mesh(new THREE.SphereGeometry(0.7, 12, 12), stoneMat);
+      lionHead.position.set(s, 3.2, 21.2);
+      hallGroup.add(lionHead);
+    }
+
+    // 2. First Floor Hall (1층 대전각) - Width: 50m, Height: 12m, Depth: 28m
+    const lowerWalls = new THREE.Mesh(new THREE.BoxGeometry(50, 11.5, 28), wallMat);
+    lowerWalls.position.y = 3.8 + 5.75;
+    lowerWalls.castShadow = true;
+    lowerWalls.receiveShadow = true;
+    hallGroup.add(lowerWalls);
+
+    // Traditional Paper Lattice Doors (꽃살 창호문 9쌍 with warm inner glow)
+    for (let d = -4; d <= 4; d++) {
+      const doorGeo = new THREE.PlaneGeometry(3.6, 8.5);
       const doorCanvas = document.createElement("canvas");
       doorCanvas.width = 128;
       doorCanvas.height = 256;
@@ -496,14 +515,13 @@ class WishPlaza3DEngine {
       dctx.strokeStyle = "#5a3219";
       dctx.lineWidth = 5;
       dctx.strokeRect(4, 4, 120, 248);
-      // Lattice grid
-      for (let y = 16; y < 256; y += 24) {
+      for (let y = 16; y < 256; y += 22) {
         dctx.beginPath();
         dctx.moveTo(4, y);
         dctx.lineTo(124, y);
         dctx.stroke();
       }
-      for (let x = 16; x < 128; x += 24) {
+      for (let x = 16; x < 128; x += 22) {
         dctx.beginPath();
         dctx.moveTo(x, 4);
         dctx.lineTo(x, 252);
@@ -513,184 +531,247 @@ class WishPlaza3DEngine {
       const doorMat = new THREE.MeshStandardMaterial({
         map: doorTex,
         emissive: 0xff9933,
-        emissiveIntensity: 0.42,
-        roughness: 0.6
+        emissiveIntensity: 0.48,
+        roughness: 0.55
       });
       const door = new THREE.Mesh(doorGeo, doorMat);
-      door.position.set(d * 3.6, 5.3, 9.05);
+      door.position.set(d * 5.0, 8.2, 14.1);
       hallGroup.add(door);
     }
 
-    // 3. Wooden Pillars (배흘림 기둥)
-    const pillarGeo = new THREE.CylinderGeometry(0.55, 0.65, 8.5, 16);
-    const pillarMat = new THREE.MeshStandardMaterial({ color: 0x801818, roughness: 0.6 }); // Dancheong Red
-    for (let p = -4; p <= 4; p++) {
-      const pillar = new THREE.Mesh(pillarGeo, pillarMat);
-      pillar.position.set(p * 3.5, 6.45, 9.3);
+    // Front Colonnade Pillars (1층 배흘림 기둥 12기)
+    for (let p = -5; p <= 5; p++) {
+      const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.95, 12.0, 16), pillarMat);
+      pillar.position.set(p * 4.8, 9.8, 14.4);
       pillar.castShadow = true;
       hallGroup.add(pillar);
     }
 
-    // 4. Korean Dancheong Bracket System (공포/익공)
-    const bracketGeo = new THREE.BoxGeometry(31, 0.9, 21);
-    const bracketMat = new THREE.MeshStandardMaterial({
+    // Lower Dancheong Bracket System (1층 다포계 공포)
+    const lowerBracket = new THREE.Mesh(new THREE.BoxGeometry(54, 1.4, 32), new THREE.MeshStandardMaterial({
       map: this.textures.dancheong,
       roughness: 0.5
-    });
-    const bracket = new THREE.Mesh(bracketGeo, bracketMat);
-    bracket.position.y = 10.9;
-    bracket.castShadow = true;
-    hallGroup.add(bracket);
+    }));
+    lowerBracket.position.y = 15.5;
+    hallGroup.add(lowerBracket);
 
-    // 5. Multi-tier Korean Hip-and-Gable Roof (팔작지붕 / 기와 지붕)
-    // Lower tier eave
-    const lowerRoofGeo = new THREE.ConeGeometry(24, 5.5, 4, 1);
-    const roofMat = new THREE.MeshStandardMaterial({
-      color: 0x182028, // Korean black clay tile (기와)
-      roughness: 0.72,
-      metalness: 0.25
-    });
-    const lowerRoof = new THREE.Mesh(lowerRoofGeo, roofMat);
+    // Lower Eave Roof (1층 기와 처마)
+    const lowerRoof = new THREE.Mesh(new THREE.ConeGeometry(42, 7.5, 4, 1), roofMat);
     lowerRoof.rotation.y = Math.PI / 4;
-    lowerRoof.scale.set(1.15, 0.65, 0.85);
-    lowerRoof.position.y = 13.5;
+    lowerRoof.scale.set(1.25, 0.65, 0.88);
+    lowerRoof.position.y = 19.5;
     lowerRoof.castShadow = true;
     hallGroup.add(lowerRoof);
 
-    // Upper main roof ridge (용마루 & 내림마루)
-    const upperRoofGeo = new THREE.ConeGeometry(19, 6.2, 4, 1);
-    const upperRoof = new THREE.Mesh(upperRoofGeo, roofMat);
+    // 3. Second Floor Hall (중층 2층 전각) - Width: 36m, Height: 9.5m, Depth: 20m
+    const upperWalls = new THREE.Mesh(new THREE.BoxGeometry(36, 9.0, 20), wallMat);
+    upperWalls.position.y = 23.5;
+    upperWalls.castShadow = true;
+    upperWalls.receiveShadow = true;
+    hallGroup.add(upperWalls);
+
+    // Upper Dancheong Bracket System (2층 공포)
+    const upperBracket = new THREE.Mesh(new THREE.BoxGeometry(39, 1.2, 23), new THREE.MeshStandardMaterial({
+      map: this.textures.dancheong,
+      roughness: 0.5
+    }));
+    upperBracket.position.y = 28.5;
+    hallGroup.add(upperBracket);
+
+    // Upper Grand Hip-and-Gable Roof (2층 팔작지붕) - Height: 38m!
+    const upperRoof = new THREE.Mesh(new THREE.ConeGeometry(32, 9.8, 4, 1), roofMat);
     upperRoof.rotation.y = Math.PI / 4;
-    upperRoof.scale.set(1.12, 0.75, 0.82);
-    upperRoof.position.y = 16.5;
+    upperRoof.scale.set(1.18, 0.72, 0.82);
+    upperRoof.position.y = 33.2;
     upperRoof.castShadow = true;
     hallGroup.add(upperRoof);
 
-    // Golden Roof Ridge Ornament (치미 / 용마루 장식)
-    const ridgeGeo = new THREE.BoxGeometry(22, 0.55, 0.65);
-    const ridgeMat = new THREE.MeshStandardMaterial({ color: 0xd4a359, metalness: 0.6, roughness: 0.3 });
-    const ridge = new THREE.Mesh(ridgeGeo, ridgeMat);
-    ridge.position.set(0, 19.4, 0);
+    // Golden Dragon Ridge & Chiwi (치미 / 용마루 장식)
+    const ridgeMat = new THREE.MeshStandardMaterial({ color: 0xd4a359, metalness: 0.65, roughness: 0.28 });
+    const ridge = new THREE.Mesh(new THREE.BoxGeometry(36, 0.95, 1.1), ridgeMat);
+    ridge.position.set(0, 38.2, 0);
     hallGroup.add(ridge);
 
-    // 6. Temple Plaque (현판: 天命殿 천명전)
+    // 4. Grand Golden Temple Plaque (현판: 天 命 殿)
     const plaqueCanvas = document.createElement("canvas");
-    plaqueCanvas.width = 256;
-    plaqueCanvas.height = 96;
+    plaqueCanvas.width = 384;
+    plaqueCanvas.height = 144;
     const plctx = plaqueCanvas.getContext("2d");
     plctx.fillStyle = "#120a05";
-    plctx.fillRect(0, 0, 256, 96);
+    plctx.fillRect(0, 0, 384, 144);
     plctx.strokeStyle = "#f59e0b";
-    plctx.lineWidth = 6;
-    plctx.strokeRect(6, 6, 244, 84);
+    plctx.lineWidth = 8;
+    plctx.strokeRect(8, 8, 368, 128);
     plctx.fillStyle = "#fde047";
-    plctx.font = "bold 38px 'Noto Serif KR', serif";
+    plctx.font = "bold 56px 'Noto Serif KR', serif";
     plctx.textAlign = "center";
     plctx.textBaseline = "middle";
-    plctx.fillText("天 命 殿", 128, 48);
+    plctx.fillText("天  命  殿", 192, 72);
 
     const plaqueTex = new THREE.CanvasTexture(plaqueCanvas);
-    const plaqueGeo = new THREE.PlaneGeometry(5.2, 2.0);
-    const plaqueMat = new THREE.MeshStandardMaterial({ map: plaqueTex, roughness: 0.4 });
+    const plaqueGeo = new THREE.PlaneGeometry(8.5, 3.2);
+    const plaqueMat = new THREE.MeshStandardMaterial({ map: plaqueTex, roughness: 0.35 });
     const plaque = new THREE.Mesh(plaqueGeo, plaqueMat);
-    plaque.position.set(0, 9.8, 10.6);
+    plaque.position.set(0, 14.8, 16.3);
     hallGroup.add(plaque);
 
     this.scene.add(hallGroup);
   }
 
   /* ==========================================================================
-     삼층석탑 및 주간 1위 대황금연등 제단
+     부속 전각 (동편 범종각 & 서편 명부전 & 둘레 회랑)
+     ========================================================================== */
+  buildSidePavilionsAndCorridor() {
+    const stoneMat = new THREE.MeshStandardMaterial({ color: 0x3d352e, roughness: 0.9 });
+    const pillarMat = new THREE.MeshStandardMaterial({ color: 0x851717, roughness: 0.6 });
+    const roofMat = new THREE.MeshStandardMaterial({ color: 0x182028, roughness: 0.72, metalness: 0.25 });
+
+    // 1. East Pavilion: 범종각 (Bell Pavilion with Bronze Bell) at x = 40, z = -18
+    const bellPavilion = new THREE.Group();
+    bellPavilion.position.set(40, 0, -18);
+
+    const bpBase = new THREE.Mesh(new THREE.BoxGeometry(16, 1.8, 16), stoneMat);
+    bpBase.position.y = 0.9;
+    bellPavilion.add(bpBase);
+
+    // 4 Corner Pillars
+    for (let cx of [-6, 6]) {
+      for (let cz of [-6, 6]) {
+        const p = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.75, 8.5, 12), pillarMat);
+        p.position.set(cx, 6.0, cz);
+        bellPavilion.add(p);
+      }
+    }
+
+    // Temple Bell (범종 / 동종)
+    const bellMat = new THREE.MeshStandardMaterial({ color: 0x8a6438, metalness: 0.85, roughness: 0.3 });
+    const bell = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 2.2, 3.6, 16), bellMat);
+    bell.position.set(0, 6.5, 0);
+    bellPavilion.add(bell);
+
+    // Roof
+    const bpRoof = new THREE.Mesh(new THREE.ConeGeometry(14, 4.5, 4), roofMat);
+    bpRoof.rotation.y = Math.PI / 4;
+    bpRoof.position.y = 12.5;
+    bellPavilion.add(bpRoof);
+    this.scene.add(bellPavilion);
+
+    // 2. West Pavilion: 명부전 (West Hall) at x = -40, z = -18
+    const westHall = new THREE.Group();
+    westHall.position.set(-40, 0, -18);
+
+    const whBase = new THREE.Mesh(new THREE.BoxGeometry(18, 1.8, 16), stoneMat);
+    whBase.position.y = 0.9;
+    westHall.add(whBase);
+
+    const whWalls = new THREE.Mesh(new THREE.BoxGeometry(16, 7.5, 14), new THREE.MeshStandardMaterial({ color: 0x221711, roughness: 0.8 }));
+    whWalls.position.y = 5.5;
+    westHall.add(whWalls);
+
+    const whRoof = new THREE.Mesh(new THREE.ConeGeometry(15, 5.2, 4), roofMat);
+    whRoof.rotation.y = Math.PI / 4;
+    whRoof.position.y = 11.5;
+    westHall.add(whRoof);
+    this.scene.add(westHall);
+
+    // 3. Side Corridors (회랑) enclosing the perimeter
+    for (let side of [-48, 48]) {
+      const corridor = new THREE.Mesh(new THREE.BoxGeometry(2.4, 4.2, 80), stoneMat);
+      corridor.position.set(side, 2.1, -12);
+      this.scene.add(corridor);
+
+      const cRoof = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.8, 80.5), roofMat);
+      cRoof.position.set(side, 4.5, -12);
+      this.scene.add(cRoof);
+    }
+  }
+
+  /* ==========================================================================
+     삼층대석탑 및 주간 1위 대황금연등 제단
      ========================================================================== */
   buildStonePagodaAndShrine() {
     this.shrineGroup = new THREE.Group();
-    this.shrineGroup.position.set(0, 0, -8);
+    this.shrineGroup.position.set(0, 0, -10);
 
-    const stoneMat = new THREE.MeshStandardMaterial({ color: 0x473f38, roughness: 0.85 });
+    const stoneMat = new THREE.MeshStandardMaterial({ color: 0x4d453d, roughness: 0.85 });
 
-    // 1. Two-tier Pagoda Base (하대석 & 상대석)
-    const base1 = new THREE.Mesh(new THREE.BoxGeometry(6.4, 0.9, 6.4), stoneMat);
-    base1.position.y = 0.45;
+    // 1. Two-tier Pagoda Base (하대석 & 상대석) - Scaled Up
+    const base1 = new THREE.Mesh(new THREE.BoxGeometry(9.6, 1.3, 9.6), stoneMat);
+    base1.position.y = 0.65;
     base1.castShadow = true;
     base1.receiveShadow = true;
     this.shrineGroup.add(base1);
 
-    const base2 = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.8, 4.8), stoneMat);
-    base2.position.y = 1.3;
+    const base2 = new THREE.Mesh(new THREE.BoxGeometry(7.4, 1.1, 7.4), stoneMat);
+    base2.position.y = 1.85;
     base2.castShadow = true;
     this.shrineGroup.add(base2);
 
     // 2. Three Pagoda Tiers (탑신 & 옥개석)
     for (let tier = 0; tier < 3; tier++) {
       const scale = 1.0 - tier * 0.22;
-      const bodyH = 1.1 * scale;
-      const bodyW = 2.4 * scale;
-      const eaveW = 3.8 * scale;
+      const bodyH = 1.6 * scale;
+      const bodyW = 3.6 * scale;
+      const eaveW = 5.8 * scale;
 
-      // Body stone (탑신석)
       const body = new THREE.Mesh(new THREE.BoxGeometry(bodyW, bodyH, bodyW), stoneMat);
-      body.position.y = 1.7 + tier * 1.6 + bodyH / 2;
+      body.position.y = 2.4 + tier * 2.4 + bodyH / 2;
       body.castShadow = true;
       this.shrineGroup.add(body);
 
-      // Eaves roof stone with upturned corners (옥개석)
-      const eave = new THREE.Mesh(new THREE.ConeGeometry(eaveW, 0.65 * scale, 4), stoneMat);
+      const eave = new THREE.Mesh(new THREE.ConeGeometry(eaveW, 0.95 * scale, 4), stoneMat);
       eave.rotation.y = Math.PI / 4;
-      eave.position.y = 1.7 + tier * 1.6 + bodyH + 0.3;
+      eave.position.y = 2.4 + tier * 2.4 + bodyH + 0.45;
       eave.castShadow = true;
       this.shrineGroup.add(eave);
     }
 
     // 3. Pagoda Finial Spire (상륜부 / 보주)
-    const spire = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.3, 1.8, 8), stoneMat);
-    spire.position.y = 6.8;
+    const spire = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.45, 2.6, 8), stoneMat);
+    spire.position.y = 10.2;
     this.shrineGroup.add(spire);
 
-    const jewelMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xd97706, roughness: 0.3 });
-    const jewel = new THREE.Mesh(new THREE.SphereGeometry(0.35, 12, 12), jewelMat);
-    jewel.position.y = 7.7;
+    const jewelMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xd97706, roughness: 0.25 });
+    const jewel = new THREE.Mesh(new THREE.SphereGeometry(0.55, 16, 16), jewelMat);
+    jewel.position.y = 11.6;
     this.shrineGroup.add(jewel);
 
     // 4. Grand Golden Crown Lantern (주간 1위 소원 대황금연등)
     this.grandLantern = new THREE.Group();
-    this.grandLantern.position.set(0, 10.2, 0);
+    this.grandLantern.position.set(0, 15.2, 0);
 
-    // Octagonal glowing body
-    const bodyGeo = new THREE.CylinderGeometry(1.6, 1.4, 2.4, 8);
+    const bodyGeo = new THREE.CylinderGeometry(2.4, 2.1, 3.6, 8);
     const grandMat = new THREE.MeshStandardMaterial({
       color: 0xffd700,
       emissive: 0xffaa00,
-      emissiveIntensity: 0.85,
-      roughness: 0.3,
-      metalness: 0.4
+      emissiveIntensity: 0.88,
+      roughness: 0.28,
+      metalness: 0.45
     });
     const grandBody = new THREE.Mesh(bodyGeo, grandMat);
     this.grandLantern.add(grandBody);
 
-    // Royal Golden Crown (금관) on top of the lantern
+    // Royal Golden Crown (금관)
     const crownGroup = new THREE.Group();
-    crownGroup.position.y = 1.5;
-    const bandGeo = new THREE.CylinderGeometry(1.4, 1.4, 0.4, 16, 1, true);
-    const crownMat = new THREE.MeshStandardMaterial({ color: 0xffdf00, metalness: 0.9, roughness: 0.2 });
+    crownGroup.position.y = 2.2;
+    const bandGeo = new THREE.CylinderGeometry(2.1, 2.1, 0.55, 16, 1, true);
+    const crownMat = new THREE.MeshStandardMaterial({ color: 0xffdf00, metalness: 0.92, roughness: 0.18 });
     const band = new THREE.Mesh(bandGeo, crownMat);
     crownGroup.add(band);
 
-    // 4 Crown tree branches (출자형 입식)
-    for (let c = 0; c < 4; c++) {
-      const prong = new THREE.Mesh(new THREE.BoxGeometry(0.18, 1.1, 0.18), crownMat);
-      const angle = (c * Math.PI) / 2;
-      prong.position.set(Math.cos(angle) * 1.35, 0.65, Math.sin(angle) * 1.35);
+    for (let c = 0; c < 5; c++) {
+      const prong = new THREE.Mesh(new THREE.BoxGeometry(0.24, 1.5, 0.24), crownMat);
+      const angle = (c * Math.PI * 2) / 5;
+      prong.position.set(Math.cos(angle) * 2.05, 0.95, Math.sin(angle) * 2.05);
       crownGroup.add(prong);
     }
     this.grandLantern.add(crownGroup);
 
-    // Grand Light
-    this.grandLight = new THREE.PointLight(0xffb703, 3.2, 35);
-    this.grandLight.position.set(0, 0, 0);
+    this.grandLight = new THREE.PointLight(0xffb703, 3.8, 50);
     this.grandLantern.add(this.grandLight);
 
     // Ground Golden Proximity Ring
-    const ringGeo = new THREE.RingGeometry(2.8, 3.2, 32);
+    const ringGeo = new THREE.RingGeometry(4.2, 4.8, 36);
     const ringMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b, side: THREE.DoubleSide, transparent: true, opacity: 0.85 });
     this.shrineRing = new THREE.Mesh(ringGeo, ringMat);
     this.shrineRing.rotation.x = -Math.PI / 2;
@@ -702,48 +783,45 @@ class WishPlaza3DEngine {
   }
 
   /* ==========================================================================
-     석등(Stone Lanterns) 및 연화지(Lotus Pond) & 홍예교(Bridge)
+     석등 및 연화지(Lotus Pond) & 홍예교(Bridge)
      ========================================================================== */
   buildStoneLanterns() {
     const lanternCoords = [
-      { x: -5.5, z: 8 },
-      { x: 5.5, z: 8 },
-      { x: -6.5, z: -1 },
-      { x: 6.5, z: -1 },
-      { x: -7.5, z: -16 },
-      { x: 7.5, z: -16 }
+      { x: -7.0, z: 12 },
+      { x: 7.0, z: 12 },
+      { x: -8.0, z: 2 },
+      { x: 8.0, z: 2 },
+      { x: -9.5, z: -18 },
+      { x: 9.5, z: -18 },
+      { x: -11.0, z: -32 },
+      { x: 11.0, z: -32 }
     ];
 
-    const stoneMat = new THREE.MeshStandardMaterial({ color: 0x524b44, roughness: 0.85 });
+    const stoneMat = new THREE.MeshStandardMaterial({ color: 0x544c45, roughness: 0.85 });
     const glowMat = new THREE.MeshStandardMaterial({ color: 0xff9922, emissive: 0xff7700, roughness: 0.2 });
 
     lanternCoords.forEach((pos) => {
       const slGroup = new THREE.Group();
       slGroup.position.set(pos.x, 0, pos.z);
 
-      // Base
-      const base = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.1, 0.4, 8), stoneMat);
-      base.position.y = 0.2;
+      const base = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.3, 0.5, 8), stoneMat);
+      base.position.y = 0.25;
       slGroup.add(base);
 
-      // Pillar
-      const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 1.6, 8), stoneMat);
-      pillar.position.y = 1.0;
+      const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 2.0, 8), stoneMat);
+      pillar.position.y = 1.25;
       slGroup.add(pillar);
 
-      // Firebox with glowing core
-      const firebox = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.8, 0.9), glowMat);
-      firebox.position.y = 2.1;
+      const firebox = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.0, 1.1), glowMat);
+      firebox.position.y = 2.6;
       slGroup.add(firebox);
 
-      // Roof stone
-      const roof = new THREE.Mesh(new THREE.ConeGeometry(1.4, 0.65, 8), stoneMat);
-      roof.position.y = 2.8;
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(1.7, 0.8, 8), stoneMat);
+      roof.position.y = 3.5;
       slGroup.add(roof);
 
-      // Warm PointLight
-      const light = new THREE.PointLight(0xffa238, 1.1, 14);
-      light.position.set(0, 2.1, 0);
+      const light = new THREE.PointLight(0xffa238, 1.3, 16);
+      light.position.set(0, 2.6, 0);
       slGroup.add(light);
 
       this.scene.add(slGroup);
@@ -751,90 +829,79 @@ class WishPlaza3DEngine {
   }
 
   buildLotusPondAndBridge() {
-    // 1. Lotus Pond (연화지) on the Southern courtyard edge
     const pondGroup = new THREE.Group();
-    pondGroup.position.set(0, 0, 26);
+    pondGroup.position.set(0, 0, 32);
 
-    const waterGeo = new THREE.BoxGeometry(48, 0.3, 16);
+    const waterGeo = new THREE.BoxGeometry(64, 0.4, 20);
     const waterMat = new THREE.MeshStandardMaterial({
-      color: 0x081c2c,
+      color: 0x071b2b,
       roughness: 0.1,
-      metalness: 0.8,
+      metalness: 0.85,
       transparent: true,
-      opacity: 0.88
+      opacity: 0.9
     });
     const water = new THREE.Mesh(waterGeo, waterMat);
     water.position.y = 0.05;
     pondGroup.add(water);
 
-    // Stone border around pond
+    // Stone border
     const borderMat = new THREE.MeshStandardMaterial({ color: 0x3d352e, roughness: 0.9 });
-    const b1 = new THREE.Mesh(new THREE.BoxGeometry(49, 0.4, 1.2), borderMat);
-    b1.position.set(0, 0.2, -8.2);
-    const b2 = new THREE.Mesh(new THREE.BoxGeometry(49, 0.4, 1.2), borderMat);
-    b2.position.set(0, 0.2, 8.2);
+    const b1 = new THREE.Mesh(new THREE.BoxGeometry(65, 0.5, 1.4), borderMat);
+    b1.position.set(0, 0.25, -10.2);
+    const b2 = new THREE.Mesh(new THREE.BoxGeometry(65, 0.5, 1.4), borderMat);
+    b2.position.set(0, 0.25, 10.2);
     pondGroup.add(b1);
     pondGroup.add(b2);
 
-    // Floating Lotus flowers & pads
-    for (let l = 0; l < 18; l++) {
-      const padGeo = new THREE.CylinderGeometry(0.55, 0.55, 0.05, 12);
-      const padMat = new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.6 });
-      const pad = new THREE.Mesh(padGeo, padMat);
-      const lx = (Math.random() - 0.5) * 42;
-      const lz = (Math.random() - 0.5) * 12;
-      if (Math.abs(lx) > 3.5) { // Leave space for bridge
+    // Floating Lotus flowers
+    for (let l = 0; l < 24; l++) {
+      const pad = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.65, 0.65, 0.06, 12),
+        new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.6 })
+      );
+      const lx = (Math.random() - 0.5) * 56;
+      const lz = (Math.random() - 0.5) * 16;
+      if (Math.abs(lx) > 4.5) {
         pad.position.set(lx, 0.22, lz);
         pondGroup.add(pad);
 
-        // Lotus blossom
-        const lotusGeo = new THREE.ConeGeometry(0.28, 0.35, 6);
-        const lotusMat = new THREE.MeshStandardMaterial({ color: 0xf472b6, emissive: 0xdb2777, emissiveIntensity: 0.3 });
-        const blossom = new THREE.Mesh(lotusGeo, lotusMat);
-        blossom.position.set(lx, 0.38, lz);
+        const blossom = new THREE.Mesh(
+          new THREE.ConeGeometry(0.32, 0.42, 6),
+          new THREE.MeshStandardMaterial({ color: 0xf472b6, emissive: 0xdb2777, emissiveIntensity: 0.35 })
+        );
+        blossom.position.set(lx, 0.42, lz);
         pondGroup.add(blossom);
       }
     }
 
-    // 2. Stone Arch Bridge (홍예교 / 무지개 돌다리) across the pond
-    const bridgeGroup = new THREE.Group();
-    bridgeGroup.position.set(0, 0.3, 0);
-
+    // Stone Arch Bridge (홍예교)
     const bridgeDeck = new THREE.Mesh(
-      new THREE.BoxGeometry(5.2, 0.45, 17.5),
+      new THREE.BoxGeometry(7.2, 0.55, 21.5),
       new THREE.MeshStandardMaterial({ color: 0x4a4138, roughness: 0.85 })
     );
+    bridgeDeck.position.y = 0.35;
     bridgeDeck.receiveShadow = true;
     bridgeDeck.castShadow = true;
-    bridgeGroup.add(bridgeDeck);
+    pondGroup.add(bridgeDeck);
 
-    // Stone balustrade railings
-    for (let side of [-2.4, 2.4]) {
+    for (let side of [-3.4, 3.4]) {
       const rail = new THREE.Mesh(
-        new THREE.BoxGeometry(0.3, 0.75, 17.5),
+        new THREE.BoxGeometry(0.35, 0.85, 21.5),
         new THREE.MeshStandardMaterial({ color: 0x3d352e, roughness: 0.85 })
       );
-      rail.position.set(side, 0.6, 0);
-      bridgeGroup.add(rail);
+      rail.position.set(side, 0.75, 0);
+      pondGroup.add(rail);
     }
-    pondGroup.add(bridgeGroup);
-
     this.scene.add(pondGroup);
   }
 
-  /* ==========================================================================
-     자연 경관 (소나무 & 대나무 숲 & 사찰 담장)
-     ========================================================================== */
   buildPineTreesAndNature() {
     const treeCoords = [
-      { x: -18, z: -10 },
-      { x: 18, z: -10 },
-      { x: -22, z: 6 },
-      { x: 22, z: 6 },
-      { x: -17, z: 22 },
-      { x: 17, z: 22 },
-      { x: -25, z: -28 },
-      { x: 25, z: -28 }
+      { x: -25, z: -10 }, { x: 25, z: -10 },
+      { x: -32, z: 8 },   { x: 32, z: 8 },
+      { x: -26, z: 26 },  { x: 26, z: 26 },
+      { x: -35, z: -38 }, { x: 35, z: -38 },
+      { x: -18, z: -55 }, { x: 18, z: -55 }
     ];
 
     const trunkMat = new THREE.MeshStandardMaterial({ color: 0x452311, roughness: 0.9 });
@@ -844,76 +911,55 @@ class WishPlaza3DEngine {
       const pine = new THREE.Group();
       pine.position.set(tc.x, 0, tc.z);
 
-      // Curved trunk
-      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.85, 7.5, 8), trunkMat);
-      trunk.position.set(0.3, 3.75, 0);
-      trunk.rotation.z = -0.08;
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 1.05, 9.5, 8), trunkMat);
+      trunk.position.set(0.4, 4.75, 0);
+      trunk.rotation.z = -0.09;
       trunk.castShadow = true;
       pine.add(trunk);
 
-      // Layered pine crowns
       for (let i = 0; i < 3; i++) {
-        const crown = new THREE.Mesh(new THREE.ConeGeometry(3.6 - i * 0.7, 2.4, 8), leafMat);
-        crown.position.set(0, 6.2 + i * 1.7, 0);
+        const crown = new THREE.Mesh(new THREE.ConeGeometry(4.5 - i * 0.9, 3.2, 8), leafMat);
+        crown.position.set(0, 7.8 + i * 2.2, 0);
         crown.castShadow = true;
         pine.add(crown);
       }
-
       this.scene.add(pine);
     });
-
-    // Temple Walls (토담 / 한옥 기와 담장) around courtyard
-    const wallMat = new THREE.MeshStandardMaterial({ color: 0x33261d, roughness: 0.9 });
-    const tileMat = new THREE.MeshStandardMaterial({ color: 0x1c2128, roughness: 0.6 });
-
-    for (let side of [-28, 28]) {
-      const sideWall = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.8, 70), wallMat);
-      sideWall.position.set(side, 1.4, -4);
-      sideWall.castShadow = true;
-      sideWall.receiveShadow = true;
-      this.scene.add(sideWall);
-
-      const wallRoof = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.45, 70.5), tileMat);
-      wallRoof.position.set(side, 2.9, -4);
-      this.scene.add(wallRoof);
-    }
   }
 
   /* ==========================================================================
-     3D 플레이어 캐릭터 (천명 도반 아바타)
+     3D 플레이어 캐릭터
      ========================================================================== */
   buildPlayerCharacter() {
     this.playerGroup = new THREE.Group();
-    this.playerGroup.position.set(this.player.x, 0, this.player.z);
+    this.playerGroup.position.set(this.player.x, this.player.y, this.player.z);
 
-    // 1. Hanbok Robe Body (도포 / 두루마기)
+    // 1. Hanbok Robe Body (도포)
     const bodyGeo = new THREE.CylinderGeometry(0.45, 0.75, 1.85, 16);
-    const bodyMat = new THREE.MeshStandardMaterial({
-      color: 0x1b2d4f, // Midnight royal navy
-      roughness: 0.7
-    });
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x1b2d4f, roughness: 0.7 });
     const body = new THREE.Mesh(bodyGeo, bodyMat);
     body.position.y = 1.25;
     body.castShadow = true;
     this.playerGroup.add(body);
 
-    // White Hanbok collar (동정)
-    const collarGeo = new THREE.TorusGeometry(0.44, 0.08, 8, 16);
-    const collarMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
-    const collar = new THREE.Mesh(collarGeo, collarMat);
+    const collar = new THREE.Mesh(
+      new THREE.TorusGeometry(0.44, 0.08, 8, 16),
+      new THREE.MeshStandardMaterial({ color: 0xffffff })
+    );
     collar.position.set(0, 2.1, 0.05);
     collar.rotation.x = Math.PI / 3;
     this.playerGroup.add(collar);
 
     // 2. Head
-    const headGeo = new THREE.SphereGeometry(0.38, 16, 16);
-    const skinMat = new THREE.MeshStandardMaterial({ color: 0xffdfc4, roughness: 0.8 });
-    const head = new THREE.Mesh(headGeo, skinMat);
+    const head = new THREE.Mesh(
+      new THREE.SphereGeometry(0.38, 16, 16),
+      new THREE.MeshStandardMaterial({ color: 0xffdfc4, roughness: 0.8 })
+    );
     head.position.y = 2.45;
     head.castShadow = true;
     this.playerGroup.add(head);
 
-    // 3. Korean Traditional Hat (흑립 / 갓)
+    // 3. Korean Traditional Hat (갓)
     const hatGroup = new THREE.Group();
     hatGroup.position.set(0, 2.75, 0);
     const gatBrim = new THREE.Mesh(
@@ -929,10 +975,9 @@ class WishPlaza3DEngine {
     hatGroup.add(gatCrown);
     this.playerGroup.add(hatGroup);
 
-    // 4. Legs (for walk animation)
+    // 4. Legs
     const legGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.75, 8);
-    const legMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8 }); // Korean traditional posun (버선)
-
+    const legMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8 });
     this.player.leftLeg = new THREE.Mesh(legGeo, legMat);
     this.player.leftLeg.position.set(-0.25, 0.38, 0);
     this.playerGroup.add(this.player.leftLeg);
@@ -941,20 +986,16 @@ class WishPlaza3DEngine {
     this.player.rightLeg.position.set(0.25, 0.38, 0);
     this.playerGroup.add(this.player.rightLeg);
 
-    // 5. Hand-held Lantern (손등불)
+    // 5. Hand Lantern
     const lanternGroup = new THREE.Group();
     lanternGroup.position.set(0.65, 1.2, 0.45);
-
     const lbody = new THREE.Mesh(
       new THREE.OctahedronGeometry(0.32, 1),
       new THREE.MeshStandardMaterial({ color: 0xffaa33, emissive: 0xff8800, emissiveIntensity: 0.9 })
     );
     lanternGroup.add(lbody);
-
-    this.player.handLight = new THREE.PointLight(0xffb042, 1.8, 10);
-    this.player.handLight.position.set(0, 0, 0);
+    this.player.handLight = new THREE.PointLight(0xffb042, 1.8, 12);
     lanternGroup.add(this.player.handLight);
-
     this.playerGroup.add(lanternGroup);
 
     // 6. 3D Name Tag Sprite
@@ -1004,7 +1045,6 @@ class WishPlaza3DEngine {
      3D 소원 연등 초기화 및 생성
      ========================================================================== */
   initLanterns() {
-    // Clear existing
     this.lanterns.forEach((l) => {
       if (l.group) this.scene.remove(l.group);
     });
@@ -1030,30 +1070,26 @@ class WishPlaza3DEngine {
       ];
     }
 
-    // 3D coordinates graceful layout in temple courtyard (near player entrance & along path)
     const positions = [
-      // Close to spawn / entrance for instant interaction
-      { x: -3.8, y: 3.2, z: 12.5 },
-      { x: 3.8, y: 3.4, z: 12.5 },
-      { x: -5.2, y: 3.8, z: 5.5 },
-      { x: 5.2, y: 3.6, z: 5.5 },
-      { x: -4.2, y: 4.1, z: -2.5 },
-      { x: 4.2, y: 3.9, z: -2.5 },
-
-      // Around the stone pagoda & lotus pond
-      { x: -8.5, y: 4.5, z: -8.0 },
-      { x: 8.5, y: 4.4, z: -8.0 },
-      { x: -11.0, y: 5.2, z: 18.0 },
-      { x: 11.0, y: 5.0, z: 18.0 },
-      { x: -14.0, y: 5.8, z: -15.0 },
-      { x: 14.0, y: 5.6, z: -15.0 },
-      { x: 0.0, y: 6.2, z: -22.0 }
+      { x: -4.5, y: 3.5, z: 12.5 },
+      { x: 4.5, y: 3.6, z: 12.5 },
+      { x: -6.5, y: 4.1, z: 5.5 },
+      { x: 6.5, y: 3.9, z: 5.5 },
+      { x: -5.5, y: 4.5, z: -3.5 },
+      { x: 5.5, y: 4.3, z: -3.5 },
+      { x: -11.0, y: 5.2, z: -10.0 },
+      { x: 11.0, y: 5.0, z: -10.0 },
+      { x: -14.0, y: 5.8, z: 20.0 },
+      { x: 14.0, y: 5.6, z: 20.0 },
+      { x: -18.0, y: 6.2, z: -18.0 },
+      { x: 18.0, y: 6.0, z: -18.0 },
+      { x: 0.0, y: 7.2, z: -28.0 }
     ];
 
     communityData.forEach((w, idx) => {
       const pos = positions[idx % positions.length];
-      const offsetX = (idx >= positions.length) ? (Math.random() * 8 - 4) : 0;
-      const offsetZ = (idx >= positions.length) ? (Math.random() * 8 - 4) : 0;
+      const offsetX = (idx >= positions.length) ? (Math.random() * 10 - 5) : 0;
+      const offsetZ = (idx >= positions.length) ? (Math.random() * 10 - 5) : 0;
       const finalPos = {
         x: pos.x + offsetX,
         y: pos.y + Math.random() * 0.8,
@@ -1071,28 +1107,26 @@ class WishPlaza3DEngine {
     const group = new THREE.Group();
     group.position.set(pos.x, pos.y, pos.z);
 
-    // Color theme based on category
     let hexColor = 0xffa500;
     let emissiveColor = 0xff7700;
     const cat = wishData.category || "";
     if (cat.includes("건강")) {
-      hexColor = 0x34d399; emissiveColor = 0x059669; // Emerald green
+      hexColor = 0x34d399; emissiveColor = 0x059669;
     } else if (cat.includes("시험") || cat.includes("합격")) {
-      hexColor = 0xfde047; emissiveColor = 0xd97706; // Amber gold
+      hexColor = 0xfde047; emissiveColor = 0xd97706;
     } else if (cat.includes("재물") || cat.includes("사업")) {
-      hexColor = 0xfbbf24; emissiveColor = 0xb45309; // Rich gold
+      hexColor = 0xfbbf24; emissiveColor = 0xb45309;
     } else if (cat.includes("애정") || cat.includes("인연")) {
-      hexColor = 0xf472b6; emissiveColor = 0xdb2777; // Rose pink
+      hexColor = 0xf472b6; emissiveColor = 0xdb2777;
     } else if (cat.includes("마음") || cat.includes("평안")) {
-      hexColor = 0x818cf8; emissiveColor = 0x4f46e5; // Indigo violet
+      hexColor = 0x818cf8; emissiveColor = 0x4f46e5;
     }
 
-    // Octagonal Hanji Lantern Body
-    const bodyGeo = new THREE.CylinderGeometry(0.65, 0.55, 1.15, 8);
+    const bodyGeo = new THREE.CylinderGeometry(0.75, 0.65, 1.35, 8);
     const bodyMat = new THREE.MeshStandardMaterial({
       color: hexColor,
       emissive: emissiveColor,
-      emissiveIntensity: 0.72,
+      emissiveIntensity: 0.75,
       map: this.textures.hanji,
       roughness: 0.4
     });
@@ -1100,18 +1134,17 @@ class WishPlaza3DEngine {
     body.castShadow = true;
     group.add(body);
 
-    // Dark wooden caps on top and bottom
-    const capGeo = new THREE.CylinderGeometry(0.72, 0.72, 0.08, 8);
+    const capGeo = new THREE.CylinderGeometry(0.82, 0.82, 0.1, 8);
     const capMat = new THREE.MeshStandardMaterial({ color: 0x1f140e, roughness: 0.5 });
     const topCap = new THREE.Mesh(capGeo, capMat);
-    topCap.position.y = 0.6;
+    topCap.position.y = 0.72;
     const botCap = new THREE.Mesh(capGeo, capMat);
-    botCap.position.y = -0.6;
+    botCap.position.y = -0.72;
     group.add(topCap);
     group.add(botCap);
 
     // Hanging Wish Streamer (소원지)
-    const streamerGeo = new THREE.PlaneGeometry(0.3, 0.95);
+    const streamerGeo = new THREE.PlaneGeometry(0.35, 1.1);
     const streamerCanvas = document.createElement("canvas");
     streamerCanvas.width = 64;
     streamerCanvas.height = 128;
@@ -1119,10 +1152,10 @@ class WishPlaza3DEngine {
     sctx.fillStyle = "#fffbeb";
     sctx.fillRect(0, 0, 64, 128);
     sctx.fillStyle = "#8c1d1d";
-    sctx.font = "bold 18px 'Noto Serif KR', sans-serif";
+    sctx.font = "bold 20px 'Noto Serif KR', sans-serif";
     sctx.textAlign = "center";
-    sctx.fillText("소", 32, 38);
-    sctx.fillText("원", 32, 72);
+    sctx.fillText("소", 32, 42);
+    sctx.fillText("원", 32, 82);
     const streamerTex = new THREE.CanvasTexture(streamerCanvas);
     const streamerMat = new THREE.MeshBasicMaterial({
       map: streamerTex,
@@ -1130,17 +1163,14 @@ class WishPlaza3DEngine {
       transparent: true
     });
     const streamer = new THREE.Mesh(streamerGeo, streamerMat);
-    streamer.position.set(0, -1.15, 0);
+    streamer.position.set(0, -1.35, 0);
     group.add(streamer);
 
-    // Localized warm point light
-    const pLight = new THREE.PointLight(hexColor, 1.2, 8.5);
-    pLight.position.set(0, 0, 0);
+    const pLight = new THREE.PointLight(hexColor, 1.4, 10.0);
     group.add(pLight);
 
-    // 3D Category & Author label sprite
     const labelSprite = this.createWishLabelSprite(wishData);
-    labelSprite.position.set(0, 1.15, 0);
+    labelSprite.position.set(0, 1.35, 0);
     group.add(labelSprite);
 
     this.scene.add(group);
@@ -1157,7 +1187,7 @@ class WishPlaza3DEngine {
       pLight: pLight,
       baseY: pos.y,
       floatSpeed: 0.8 + Math.random() * 0.6,
-      floatAmp: 0.35 + Math.random() * 0.2,
+      floatAmp: 0.4 + Math.random() * 0.25,
       floatOffset: Math.random() * Math.PI * 2,
       rotSpeed: (Math.random() - 0.5) * 0.4
     };
@@ -1169,7 +1199,7 @@ class WishPlaza3DEngine {
     canvas.height = 64;
     const ctx = canvas.getContext("2d");
 
-    ctx.fillStyle = "rgba(22, 14, 9, 0.82)";
+    ctx.fillStyle = "rgba(22, 14, 9, 0.85)";
     ctx.strokeStyle = "#f59e0b";
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -1186,27 +1216,25 @@ class WishPlaza3DEngine {
     const tex = new THREE.CanvasTexture(canvas);
     const spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true });
     const sprite = new THREE.Sprite(spriteMat);
-    sprite.scale.set(2.4, 0.6, 1);
+    sprite.scale.set(2.6, 0.65, 1);
     return sprite;
   }
 
   addPlayerNewLantern(newWish) {
-    // Spawn near the player
     const spawnPos = {
-      x: this.player.x + Math.sin(this.player.rotationY) * 2.2,
-      y: 1.2,
-      z: this.player.z + Math.cos(this.player.rotationY) * 2.2
+      x: this.player.x + Math.sin(this.player.rotationY) * 2.5,
+      y: 1.5,
+      z: this.player.z + Math.cos(this.player.rotationY) * 2.5
     };
 
     const lanternObj = this.createLanternMesh(newWish, spawnPos);
     lanternObj.isNew = true;
-    lanternObj.targetY = 4.0 + Math.random() * 1.5;
+    lanternObj.targetY = 4.8 + Math.random() * 1.8;
     this.lanterns.unshift(lanternObj);
 
     this.updateHudCount();
     this.showToast("🏮 도반님의 소원 연등이 은하수 사찰 광장 밤하늘에 띄워졌습니다!");
 
-    // Save to localStorage
     try {
       const serializable = this.lanterns.map((l) => ({
         id: l.id,
@@ -1226,14 +1254,12 @@ class WishPlaza3DEngine {
 
     lantern.cheers = (lantern.cheers || 0) + 1;
 
-    // Save cheered IDs in localStorage
     try {
       let cheeredIds = JSON.parse(localStorage.getItem("chunmyung_cheered_wish_ids") || "[]");
       if (!cheeredIds.includes(wishId)) cheeredIds.push(wishId);
       localStorage.setItem("chunmyung_cheered_wish_ids", JSON.stringify(cheeredIds));
     } catch (e) {}
 
-    // Update modal UI elements if opened
     const countEl = document.getElementById("wishDetailCheerCount");
     const cheerBtn = document.getElementById("wishDetailCheerBtn");
     if (countEl) countEl.textContent = lantern.cheers;
@@ -1242,23 +1268,17 @@ class WishPlaza3DEngine {
       cheerBtn.className = "px-4 py-2 rounded-xl bg-[#8c1d1d] text-[#ffe8b3] font-bold border border-[#f59e0b] shadow flex items-center space-x-1.5 text-xs";
     }
 
-    // Spawn 3D sparkle fireworks particles around the lantern
     this.spawnCheerSparkles(lantern.group.position);
 
-    // Confetti if available
     if (typeof confetti === "function") {
-      confetti({
-        particleCount: 40,
-        spread: 60,
-        origin: { y: 0.6 }
-      });
+      confetti({ particleCount: 40, spread: 60, origin: { y: 0.6 } });
     }
 
     this.showToast(`✨ [${lantern.author}] 님께 따뜻한 응원을 보냈습니다!`);
   }
 
   spawnCheerSparkles(pos) {
-    const particleCount = 28;
+    const particleCount = 32;
     const geo = new THREE.BufferGeometry();
     const positions = new Float32Array(particleCount * 3);
     const velocities = [];
@@ -1267,18 +1287,17 @@ class WishPlaza3DEngine {
       positions[i * 3] = pos.x;
       positions[i * 3 + 1] = pos.y + 0.5;
       positions[i * 3 + 2] = pos.z;
-
       velocities.push(
-        (Math.random() - 0.5) * 4.5,
-        Math.random() * 4.2 + 1.5,
-        (Math.random() - 0.5) * 4.5
+        (Math.random() - 0.5) * 4.8,
+        Math.random() * 4.5 + 1.8,
+        (Math.random() - 0.5) * 4.8
       );
     }
 
     geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
     const mat = new THREE.PointsMaterial({
       color: 0xffe066,
-      size: 0.35,
+      size: 0.38,
       transparent: true,
       opacity: 1.0,
       blending: THREE.AdditiveBlending
@@ -1295,16 +1314,14 @@ class WishPlaza3DEngine {
   }
 
   /* ==========================================================================
-     입력 이벤트 (WASD / 방향키 / 마우스 3D 드래그 & 클릭)
+     입력 이벤트 (WASD / 방향키 / 스페이스바 점프 / 마우스 위아래양옆 시점 회전)
      ========================================================================== */
   bindEvents() {
     window.addEventListener("keydown", (e) => {
       if (!this.isRunning) return;
 
       const code = e.code;
-      const key = e.key.toLowerCase();
 
-      // W, S, A, D & Arrow Keys
       if (code === "KeyW" || code === "ArrowUp") {
         this.keys.up = true;
         this.player.targetX = null;
@@ -1321,7 +1338,12 @@ class WishPlaza3DEngine {
         this.keys.right = true;
         this.player.targetX = null;
         this.player.targetZ = null;
-      } else if (code === "KeyE" || code === "Space") {
+      } else if (code === "Space") {
+        // Spacebar Jump!
+        this.jump();
+        e.preventDefault();
+      } else if (code === "KeyE") {
+        // E Key for Reading Wishes
         this.interactWithNearby();
         e.preventDefault();
       } else if (code === "Escape") {
@@ -1339,7 +1361,7 @@ class WishPlaza3DEngine {
       if (code === "KeyD" || code === "ArrowRight") this.keys.right = false;
     });
 
-    // Mouse drag for 3D Camera Orbit
+    // Mouse Controls for 360 Look (위, 아래, 양옆 자유 시점)
     if (this.canvas) {
       this.canvas.addEventListener("mousedown", (e) => {
         if (!this.isRunning) return;
@@ -1349,31 +1371,49 @@ class WishPlaza3DEngine {
         this.hasDragged = false;
       });
 
+      let lastMoveX = null;
+      let lastMoveY = null;
+
       window.addEventListener("mousemove", (e) => {
-        if (!this.isRunning || !this.cameraOrbit.isDragging) return;
+        if (!this.isRunning) return;
 
-        const deltaX = e.clientX - this.cameraOrbit.prevMouseX;
-        const deltaY = e.clientY - this.cameraOrbit.prevMouseY;
+        let dx = 0;
+        let dy = 0;
 
-        if (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2) {
-          this.hasDragged = true;
+        if (document.pointerLockElement === this.canvas) {
+          dx = e.movementX;
+          dy = e.movementY;
+        } else if (this.cameraOrbit.isDragging) {
+          dx = e.clientX - this.cameraOrbit.prevMouseX;
+          dy = e.clientY - this.cameraOrbit.prevMouseY;
+          this.cameraOrbit.prevMouseX = e.clientX;
+          this.cameraOrbit.prevMouseY = e.clientY;
+          if (Math.abs(dx) > 2 || Math.abs(dy) > 2) this.hasDragged = true;
+        } else if (e.target === this.canvas && lastMoveX !== null && lastMoveY !== null) {
+          // Free look when cursor moves over canvas
+          dx = (e.clientX - lastMoveX) * 0.75;
+          dy = (e.clientY - lastMoveY) * 0.75;
         }
 
-        this.cameraOrbit.azimuth -= deltaX * 0.006;
-        this.cameraOrbit.elevation = Math.max(
-          0.12,
-          Math.min(1.25, this.cameraOrbit.elevation + deltaY * 0.005)
-        );
+        lastMoveX = e.clientX;
+        lastMoveY = e.clientY;
 
-        this.cameraOrbit.prevMouseX = e.clientX;
-        this.cameraOrbit.prevMouseY = e.clientY;
+        if (dx !== 0 || dy !== 0) {
+          // Look Left / Right (양옆)
+          this.cameraOrbit.azimuth -= dx * 0.0055;
+          // Look Up / Down (위, 아래) - expanded range to look straight up at sky/moon and down
+          this.cameraOrbit.elevation = Math.max(
+            -0.30,
+            Math.min(1.48, this.cameraOrbit.elevation + dy * 0.005)
+          );
+        }
       });
 
       window.addEventListener("mouseup", () => {
         this.cameraOrbit.isDragging = false;
       });
 
-      // Canvas click (Raycasting to click on Lanterns or walk to ground)
+      // Canvas click (Raycast to click on Lanterns or Pagoda)
       this.canvas.addEventListener("click", (e) => {
         if (!this.isRunning || this.hasDragged) return;
 
@@ -1383,7 +1423,7 @@ class WishPlaza3DEngine {
 
         this.raycaster.setFromCamera(this.mouse, this.camera);
 
-        // 1. Check if clicked Grand Pagoda / Lantern
+        // Click Grand Lantern / Pagoda
         if (this.grandLantern) {
           const grandHits = this.raycaster.intersectObjects(this.grandLantern.children, true);
           if (grandHits.length > 0) {
@@ -1392,7 +1432,7 @@ class WishPlaza3DEngine {
           }
         }
 
-        // 2. Check if clicked a floating wish lantern
+        // Click floating lantern
         let clickedLantern = null;
         for (const l of this.lanterns) {
           const hits = this.raycaster.intersectObjects(l.group.children, true);
@@ -1407,10 +1447,10 @@ class WishPlaza3DEngine {
           return;
         }
 
-        // 3. Click to walk to ground position
+        // Click to walk to ground position
         const groundHits = this.raycaster.intersectObjects(this.scene.children, false);
         for (const hit of groundHits) {
-          if (hit.point && Math.abs(hit.point.y) < 0.5) {
+          if (hit.point && Math.abs(hit.point.y) < 0.6) {
             this.player.targetX = hit.point.x;
             this.player.targetZ = hit.point.z;
             break;
@@ -1418,16 +1458,16 @@ class WishPlaza3DEngine {
         }
       });
 
-      // Mouse wheel zoom
+      // Wheel Zoom
       this.canvas.addEventListener("wheel", (e) => {
         if (!this.isRunning) return;
         this.cameraOrbit.distance = Math.max(
-          7.0,
-          Math.min(32.0, this.cameraOrbit.distance + e.deltaY * 0.015)
+          8.0,
+          Math.min(36.0, this.cameraOrbit.distance + e.deltaY * 0.015)
         );
       });
 
-      // Touch events for mobile
+      // Touch controls
       let touchStartX = 0;
       let touchStartY = 0;
       this.canvas.addEventListener("touchstart", (e) => {
@@ -1443,8 +1483,8 @@ class WishPlaza3DEngine {
 
         this.cameraOrbit.azimuth -= dx * 0.008;
         this.cameraOrbit.elevation = Math.max(
-          0.12,
-          Math.min(1.25, this.cameraOrbit.elevation + dy * 0.007)
+          -0.30,
+          Math.min(1.48, this.cameraOrbit.elevation + dy * 0.007)
         );
 
         touchStartX = e.touches[0].clientX;
@@ -1462,9 +1502,8 @@ class WishPlaza3DEngine {
     } else if (this.nearbyLantern) {
       this.showWishDetailModal(this.nearbyLantern);
     } else {
-      // Find closest lantern if any within generous range
       let closest = null;
-      let minD = 8.5;
+      let minD = 9.5;
       for (const l of this.lanterns) {
         const d = Math.hypot(l.group.position.x - this.player.x, l.group.position.z - this.player.z);
         if (d < minD) {
@@ -1526,7 +1565,6 @@ class WishPlaza3DEngine {
     const dialog = document.getElementById("wishWeeklyTopModal");
     if (!dialog) return;
 
-    // Find highest cheered wish
     const topWish = this.lanterns.reduce((max, w) => (w.cheers > max.cheers ? w : max), this.lanterns[0]);
 
     const titleEl = document.getElementById("weeklyTopDetailTitle");
@@ -1588,8 +1626,18 @@ class WishPlaza3DEngine {
   }
 
   update(dt, elapsedTime) {
-    // 1. Calculate movement relative to Camera View
-    // Camera forward vector projected on XZ plane
+    // 1. Jump Physics Update
+    if (!this.player.isGrounded) {
+      this.player.y += this.player.vy * dt;
+      this.player.vy -= this.player.gravity * dt;
+      if (this.player.y <= 0) {
+        this.player.y = 0;
+        this.player.vy = 0;
+        this.player.isGrounded = true;
+      }
+    }
+
+    // 2. Horizontal Movement relative to Camera View
     const camForward = new THREE.Vector3();
     this.camera.getWorldDirection(camForward);
     camForward.y = 0;
@@ -1623,13 +1671,11 @@ class WishPlaza3DEngine {
       this.player.x += moveDir.x * this.player.speed * dt;
       this.player.z += moveDir.z * this.player.speed * dt;
 
-      // Restrict player inside temple courtyard
-      this.player.x = Math.max(-25, Math.min(25, this.player.x));
-      this.player.z = Math.max(-30, Math.min(32, this.player.z));
+      // Temple boundaries
+      this.player.x = Math.max(-38, Math.min(38, this.player.x));
+      this.player.z = Math.max(-42, Math.min(38, this.player.z));
 
-      // Character facing direction
       const targetAngle = Math.atan2(moveDir.x, moveDir.z);
-      // Smooth rotation
       let diff = targetAngle - this.player.rotationY;
       while (diff < -Math.PI) diff += Math.PI * 2;
       while (diff > Math.PI) diff -= Math.PI * 2;
@@ -1644,12 +1690,15 @@ class WishPlaza3DEngine {
 
     // Apply player position & rotation
     if (this.playerGroup) {
-      this.playerGroup.position.set(this.player.x, 0, this.player.z);
+      this.playerGroup.position.set(this.player.x, this.player.y, this.player.z);
       this.playerGroup.rotation.y = this.player.rotationY;
 
-      // Leg swing animation when walking
       if (this.player.leftLeg && this.player.rightLeg) {
-        if (this.player.isMoving) {
+        if (!this.player.isGrounded) {
+          // Jumping pose
+          this.player.leftLeg.rotation.x = -0.3;
+          this.player.rightLeg.rotation.x = 0.3;
+        } else if (this.player.isMoving) {
           this.player.leftLeg.rotation.x = Math.sin(this.player.walkPhase) * 0.45;
           this.player.rightLeg.rotation.x = -Math.sin(this.player.walkPhase) * 0.45;
         } else {
@@ -1659,49 +1708,45 @@ class WishPlaza3DEngine {
       }
     }
 
-    // 2. Camera follow (Third-Person Orbit)
+    // 3. Camera Follow (Up/Down/Left/Right Orbit around player)
     const orbitDist = this.cameraOrbit.distance;
     const elev = this.cameraOrbit.elevation;
     const azim = this.cameraOrbit.azimuth;
 
     const camX = this.player.x + orbitDist * Math.cos(elev) * Math.sin(azim);
-    const camY = Math.max(1.5, orbitDist * Math.sin(elev));
+    const camY = Math.max(1.2, this.player.y + orbitDist * Math.sin(elev));
     const camZ = this.player.z + orbitDist * Math.cos(elev) * Math.cos(azim);
 
-    // Damped camera movement
-    this.camera.position.lerp(new THREE.Vector3(camX, camY, camZ), 0.15);
-    this.camera.lookAt(this.player.x, 1.8, this.player.z);
+    this.camera.position.lerp(new THREE.Vector3(camX, camY, camZ), 0.16);
+    this.camera.lookAt(this.player.x, this.player.y + 1.8, this.player.z);
 
-    // 3. Floating lanterns bobbing & sway
+    // 4. Floating lanterns bobbing & sway
     this.lanterns.forEach((l) => {
-      // Bobbing
       l.group.position.y = l.baseY + Math.sin(elapsedTime * l.floatSpeed + l.floatOffset) * l.floatAmp;
       l.group.rotation.y += l.rotSpeed * dt;
 
-      // Streamer sway
       if (l.streamer) {
         l.streamer.rotation.z = Math.sin(elapsedTime * 2.5 + l.floatOffset) * 0.12;
       }
 
-      // Smooth rise if new
       if (l.isNew && l.baseY < l.targetY) {
-        l.baseY += dt * 0.9;
+        l.baseY += dt * 0.95;
         if (l.baseY >= l.targetY) l.isNew = false;
       }
     });
 
-    // 4. Grand Golden Lantern Rotation & Crown Glow
+    // 5. Grand Golden Lantern Rotation & Shrine Ring
     if (this.grandLantern) {
       this.grandLantern.rotation.y += 0.015;
-      this.grandLantern.position.y = 10.2 + Math.sin(elapsedTime * 1.5) * 0.4;
+      this.grandLantern.position.y = 15.2 + Math.sin(elapsedTime * 1.5) * 0.45;
     }
     if (this.shrineRing) {
       this.shrineRing.rotation.z += 0.01;
     }
 
-    // 5. Proximity check
+    // 6. Proximity check
     this.nearbyLantern = null;
-    let closestDist = 5.2;
+    let closestDist = 5.5;
 
     for (const l of this.lanterns) {
       const d = Math.hypot(l.group.position.x - this.player.x, l.group.position.z - this.player.z);
@@ -1711,17 +1756,15 @@ class WishPlaza3DEngine {
       }
     }
 
-    // Pagoda shrine proximity
-    const distToPagoda = Math.hypot(0 - this.player.x, -8 - this.player.z);
-    this.isNearShrine = distToPagoda < 5.8;
+    const distToPagoda = Math.hypot(0 - this.player.x, -10 - this.player.z);
+    this.isNearShrine = distToPagoda < 7.2;
 
-    // 6. Shooting star periodic spawn
-    if (elapsedTime - this.lastShootingStarTime > 4.5 && Math.random() < 0.4) {
+    // 7. Shooting stars
+    if (elapsedTime - this.lastShootingStarTime > 4.2 && Math.random() < 0.4) {
       this.lastShootingStarTime = elapsedTime;
       this.spawnShootingStar();
     }
 
-    // Update shooting stars
     for (let i = this.shootingStars.length - 1; i >= 0; i--) {
       const s = this.shootingStars[i];
       s.mesh.position.x += s.vx;
@@ -1735,7 +1778,7 @@ class WishPlaza3DEngine {
       }
     }
 
-    // Update cheer sparkle particles
+    // 8. Cheer sparkle particles
     for (let p = this.sparkleParticles.length - 1; p >= 0; p--) {
       const sp = this.sparkleParticles[p];
       const posAttr = sp.mesh.geometry.attributes.position;

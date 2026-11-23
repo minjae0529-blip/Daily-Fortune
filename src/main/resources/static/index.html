@@ -2144,26 +2144,28 @@
     <footer class="relative z-10 mt-auto bg-gradient-to-t from-[#120a06]/95 via-[#120a06]/75 to-transparent px-4 py-3 flex items-center justify-between pointer-events-none text-xs">
       <!-- Movement key badges -->
       <div class="flex items-center space-x-2 text-[11px] text-stone-300 font-sans pointer-events-auto bg-[#1e140d]/85 px-3.5 py-1.5 rounded-xl border border-stone-700/80 backdrop-blur-xs">
-        <span class="text-amber-400 font-bold">⌨️ 이동 조작:</span>
-        <span class="font-mono bg-[#2a1b14] px-1.5 py-0.5 rounded border border-stone-600 text-[10px] text-amber-200">W(앞) S(뒤) A(좌) D(우)</span>
-        <span>또는</span>
-        <span class="font-mono bg-[#2a1b14] px-1.5 py-0.5 rounded border border-stone-600 text-[10px]">↑ ↓ ← →</span>
+        <span class="text-amber-400 font-bold">⌨️ 이동:</span>
+        <span class="font-mono bg-[#2a1b14] px-1.5 py-0.5 rounded border border-stone-600 text-[10px] text-amber-200">W(앞) S(뒤) A(좌) D(우) / 방향키</span>
         <span>|</span>
-        <span class="text-amber-300">🖱️ 시점:</span>
-        <span class="text-stone-300 text-[10px]">화면 드래그</span>
+        <span class="text-amber-300 font-bold">🚀 점프:</span>
+        <span class="font-mono bg-[#2a1b14] px-1.5 py-0.5 rounded border border-stone-600 text-[10px] text-amber-200">스페이스바</span>
         <span>|</span>
-        <span class="text-amber-300">소원 읽기:</span>
-        <span class="font-mono bg-[#2a1b14] px-1.5 py-0.5 rounded border border-stone-600 text-[10px]">E / 스페이스 / 클릭</span>
+        <span class="text-amber-300 font-bold">🖱️ 시점:</span>
+        <span class="text-stone-300 text-[10px]">마우스 이동/드래그 (상·하·좌·우)</span>
+        <span>|</span>
+        <span class="text-amber-300 font-bold">소원 읽기:</span>
+        <span class="font-mono bg-[#2a1b14] px-1.5 py-0.5 rounded border border-stone-600 text-[10px]">E / 클릭</span>
       </div>
 
-      <!-- Mobile On-Screen D-Pad (Touch / Clickable) -->
-      <div class="pointer-events-auto flex items-center space-x-1 sm:hidden">
+      <!-- Mobile On-Screen D-Pad & Jump Button (Touch / Clickable) -->
+      <div class="pointer-events-auto flex items-center space-x-2 sm:hidden">
         <button type="button" onmousedown="WishPlaza.keys.left=true" onmouseup="WishPlaza.keys.left=false" ontouchstart="WishPlaza.keys.left=true" ontouchend="WishPlaza.keys.left=false" class="w-9 h-9 rounded-lg bg-[#2a1b14] text-white border border-stone-600 font-bold flex items-center justify-center active:bg-amber-800">◀</button>
         <div class="flex flex-col space-y-1">
           <button type="button" onmousedown="WishPlaza.keys.up=true" onmouseup="WishPlaza.keys.up=false" ontouchstart="WishPlaza.keys.up=true" ontouchend="WishPlaza.keys.up=false" class="w-9 h-9 rounded-lg bg-[#2a1b14] text-white border border-stone-600 font-bold flex items-center justify-center active:bg-amber-800">▲</button>
           <button type="button" onmousedown="WishPlaza.keys.down=true" onmouseup="WishPlaza.keys.down=false" ontouchstart="WishPlaza.keys.down=true" ontouchend="WishPlaza.keys.down=false" class="w-9 h-9 rounded-lg bg-[#2a1b14] text-white border border-stone-600 font-bold flex items-center justify-center active:bg-amber-800">▼</button>
         </div>
         <button type="button" onmousedown="WishPlaza.keys.right=true" onmouseup="WishPlaza.keys.right=false" ontouchstart="WishPlaza.keys.right=true" ontouchend="WishPlaza.keys.right=false" class="w-9 h-9 rounded-lg bg-[#2a1b14] text-white border border-stone-600 font-bold flex items-center justify-center active:bg-amber-800">▶</button>
+        <button type="button" onclick="WishPlaza.jump()" class="w-10 h-10 rounded-lg bg-gradient-to-b from-[#b45309] to-[#78350f] text-[#fef08a] border border-[#f59e0b] font-bold text-xs flex items-center justify-center active:scale-95 shadow">점프</button>
       </div>
     </footer>
 

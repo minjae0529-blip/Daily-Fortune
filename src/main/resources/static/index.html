@@ -2110,8 +2110,8 @@
         <span class="text-2xl filter drop-shadow-[0_0_10px_rgba(251,191,36,0.9)] animate-pulse">🏮</span>
         <div>
           <div class="flex items-center space-x-2">
-            <h2 class="text-sm sm:text-base font-black text-[#fce8bd] tracking-wide">천명(天命) 은하수 소원 연등 광장</h2>
-            <span class="px-2 py-0.5 rounded-full bg-[#8c1d1d] text-[#ffe8b3] text-[10px] font-bold border border-[#d4a359]">WASD / 방향키 탐험</span>
+            <h2 class="text-sm sm:text-base font-black text-[#fce8bd] tracking-wide">천명(天命) 3D 산사(절) 은하수 연등 광장</h2>
+            <span class="px-2 py-0.5 rounded-full bg-[#8c1d1d] text-[#ffe8b3] text-[10px] font-bold border border-[#d4a359]">3D WASD 탐험</span>
           </div>
           <p class="text-[11px] text-[#d6c0a0]">
             밤하늘에 떠 있는 <strong class="text-amber-300 font-bold" id="wishPlazaTotalCount">0</strong>개의 소원 연등 · 다가가서 [E] 또는 클릭하여 소원을 읽고 응원해보세요 ✨
@@ -2145,12 +2145,15 @@
       <!-- Movement key badges -->
       <div class="flex items-center space-x-2 text-[11px] text-stone-300 font-sans pointer-events-auto bg-[#1e140d]/85 px-3.5 py-1.5 rounded-xl border border-stone-700/80 backdrop-blur-xs">
         <span class="text-amber-400 font-bold">⌨️ 이동 조작:</span>
-        <span class="font-mono bg-[#2a1b14] px-1.5 py-0.5 rounded border border-stone-600 text-[10px]">W A S D</span>
+        <span class="font-mono bg-[#2a1b14] px-1.5 py-0.5 rounded border border-stone-600 text-[10px] text-amber-200">W(앞) S(뒤) A(좌) D(우)</span>
         <span>또는</span>
         <span class="font-mono bg-[#2a1b14] px-1.5 py-0.5 rounded border border-stone-600 text-[10px]">↑ ↓ ← →</span>
         <span>|</span>
+        <span class="text-amber-300">🖱️ 시점:</span>
+        <span class="text-stone-300 text-[10px]">화면 드래그</span>
+        <span>|</span>
         <span class="text-amber-300">소원 읽기:</span>
-        <span class="font-mono bg-[#2a1b14] px-1.5 py-0.5 rounded border border-stone-600 text-[10px]">E / 스페이스 / 마우스 클릭</span>
+        <span class="font-mono bg-[#2a1b14] px-1.5 py-0.5 rounded border border-stone-600 text-[10px]">E / 스페이스 / 클릭</span>
       </div>
 
       <!-- Mobile On-Screen D-Pad (Touch / Clickable) -->
@@ -2323,7 +2326,8 @@
   <script src="js/engine/calendar.js?v=20261121_admin"></script>
   <script src="js/engine/saju.js?v=20261121_admin"></script>
   <script src="js/engine/fortune.js?v=20261121_admin"></script>
-  <script src="js/engine/wish_plaza.js?v=20261123"></script>
+  <script src="js/lib/three.min.js"></script>
+  <script src="js/engine/wish_plaza.js?v=20261123_3d"></script>
   <script src="js/app.js?v=20261121_export"></script>
 
 </body>

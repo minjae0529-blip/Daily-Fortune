@@ -2143,7 +2143,7 @@
     <!-- Plaza Bottom HUD Controls & Instructions -->
     <footer class="relative z-10 mt-auto bg-gradient-to-t from-[#120a06]/95 via-[#120a06]/75 to-transparent px-4 py-3 flex items-center justify-between pointer-events-none text-xs">
       <!-- Movement key badges -->
-      <div class="flex items-center space-x-2 text-[11px] text-stone-300 font-sans pointer-events-auto bg-[#1e140d]/85 px-3.5 py-1.5 rounded-xl border border-stone-700/80 backdrop-blur-xs">
+      <div class="flex items-center space-x-2 text-[11px] text-stone-300 font-sans pointer-events-auto bg-[#1e140d]/85 px-3.5 py-1.5 rounded-xl border border-stone-700/80 backdrop-blur-xs flex-wrap gap-y-1">
         <span class="text-amber-400 font-bold">⌨️ 이동:</span>
         <span class="font-mono bg-[#2a1b14] px-1.5 py-0.5 rounded border border-stone-600 text-[10px] text-amber-200">W(앞) S(뒤) A(좌) D(우) / 방향키</span>
         <span>|</span>
@@ -2151,10 +2151,10 @@
         <span class="font-mono bg-[#2a1b14] px-1.5 py-0.5 rounded border border-stone-600 text-[10px] text-amber-200">스페이스바</span>
         <span>|</span>
         <span class="text-amber-300 font-bold">🖱️ 시점:</span>
-        <span class="text-stone-300 text-[10px]">마우스 이동/드래그 (상·하·좌·우)</span>
+        <span class="text-stone-300 text-[10px]">마우스 드래그 (360° 상·하·좌·우)</span>
         <span>|</span>
-        <span class="text-amber-300 font-bold">소원 읽기:</span>
-        <span class="font-mono bg-[#2a1b14] px-1.5 py-0.5 rounded border border-stone-600 text-[10px]">E / 클릭</span>
+        <span class="text-amber-300 font-bold">🪷 대웅전 입장 & 삼배:</span>
+        <span class="font-mono bg-[#2a1b14] px-1.5 py-0.5 rounded border border-stone-600 text-[10px] text-amber-200">E / 클릭</span>
       </div>
 
       <!-- Mobile On-Screen D-Pad & Jump Button (Touch / Clickable) -->
@@ -2166,8 +2166,15 @@
         </div>
         <button type="button" onmousedown="WishPlaza.keys.right=true" onmouseup="WishPlaza.keys.right=false" ontouchstart="WishPlaza.keys.right=true" ontouchend="WishPlaza.keys.right=false" class="w-9 h-9 rounded-lg bg-[#2a1b14] text-white border border-stone-600 font-bold flex items-center justify-center active:bg-amber-800">▶</button>
         <button type="button" onclick="WishPlaza.jump()" class="w-10 h-10 rounded-lg bg-gradient-to-b from-[#b45309] to-[#78350f] text-[#fef08a] border border-[#f59e0b] font-bold text-xs flex items-center justify-center active:scale-95 shadow">점프</button>
+        <button id="mobilePrayerBtn" type="button" onclick="WishPlaza.offerPrayerAtBuddha()" class="hidden px-2.5 h-10 rounded-lg bg-gradient-to-r from-amber-600 to-amber-700 text-amber-100 border border-amber-300 font-bold text-xs flex items-center justify-center active:scale-95 shadow">🪷 삼배</button>
       </div>
     </footer>
+
+    <!-- Buddha Altar Proximity Interactive Prompt -->
+    <div id="wishPlazaBuddhaPrompt" class="hidden absolute top-20 left-1/2 -translate-x-1/2 z-20 bg-[#1e130c]/95 border-2 border-amber-400 px-5 py-2.5 rounded-full text-xs font-bold text-amber-200 shadow-[0_0_25px_rgba(251,191,36,0.5)] flex items-center space-x-2 animate-bounce cursor-pointer" onclick="WishPlaza.offerPrayerAtBuddha()">
+      <span class="text-base">🪷</span>
+      <span>[천명전 대웅보전] 부처님 불단 앞: <span class="text-white font-mono bg-amber-900/80 px-2 py-0.5 rounded border border-amber-400">E</span> 또는 클릭하여 합장 삼배 올리기</span>
+    </div>
 
     <!-- Plaza Toast Notification -->
     <div id="wishPlazaToast" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-[#1e130c]/95 border-2 border-[#f59e0b] px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold text-[#fef08a] shadow-[0_0_20px_rgba(245,158,11,0.4)] opacity-0 pointer-events-none transition-all duration-300">
@@ -2258,6 +2265,47 @@
         <div class="text-center pt-1">
           <button type="button" onclick="document.getElementById('wishWeeklyTopModal').close()" class="px-6 py-2 rounded-xl bg-[#2a170e] hover:bg-[#3d1f11] text-amber-200 border border-amber-700 text-xs font-bold transition cursor-pointer">
             확인 및 광장으로 돌아가기
+          </button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 🪷 MODAL: 천명전 대웅보전 합장 삼배 발원 모달 -->
+  <dialog id="buddhaBlessingModal" class="custom-modal" onclick="if(event.target===this) this.close()">
+    <div class="bg-[#1c120a] rounded-2xl border-2 border-[#f59e0b] overflow-hidden shadow-2xl text-[#f7eedc] font-serif-kr max-w-md w-full relative">
+      <div class="dancheong-bar"></div>
+      
+      <div class="bg-[#2a180e] px-5 py-4 flex items-center justify-between border-b border-[#b48a4e]">
+        <div class="flex items-center space-x-2.5">
+          <span class="text-2xl filter drop-shadow-[0_0_8px_rgba(251,191,36,0.9)] animate-pulse">🪷</span>
+          <div>
+            <h3 class="text-base font-black text-[#fde047]">천명전(天命殿) 대웅보전 합장 삼배</h3>
+            <p class="text-[11px] text-[#e2cbb0]">나무아미타불 관세음보살 (南無阿彌陀佛 觀世音菩薩)</p>
+          </div>
+        </div>
+        <button type="button" onclick="document.getElementById('buddhaBlessingModal').close()" class="text-stone-400 hover:text-white font-bold text-lg px-1 cursor-pointer">✕</button>
+      </div>
+
+      <div class="p-5 space-y-4 text-xs font-sans">
+        <div class="p-4 rounded-xl bg-[#140b07] border-2 border-amber-500/70 shadow-sm space-y-2.5 text-center">
+          <div class="text-3xl text-amber-300">🙏 ✨ 🪷</div>
+          <h4 class="text-sm font-serif-kr text-[#fef08a] font-bold">"부처님 전 지극한 정성으로 삼배를 올립니다"</h4>
+          <p class="text-xs font-serif-kr text-stone-300 leading-relaxed">
+            마음의 모든 번뇌와 시름은 눈 녹듯 흩어지고,<br/>
+            지혜와 자비의 온화한 광명이 도반님의 앞날을 환히 비춥니다.<br/>
+            가슴 깊이 품으신 소원이 시절인연을 만나 반드시 원만 성취되시기를 간절히 축원합니다.
+          </p>
+        </div>
+
+        <div class="p-3 rounded-xl bg-[#2a1c12] border border-amber-600/40 text-[11px] text-amber-200/90 flex items-center justify-between">
+          <span>🔔 맑고 그윽한 싱잉볼 타종이 사찰에 울려 퍼집니다</span>
+          <span class="px-2 py-0.5 rounded-full bg-amber-900 text-amber-200 font-bold text-[10px]">만복(萬福) 깃듦</span>
+        </div>
+
+        <div class="text-center pt-1">
+          <button type="button" onclick="document.getElementById('buddhaBlessingModal').close()" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#d97706] to-[#b45309] hover:from-[#f59e0b] hover:to-[#d97706] text-white font-bold text-xs border border-amber-400 shadow transition cursor-pointer">
+            마음에 평안을 담고 일어서기 🪷
           </button>
         </div>
       </div>

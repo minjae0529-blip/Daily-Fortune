@@ -57,6 +57,8 @@ class WishPlaza3DEngine {
       speed: 11.5,
       walkPhase: 0,
       isMoving: false,
+      isPraying: false,
+      prayPhase: 0,
       leftLeg: null,
       rightLeg: null,
       leftArm: null,
@@ -68,8 +70,14 @@ class WishPlaza3DEngine {
     this.lanterns = [];         // Data + 3D meshes
     this.shootingStars = [];    // Active 3D shooting stars
     this.sparkleParticles = []; // Cheer particle effects
+    this.incenseParticles = []; // Temple altar incense smoke
     this.nearbyLantern = null;
     this.isNearShrine = false;
+    this.isNearBuddhaAltar = false;
+    this.buddhaGroup = null;
+    this.candleLightLeft = null;
+    this.candleLightRight = null;
+    this.audioCtx = null;
     this.lastShootingStarTime = 0;
     this.clock = null;
 
@@ -268,6 +276,51 @@ class WishPlaza3DEngine {
       hctx.stroke();
     }
     this.textures.hanji = new THREE.CanvasTexture(hanjiCanvas);
+
+    // 4. Korean Temple Wood Floor (우물마루 바닥 텍스처)
+    const woodCanvas = document.createElement("canvas");
+    woodCanvas.width = 256;
+    woodCanvas.height = 256;
+    const wctx = woodCanvas.getContext("2d");
+    wctx.fillStyle = "#3e2415";
+    wctx.fillRect(0, 0, 256, 256);
+    wctx.strokeStyle = "#25140b";
+    wctx.lineWidth = 3;
+    for (let y = 0; y < 256; y += 32) {
+      wctx.strokeRect(0, y, 256, 32);
+      for (let x = 0; x < 256; x += 64) {
+        wctx.strokeRect(x, y, 64, 32);
+      }
+    }
+    const woodTex = new THREE.CanvasTexture(woodCanvas);
+    woodTex.wrapS = THREE.RepeatWrapping;
+    woodTex.wrapT = THREE.RepeatWrapping;
+    woodTex.repeat.set(12, 8);
+    this.textures.woodFloor = woodTex;
+
+    // 5. Buddhist Temple Mural / Mandala (불교 사찰 벽화 & 광배 텍스처)
+    const muralCanvas = document.createElement("canvas");
+    muralCanvas.width = 256;
+    muralCanvas.height = 256;
+    const mctx = muralCanvas.getContext("2d");
+    mctx.fillStyle = "#2c170d";
+    mctx.fillRect(0, 0, 256, 256);
+    mctx.strokeStyle = "#d4af37";
+    mctx.lineWidth = 6;
+    mctx.strokeRect(8, 8, 240, 240);
+    mctx.fillStyle = "#d4af37";
+    mctx.beginPath();
+    mctx.arc(128, 128, 54, 0, Math.PI * 2);
+    mctx.fill();
+    mctx.fillStyle = "#8c1d1d";
+    mctx.beginPath();
+    mctx.arc(128, 128, 36, 0, Math.PI * 2);
+    mctx.fill();
+    mctx.fillStyle = "#fef08a";
+    mctx.beginPath();
+    mctx.arc(128, 128, 18, 0, Math.PI * 2);
+    mctx.fill();
+    this.textures.mural = new THREE.CanvasTexture(muralCanvas);
   }
 
   buildLighting() {
@@ -448,7 +501,7 @@ class WishPlaza3DEngine {
   }
 
   /* ==========================================================================
-     대형 한국 전통 사찰 대웅전 (중층 전각 天命殿) - 크기 대폭 확장
+     대형 한국 전통 사찰 대웅전 (중층 전각 天命殿) - 내부 진입 가능 & 불교 대웅보전 장엄
      ========================================================================== */
   buildGrandTempleHall() {
     const hallGroup = new THREE.Group();
@@ -459,7 +512,7 @@ class WishPlaza3DEngine {
     const pillarMat = new THREE.MeshStandardMaterial({ color: 0x851717, roughness: 0.6 }); // Dancheong Vermilion
     const roofMat = new THREE.MeshStandardMaterial({ color: 0x182028, roughness: 0.72, metalness: 0.25 }); // Korean Clay Tile
 
-    // 1. Double-deck Stone Platform (기단 & 월대) - Width: 60m, Depth: 38m
+    // 1. Double-deck Stone Platform (기단 & 월대) - Width: 64m, Depth: 42m
     const lowerPlatform = new THREE.Mesh(new THREE.BoxGeometry(64, 2.0, 42), stoneMat);
     lowerPlatform.position.y = 1.0;
     lowerPlatform.castShadow = true;
@@ -472,10 +525,10 @@ class WishPlaza3DEngine {
     upperPlatform.receiveShadow = true;
     hallGroup.add(upperPlatform);
 
-    // Grand Ceremonial Stairs (중앙 대석계단)
-    for (let i = 0; i < 7; i++) {
-      const step = new THREE.Mesh(new THREE.BoxGeometry(16 - i * 0.7, 0.45, 1.3), stoneMat);
-      step.position.set(0, 0.22 + i * 0.45, 17.2 + (6 - i) * 0.9);
+    // Grand Ceremonial Stairs (중앙 대석계단 - 9단 넓은 석계)
+    for (let i = 0; i < 9; i++) {
+      const step = new THREE.Mesh(new THREE.BoxGeometry(17.5 - i * 0.45, 0.45, 1.15), stoneMat);
+      step.position.set(0, 0.22 + i * 0.42, 17.5 + (8 - i) * 0.95);
       step.castShadow = true;
       step.receiveShadow = true;
       hallGroup.add(step);
@@ -496,58 +549,347 @@ class WishPlaza3DEngine {
       hallGroup.add(lionHead);
     }
 
-    // 2. First Floor Hall (1층 대전각) - Width: 50m, Height: 12m, Depth: 28m
-    const lowerWalls = new THREE.Mesh(new THREE.BoxGeometry(50, 11.5, 28), wallMat);
-    lowerWalls.position.y = 3.8 + 5.75;
-    lowerWalls.castShadow = true;
-    lowerWalls.receiveShadow = true;
-    hallGroup.add(lowerWalls);
+    // 2. Interior Wooden Floor (우물마루 바닥 - 깊은 온기의 목재 전각 마루)
+    const floorMat = new THREE.MeshStandardMaterial({
+      map: this.textures.woodFloor,
+      color: 0x5a341e,
+      roughness: 0.38,
+      metalness: 0.12
+    });
+    const templeFloor = new THREE.Mesh(new THREE.BoxGeometry(49, 0.3, 27), floorMat);
+    templeFloor.position.set(0, 3.85, 0);
+    templeFloor.receiveShadow = true;
+    hallGroup.add(templeFloor);
 
-    // Traditional Paper Lattice Doors (꽃살 창호문 9쌍 with warm inner glow)
-    for (let d = -4; d <= 4; d++) {
-      const doorGeo = new THREE.PlaneGeometry(3.6, 8.5);
-      const doorCanvas = document.createElement("canvas");
-      doorCanvas.width = 128;
-      doorCanvas.height = 256;
-      const dctx = doorCanvas.getContext("2d");
-      dctx.fillStyle = "#ffeedd";
-      dctx.fillRect(0, 0, 128, 256);
-      dctx.strokeStyle = "#5a3219";
-      dctx.lineWidth = 5;
-      dctx.strokeRect(4, 4, 120, 248);
-      for (let y = 16; y < 256; y += 22) {
-        dctx.beginPath();
-        dctx.moveTo(4, y);
-        dctx.lineTo(124, y);
-        dctx.stroke();
-      }
-      for (let x = 16; x < 128; x += 22) {
-        dctx.beginPath();
-        dctx.moveTo(x, 4);
-        dctx.lineTo(x, 252);
-        dctx.stroke();
-      }
-      const doorTex = new THREE.CanvasTexture(doorCanvas);
-      const doorMat = new THREE.MeshStandardMaterial({
-        map: doorTex,
-        emissive: 0xff9933,
-        emissiveIntensity: 0.48,
-        roughness: 0.55
-      });
-      const door = new THREE.Mesh(doorGeo, doorMat);
-      door.position.set(d * 5.0, 8.2, 14.1);
-      hallGroup.add(door);
+    // 3. Walls (외벽 및 정면 개방 대문)
+    // Back Wall (후벽)
+    const backWall = new THREE.Mesh(new THREE.BoxGeometry(50, 11.5, 1.2), wallMat);
+    backWall.position.set(0, 9.55, -13.5);
+    backWall.castShadow = true;
+    backWall.receiveShadow = true;
+    hallGroup.add(backWall);
+
+    // West & East Side Walls (좌우 측벽)
+    for (let sx of [-24.4, 24.4]) {
+      const sideWall = new THREE.Mesh(new THREE.BoxGeometry(1.2, 11.5, 27), wallMat);
+      sideWall.position.set(sx, 9.55, 0);
+      sideWall.castShadow = true;
+      sideWall.receiveShadow = true;
+      hallGroup.add(sideWall);
+
+      // Buddhist Temple Tapestry / Scroll on interior wall (사찰 탱화/벽화)
+      const muralMat = new THREE.MeshStandardMaterial({ map: this.textures.mural, roughness: 0.6 });
+      const mural = new THREE.Mesh(new THREE.PlaneGeometry(8.5, 5.2), muralMat);
+      mural.position.set(sx > 0 ? 23.7 : -23.7, 9.8, 0);
+      mural.rotation.y = sx > 0 ? -Math.PI / 2 : Math.PI / 2;
+      hallGroup.add(mural);
     }
 
-    // Front Colonnade Pillars (1층 배흘림 기둥 12기)
-    for (let p = -5; p <= 5; p++) {
+    // Front Walls & Open Central Gate (정면 외벽 & 중앙 활짝 열린 꽃살문)
+    const frontWallLeft = new THREE.Mesh(new THREE.BoxGeometry(17, 11.5, 1.0), wallMat);
+    frontWallLeft.position.set(-16.0, 9.55, 13.5);
+    frontWallLeft.castShadow = true;
+    frontWallLeft.receiveShadow = true;
+    hallGroup.add(frontWallLeft);
+
+    const frontWallRight = new THREE.Mesh(new THREE.BoxGeometry(17, 11.5, 1.0), wallMat);
+    frontWallRight.position.set(16.0, 9.55, 13.5);
+    frontWallRight.castShadow = true;
+    frontWallRight.receiveShadow = true;
+    hallGroup.add(frontWallRight);
+
+    // Top Entrance Lintel (정면 문설주 상인방)
+    const frontLintel = new THREE.Mesh(new THREE.BoxGeometry(15, 3.8, 1.2), wallMat);
+    frontLintel.position.set(0, 13.4, 13.5);
+    hallGroup.add(frontLintel);
+
+    // Open Paper Lattice Doors (활짝 열려 있는 꽃살 창호문 양편 배치)
+    const doorGeo = new THREE.PlaneGeometry(3.6, 7.8);
+    const doorCanvas = document.createElement("canvas");
+    doorCanvas.width = 128;
+    doorCanvas.height = 256;
+    const dctx = doorCanvas.getContext("2d");
+    dctx.fillStyle = "#ffeedd";
+    dctx.fillRect(0, 0, 128, 256);
+    dctx.strokeStyle = "#5a3219";
+    dctx.lineWidth = 5;
+    dctx.strokeRect(4, 4, 120, 248);
+    for (let y = 16; y < 256; y += 22) {
+      dctx.beginPath();
+      dctx.moveTo(4, y);
+      dctx.lineTo(124, y);
+      dctx.stroke();
+    }
+    for (let x = 16; x < 128; x += 22) {
+      dctx.beginPath();
+      dctx.moveTo(x, 4);
+      dctx.lineTo(x, 252);
+      dctx.stroke();
+    }
+    const doorTex = new THREE.CanvasTexture(doorCanvas);
+    const doorMat = new THREE.MeshStandardMaterial({
+      map: doorTex,
+      emissive: 0xff9933,
+      emissiveIntensity: 0.45,
+      roughness: 0.55
+    });
+
+    // Left folded door
+    const openDoorLeft = new THREE.Mesh(doorGeo, doorMat);
+    openDoorLeft.position.set(-7.2, 7.8, 14.1);
+    openDoorLeft.rotation.y = -Math.PI / 3;
+    hallGroup.add(openDoorLeft);
+
+    // Right folded door
+    const openDoorRight = new THREE.Mesh(doorGeo, doorMat);
+    openDoorRight.position.set(7.2, 7.8, 14.1);
+    openDoorRight.rotation.y = Math.PI / 3;
+    hallGroup.add(openDoorRight);
+
+    // Decorative closed doors on left and right front walls
+    for (let d of [-4, -3, 3, 4]) {
+      const closedDoor = new THREE.Mesh(doorGeo, doorMat);
+      closedDoor.position.set(d * 4.8, 8.2, 14.05);
+      hallGroup.add(closedDoor);
+    }
+
+    // Front Colonnade Pillars (1층 배흘림 기둥 - 중앙 통로는 비워둠)
+    for (let p of [-5, -4, -3, -2, 2, 3, 4, 5]) {
       const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.95, 12.0, 16), pillarMat);
       pillar.position.set(p * 4.8, 9.8, 14.4);
       pillar.castShadow = true;
       hallGroup.add(pillar);
     }
 
-    // Lower Dancheong Bracket System (1층 다포계 공포)
+    // Interior Temple Pillars (내진주 4기)
+    for (let ix of [-14, 14]) {
+      for (let iz of [-5, 5]) {
+        const inPillar = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.85, 11.5, 16), pillarMat);
+        inPillar.position.set(ix, 9.6, iz);
+        inPillar.castShadow = true;
+        hallGroup.add(inPillar);
+      }
+    }
+
+    // 4. Buddha Altar & Sacred Sanctuary (대형 황금 삼존불 / 석가모니불 좌상 & 수미단)
+    this.buddhaGroup = new THREE.Group();
+    this.buddhaGroup.position.set(0, 3.85, -7.5);
+
+    // Sumidan Altar Table (3단 목조 조각 수미단)
+    const altarMat = new THREE.MeshStandardMaterial({ color: 0x5c1111, roughness: 0.5, metalness: 0.2 });
+    const altarBase = new THREE.Mesh(new THREE.BoxGeometry(15, 1.4, 7.5), altarMat);
+    altarBase.position.y = 0.7;
+    altarBase.castShadow = true;
+    this.buddhaGroup.add(altarBase);
+
+    const altarTop = new THREE.Mesh(new THREE.BoxGeometry(13, 0.6, 6.5), new THREE.MeshStandardMaterial({
+      color: 0x991b1b,
+      roughness: 0.4
+    }));
+    altarTop.position.y = 1.7;
+    this.buddhaGroup.add(altarTop);
+
+    // Golden Lotus Pedestal (연화대좌)
+    const lotusMat = new THREE.MeshStandardMaterial({
+      color: 0xd4a359,
+      emissive: 0x926620,
+      emissiveIntensity: 0.35,
+      roughness: 0.3,
+      metalness: 0.6
+    });
+    const lotusBase = new THREE.Mesh(new THREE.CylinderGeometry(3.6, 4.2, 1.2, 20), lotusMat);
+    lotusBase.position.y = 2.6;
+    this.buddhaGroup.add(lotusBase);
+
+    // Grand Golden Buddha (대형 황금 불상)
+    const goldMat = new THREE.MeshStandardMaterial({
+      color: 0xffd700,
+      emissive: 0xb48210,
+      emissiveIntensity: 0.45,
+      roughness: 0.26,
+      metalness: 0.85
+    });
+
+    // Cross-legged base (결가부좌 다리 및 가사 주름)
+    const buddhaLegs = new THREE.Mesh(new THREE.CylinderGeometry(2.8, 3.6, 1.8, 16), goldMat);
+    buddhaLegs.position.y = 4.1;
+    this.buddhaGroup.add(buddhaLegs);
+
+    // Torso (불신 상체)
+    const buddhaTorso = new THREE.Mesh(new THREE.BoxGeometry(2.5, 3.2, 1.7), goldMat);
+    buddhaTorso.position.y = 6.4;
+    this.buddhaGroup.add(buddhaTorso);
+
+    // Arms & Mudra (항마촉지인 수인)
+    const leftArm = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.42, 2.2, 8), goldMat);
+    leftArm.position.set(-1.4, 5.4, 0.4);
+    leftArm.rotation.z = 0.5;
+    leftArm.rotation.x = -0.3;
+    this.buddhaGroup.add(leftArm);
+
+    const rightArm = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.42, 2.2, 8), goldMat);
+    rightArm.position.set(1.4, 5.4, 0.4);
+    rightArm.rotation.z = -0.5;
+    rightArm.rotation.x = 0.4;
+    this.buddhaGroup.add(rightArm);
+
+    // Head (자비로운 부처님 두상)
+    const buddhaHead = new THREE.Mesh(new THREE.SphereGeometry(1.2, 20, 20), goldMat);
+    buddhaHead.position.y = 8.8;
+    this.buddhaGroup.add(buddhaHead);
+
+    // Usnisa (육계 / 지혜의 상징)
+    const buddhaUsnisa = new THREE.Mesh(new THREE.SphereGeometry(0.5, 14, 14), goldMat);
+    buddhaUsnisa.position.y = 10.1;
+    this.buddhaGroup.add(buddhaUsnisa);
+
+    // Golden Halo / Mandorla (대형 황금 광배 / 신광 & 두광)
+    const haloMat = new THREE.MeshStandardMaterial({
+      color: 0xffe680,
+      emissive: 0xffaa00,
+      emissiveIntensity: 0.75,
+      roughness: 0.25,
+      metalness: 0.5,
+      side: THREE.DoubleSide
+    });
+    const halo = new THREE.Mesh(new THREE.RingGeometry(0.4, 4.6, 32), haloMat);
+    halo.position.set(0, 8.2, -1.2);
+    this.buddhaGroup.add(halo);
+
+    // Incense Burner (불단 앞 청동 향로)
+    const burnerMat = new THREE.MeshStandardMaterial({ color: 0x4a5568, metalness: 0.85, roughness: 0.3 });
+    const burner = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.55, 0.9, 12), burnerMat);
+    burner.position.set(0, 2.45, 2.5);
+    this.buddhaGroup.add(burner);
+
+    // Glowing incense embers inside burner
+    const ember = new THREE.Mesh(new THREE.SphereGeometry(0.4, 8, 8), new THREE.MeshStandardMaterial({
+      color: 0xff4500,
+      emissive: 0xff2200,
+      emissiveIntensity: 1.0
+    }));
+    ember.position.set(0, 2.85, 2.5);
+    this.buddhaGroup.add(ember);
+
+    // Candlesticks & Flickering Candle Lights (좌우 촛대)
+    const candleMat = new THREE.MeshStandardMaterial({ color: 0xfef3c7, roughness: 0.4 });
+    for (let cx of [-4.5, 4.5]) {
+      const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.45, 1.3, 8), burnerMat);
+      stand.position.set(cx, 2.65, 2.4);
+      this.buddhaGroup.add(stand);
+
+      const candle = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.7, 8), candleMat);
+      candle.position.set(cx, 3.6, 2.4);
+      this.buddhaGroup.add(candle);
+
+      const flame = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 8), new THREE.MeshStandardMaterial({
+        color: 0xffa500,
+        emissive: 0xff6600,
+        emissiveIntensity: 1.2
+      }));
+      flame.position.set(cx, 4.05, 2.4);
+      this.buddhaGroup.add(flame);
+
+      const cLight = new THREE.PointLight(0xff9922, 1.6, 12);
+      cLight.position.set(cx, 4.2, 2.4);
+      this.buddhaGroup.add(cLight);
+      if (cx < 0) this.candleLightLeft = cLight;
+      else this.candleLightRight = cLight;
+    }
+
+    // Wooden Fish Gong (목탁과 목탁채)
+    const moktak = new THREE.Mesh(new THREE.SphereGeometry(0.35, 10, 10), new THREE.MeshStandardMaterial({
+      color: 0x8b5a2b,
+      roughness: 0.4
+    }));
+    moktak.scale.set(1.1, 0.85, 1.0);
+    moktak.position.set(-2.4, 2.3, 2.5);
+    this.buddhaGroup.add(moktak);
+
+    // 3 Prayer Cushions (연화문 삼배 방석 3좌)
+    const cushionMat = new THREE.MeshStandardMaterial({
+      color: 0x8c1d1d,
+      emissive: 0x3d0b0b,
+      roughness: 0.7
+    });
+    for (let c of [-3.2, 0, 3.2]) {
+      const cushion = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.05, 0.16, 16), cushionMat);
+      cushion.position.set(c, 0.12, 6.8);
+      cushion.receiveShadow = true;
+      this.buddhaGroup.add(cushion);
+
+      // Lotus emblem in center of cushion
+      const lotusCenter = new THREE.Mesh(new THREE.CircleGeometry(0.42, 12), new THREE.MeshStandardMaterial({
+        color: 0xfde047,
+        roughness: 0.5
+      }));
+      lotusCenter.rotation.x = -Math.PI / 2;
+      lotusCenter.position.set(c, 0.21, 6.8);
+      this.buddhaGroup.add(lotusCenter);
+    }
+
+    // Sacred Buddha Spotlight & Sanctuary Ambient Light
+    const buddhaSpot = new THREE.SpotLight(0xfff5cc, 2.8, 38, Math.PI / 3.5, 0.35);
+    buddhaSpot.position.set(0, 14, 6);
+    buddhaSpot.target = lotusBase;
+    this.buddhaGroup.add(buddhaSpot);
+
+    const sanctuaryLight = new THREE.PointLight(0xffaa44, 2.0, 32);
+    sanctuaryLight.position.set(0, 7.5, 2);
+    this.buddhaGroup.add(sanctuaryLight);
+
+    hallGroup.add(this.buddhaGroup);
+
+    // Dharma Drum (법고 / 대형 사찰 북) on tiger stand at East interior
+    const drumGroup = new THREE.Group();
+    drumGroup.position.set(18.0, 3.85, -4.5);
+    const drumStand = new THREE.Mesh(new THREE.BoxGeometry(3.5, 1.2, 3.0), altarMat);
+    drumStand.position.y = 0.6;
+    drumGroup.add(drumStand);
+
+    const drumBody = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.6, 2.6, 16), new THREE.MeshStandardMaterial({
+      color: 0x991b1b,
+      roughness: 0.4
+    }));
+    drumBody.rotation.z = Math.PI / 2;
+    drumBody.position.y = 2.4;
+    drumGroup.add(drumBody);
+
+    const drumSkinMat = new THREE.MeshStandardMaterial({ color: 0xfef3c7, roughness: 0.6 });
+    for (let ds of [-1.31, 1.31]) {
+      const skin = new THREE.Mesh(new THREE.CircleGeometry(1.58, 16), drumSkinMat);
+      skin.rotation.y = ds > 0 ? Math.PI / 2 : -Math.PI / 2;
+      skin.position.set(ds, 2.4, 0);
+      drumGroup.add(skin);
+    }
+    hallGroup.add(drumGroup);
+
+    // Hanging Lotus Lanterns on Interior Ceiling (천장 장엄 연등 12기)
+    const interiorLanternColors = [0xf472b6, 0xfde047, 0x34d399, 0xfbbf24];
+    for (let lx of [-12, -4, 4, 12]) {
+      for (let lz of [-4, 4]) {
+        const iLantern = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.55, 0.45, 0.9, 8),
+          new THREE.MeshStandardMaterial({
+            color: interiorLanternColors[(Math.abs(lx) + Math.abs(lz)) % 4],
+            emissive: 0xd97706,
+            emissiveIntensity: 0.6
+          })
+        );
+        iLantern.position.set(lx, 13.0, lz);
+        hallGroup.add(iLantern);
+
+        // Cord
+        const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.8, 4), pillarMat);
+        cord.position.set(lx, 14.1, lz);
+        hallGroup.add(cord);
+      }
+    }
+
+    // Incense Smoke Particles System
+    this.initIncenseParticles(hallGroup);
+
+    // 5. Lower Dancheong Bracket System & Eaves
     const lowerBracket = new THREE.Mesh(new THREE.BoxGeometry(54, 1.4, 32), new THREE.MeshStandardMaterial({
       map: this.textures.dancheong,
       roughness: 0.5
@@ -555,7 +897,6 @@ class WishPlaza3DEngine {
     lowerBracket.position.y = 15.5;
     hallGroup.add(lowerBracket);
 
-    // Lower Eave Roof (1층 기와 처마)
     const lowerRoof = new THREE.Mesh(new THREE.ConeGeometry(42, 7.5, 4, 1), roofMat);
     lowerRoof.rotation.y = Math.PI / 4;
     lowerRoof.scale.set(1.25, 0.65, 0.88);
@@ -563,14 +904,12 @@ class WishPlaza3DEngine {
     lowerRoof.castShadow = true;
     hallGroup.add(lowerRoof);
 
-    // 3. Second Floor Hall (중층 2층 전각) - Width: 36m, Height: 9.5m, Depth: 20m
+    // 6. Second Floor Hall (중층 2층 전각) & Upper Roof
     const upperWalls = new THREE.Mesh(new THREE.BoxGeometry(36, 9.0, 20), wallMat);
     upperWalls.position.y = 23.5;
     upperWalls.castShadow = true;
-    upperWalls.receiveShadow = true;
     hallGroup.add(upperWalls);
 
-    // Upper Dancheong Bracket System (2층 공포)
     const upperBracket = new THREE.Mesh(new THREE.BoxGeometry(39, 1.2, 23), new THREE.MeshStandardMaterial({
       map: this.textures.dancheong,
       roughness: 0.5
@@ -578,7 +917,6 @@ class WishPlaza3DEngine {
     upperBracket.position.y = 28.5;
     hallGroup.add(upperBracket);
 
-    // Upper Grand Hip-and-Gable Roof (2층 팔작지붕) - Height: 38m!
     const upperRoof = new THREE.Mesh(new THREE.ConeGeometry(32, 9.8, 4, 1), roofMat);
     upperRoof.rotation.y = Math.PI / 4;
     upperRoof.scale.set(1.18, 0.72, 0.82);
@@ -586,13 +924,13 @@ class WishPlaza3DEngine {
     upperRoof.castShadow = true;
     hallGroup.add(upperRoof);
 
-    // Golden Dragon Ridge & Chiwi (치미 / 용마루 장식)
+    // Golden Dragon Ridge & Chiwi
     const ridgeMat = new THREE.MeshStandardMaterial({ color: 0xd4a359, metalness: 0.65, roughness: 0.28 });
     const ridge = new THREE.Mesh(new THREE.BoxGeometry(36, 0.95, 1.1), ridgeMat);
     ridge.position.set(0, 38.2, 0);
     hallGroup.add(ridge);
 
-    // 4. Grand Golden Temple Plaque (현판: 天 命 殿)
+    // 7. Grand Golden Temple Plaque (현판: 天 命 殿)
     const plaqueCanvas = document.createElement("canvas");
     plaqueCanvas.width = 384;
     plaqueCanvas.height = 144;
@@ -616,6 +954,34 @@ class WishPlaza3DEngine {
     hallGroup.add(plaque);
 
     this.scene.add(hallGroup);
+  }
+
+  initIncenseParticles(parentGroup) {
+    this.incenseParticles = [];
+    const count = 28;
+    const pMat = new THREE.MeshBasicMaterial({
+      color: 0xcccccc,
+      transparent: true,
+      opacity: 0.45
+    });
+
+    for (let i = 0; i < count; i++) {
+      const p = new THREE.Mesh(new THREE.SphereGeometry(0.08 + Math.random() * 0.06, 6, 6), pMat);
+      p.position.set(
+        (Math.random() - 0.5) * 0.25,
+        6.7 + Math.random() * 2.8,
+        -5.0 + (Math.random() - 0.5) * 0.25
+      );
+      p.userData = {
+        baseY: 6.7,
+        speed: 0.6 + Math.random() * 0.5,
+        swaySpeed: 1.5 + Math.random() * 1.5,
+        swayAmp: 0.08 + Math.random() * 0.08,
+        offset: Math.random() * Math.PI * 2
+      };
+      parentGroup.add(p);
+      this.incenseParticles.push(p);
+    }
   }
 
   /* ==========================================================================
@@ -1417,6 +1783,15 @@ class WishPlaza3DEngine {
 
         this.raycaster.setFromCamera(this.mouse, this.camera);
 
+        // Click Buddha Altar / Sanctuary inside Daeungjeon
+        if (this.buddhaGroup) {
+          const buddhaHits = this.raycaster.intersectObjects(this.buddhaGroup.children, true);
+          if (buddhaHits.length > 0) {
+            this.offerPrayerAtBuddha();
+            return;
+          }
+        }
+
         // Click Grand Lantern / Pagoda
         if (this.grandLantern) {
           const grandHits = this.raycaster.intersectObjects(this.grandLantern.children, true);
@@ -1444,7 +1819,7 @@ class WishPlaza3DEngine {
         // Click to walk to ground position
         const groundHits = this.raycaster.intersectObjects(this.scene.children, false);
         for (const hit of groundHits) {
-          if (hit.point && Math.abs(hit.point.y) < 0.6) {
+          if (hit.point && Math.abs(hit.point.y) < 4.5) {
             this.player.targetX = hit.point.x;
             this.player.targetZ = hit.point.z;
             break;
@@ -1491,7 +1866,9 @@ class WishPlaza3DEngine {
      상세 모달 & 상호작용
      ========================================================================== */
   interactWithNearby() {
-    if (this.isNearShrine) {
+    if (this.isNearBuddhaAltar) {
+      this.offerPrayerAtBuddha();
+    } else if (this.isNearShrine) {
       this.showWeeklyTopModal();
     } else if (this.nearbyLantern) {
       this.showWishDetailModal(this.nearbyLantern);
@@ -1508,6 +1885,76 @@ class WishPlaza3DEngine {
       if (closest) {
         this.showWishDetailModal(closest);
       }
+    }
+  }
+
+  /* ==========================================================================
+     불교 대웅보전 합장 삼배 및 싱잉볼 타종 사운드
+     ========================================================================== */
+  playTempleBellSound() {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      if (!this.audioCtx) this.audioCtx = new AudioCtx();
+      if (this.audioCtx.state === "suspended") this.audioCtx.resume();
+
+      const now = this.audioCtx.currentTime;
+      // Resonant harmonic frequencies of a Buddhist singing bowl / temple bell
+      const harmonics = [
+        { f: 261.63, g: 0.35, d: 4.5 }, // C4
+        { f: 523.25, g: 0.22, d: 3.8 }, // C5
+        { f: 784.88, g: 0.15, d: 3.0 }, // G5
+        { f: 1046.5, g: 0.08, d: 2.2 }  // C6
+      ];
+
+      harmonics.forEach(({ f, g, d }) => {
+        const osc = this.audioCtx.createOscillator();
+        const gain = this.audioCtx.createGain();
+
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(f, now);
+
+        gain.gain.setValueAtTime(g, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + d);
+
+        osc.connect(gain);
+        gain.connect(this.audioCtx.destination);
+
+        osc.start(now);
+        osc.stop(now + d + 0.1);
+      });
+    } catch (e) {
+      console.warn("Temple sound audio error:", e);
+    }
+  }
+
+  offerPrayerAtBuddha() {
+    if (this.player.isPraying) return;
+    this.player.isPraying = true;
+    this.player.prayPhase = 0;
+
+    // 1. Play serene Buddhist singing bowl chime
+    this.playTempleBellSound();
+
+    // 2. Emit golden lotus sparkles around player
+    this.spawnCheerSparkles({
+      x: this.player.x,
+      y: this.player.y + 1.2,
+      z: this.player.z
+    });
+
+    // 3. Show heartfelt toast & open blessing modal
+    this.showToast("🪷 [천명전 대웅보전] 부처님 전에 지극한 정성으로 삼배를 올립니다. 번뇌는 사라지고 온 누리에 평안이 깃드시길 발원합니다.");
+    this.showBuddhaBlessingModal();
+  }
+
+  showBuddhaBlessingModal() {
+    const dialog = document.getElementById("buddhaBlessingModal");
+    if (!dialog) return;
+    if (typeof dialog.showModal === "function") {
+      dialog.showModal();
+    } else {
+      dialog.setAttribute("open", "");
     }
   }
 
@@ -1605,6 +2052,142 @@ class WishPlaza3DEngine {
   }
 
   /* ==========================================================================
+     충돌 감지 시스템 (건물 및 조형물 관통 100% 방지)
+     ========================================================================== */
+  checkCollision(px, pz, radius = 0.65) {
+    // 1. World outer boundary walls
+    if (px < -43.5 || px > 43.5) return true;
+    if (pz > 42.0 || pz < -61.0) return true;
+
+    // 2. South Lotus Pond (연화지 수역 - 다리 통로만 통행 가능)
+    if (pz >= 22.0 && pz <= 42.0) {
+      if (Math.abs(px) > 3.2 - radius * 0.3) return true;
+    }
+
+    // 3. Central 3-Story Stone Pagoda (중앙 삼층대석탑 at x = 0, z = -10)
+    if (px >= -5.0 - radius && px <= 5.0 + radius && pz >= -15.0 - radius && pz <= -5.0 + radius) {
+      return true;
+    }
+
+    // 4. East Bell Pavilion (범종각 at x = 40, z = -18)
+    if (px >= 31.5 - radius && px <= 48.5 + radius && pz >= -26.5 - radius && pz <= -9.5 + radius) {
+      return true;
+    }
+
+    // 5. West Hall (명부전 at x = -40, z = -18)
+    if (px >= -48.5 - radius && px <= -31.5 + radius && pz >= -26.5 - radius && pz <= -9.5 + radius) {
+      return true;
+    }
+
+    // 6. Perimeter Side Corridors (좌우 둘레 회랑)
+    if ((px <= -45.5 || px >= 45.5) && pz >= -52.0 && pz <= 28.0) {
+      return true;
+    }
+
+    // 7. Guardian Stone Lions (계단 좌우 해태상 at x = ±9.2, z = -27.0)
+    if (Math.hypot(px - (-9.2), pz - (-27.0)) < 1.7 + radius) return true;
+    if (Math.hypot(px - 9.2, pz - (-27.0)) < 1.7 + radius) return true;
+
+    // 8. Courtyard Stone Lanterns (석등 8기)
+    const stoneLanternCoords = [
+      [-7.0, 12], [7.0, 12],
+      [-8.0, 2], [8.0, 2],
+      [-9.5, -18], [9.5, -18],
+      [-11.0, -32], [11.0, -32]
+    ];
+    for (const [lx, lz] of stoneLanternCoords) {
+      if (Math.hypot(px - lx, pz - lz) < 1.35 + radius) return true;
+    }
+
+    // 9. Grand Temple Hall (대웅전 / 천명전) Walls & Obstacles
+    // A. Back Wall of Daeungjeon
+    if (pz <= -60.2 - radius && Math.abs(px) <= 24.5) return true;
+
+    // B. West & East Outer Walls of Daeungjeon
+    if (pz <= -34.0 && pz >= -61.0) {
+      if (px <= -23.5 - radius && px >= -26.0) return true;
+      if (px >= 23.5 + radius && px <= 26.0) return true;
+    }
+
+    // C. Front Wall of Daeungjeon (with Open Central Entrance Portal)
+    if (pz <= -34.0 && pz >= -35.2) {
+      if (px < -6.5 || px > 6.5) return true; // Center entrance |x| <= 6.5 is OPEN!
+    }
+
+    // D. Buddha Altar & Sacred Sanctuary Platform (inside hall at z ≈ -55.5)
+    if (px >= -8.2 - radius && px <= 8.2 + radius && pz >= -60.0 && pz <= -51.5) {
+      return true;
+    }
+
+    // E. Dharma Drum (inside hall at East side)
+    if (px >= 16.0 - radius && px <= 21.0 + radius && pz >= -55.5 && pz <= -50.5) {
+      return true;
+    }
+
+    // F. Temple Platform Side Walls (기단 측면 관통 방지)
+    if (pz <= -26.5 && pz >= -34.0 && Math.abs(px) > 8.5) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /* ==========================================================================
+     지형 고도 및 계단 높이 계산 (대웅전 내부 및 석계단 자연스러운 보행)
+     ========================================================================== */
+  getGroundElevation(px, pz) {
+    // 1. South Lotus Pond Stone Arch Bridge (홍예교)
+    if (pz >= 22.0 && pz <= 42.0 && Math.abs(px) <= 3.4) {
+      const bridgeNorm = (pz - 22.0) / 20.0;
+      return 0.35 + Math.sin(bridgeNorm * Math.PI) * 0.55;
+    }
+
+    // 2. Ceremonial Stairs leading to the Grand Temple Hall
+    // Stairs span world z from -25.5 down to -34.5 for |px| <= 8.5
+    if (pz <= -25.5 && pz >= -34.5 && Math.abs(px) <= 8.5) {
+      const stairNorm = (-25.5 - pz) / 9.0;
+      return Math.max(0.0, Math.min(3.8, stairNorm * 3.8));
+    }
+
+    // 3. Grand Temple Platform and Temple Interior (대웅전 월대 및 전각 내부 마루)
+    if (pz < -34.5 && pz >= -61.0 && Math.abs(px) <= 24.0) {
+      return 3.8;
+    }
+
+    // 4. Default Courtyard Level
+    return 0.0;
+  }
+
+  /* ==========================================================================
+     플레이어 이동 및 충돌 해결 (벽면 슬라이딩 지원)
+     ========================================================================== */
+  resolvePlayerMovement(moveDir, dt) {
+    const speed = this.player.speed;
+    const radius = 0.65;
+    const stepX = moveDir.x * speed * dt;
+    const stepZ = moveDir.z * speed * dt;
+
+    const dist = Math.hypot(stepX, stepZ);
+    const substeps = Math.max(1, Math.ceil(dist / 0.15));
+    const subX = stepX / substeps;
+    const subZ = stepZ / substeps;
+
+    for (let s = 0; s < substeps; s++) {
+      // 1. Try X movement
+      const nextX = this.player.x + subX;
+      if (!this.checkCollision(nextX, this.player.z, radius)) {
+        this.player.x = nextX;
+      }
+
+      // 2. Try Z movement independently (wall sliding!)
+      const nextZ = this.player.z + subZ;
+      if (!this.checkCollision(this.player.x, nextZ, radius)) {
+        this.player.z = nextZ;
+      }
+    }
+  }
+
+  /* ==========================================================================
      메인 렌더링 루프 & 물리/애니메이션 업데이트
      ========================================================================== */
   loop() {
@@ -1620,14 +2203,22 @@ class WishPlaza3DEngine {
   }
 
   update(dt, elapsedTime) {
-    // 1. Jump Physics Update
+    // 1. Jump Physics & Ground Elevation Tracking
+    const groundElevation = this.getGroundElevation(this.player.x, this.player.z);
+
     if (!this.player.isGrounded) {
       this.player.y += this.player.vy * dt;
       this.player.vy -= this.player.gravity * dt;
-      if (this.player.y <= 0) {
-        this.player.y = 0;
+      if (this.player.y <= groundElevation) {
+        this.player.y = groundElevation;
         this.player.vy = 0;
         this.player.isGrounded = true;
+      }
+    } else {
+      // Smoothly step up/down stairs while walking
+      this.player.y += (groundElevation - this.player.y) * Math.min(1.0, 22.0 * dt);
+      if (Math.abs(this.player.y - groundElevation) < 0.02) {
+        this.player.y = groundElevation;
       }
     }
 
@@ -1662,12 +2253,7 @@ class WishPlaza3DEngine {
 
     if (moveDir.lengthSq() > 0.001) {
       moveDir.normalize();
-      this.player.x += moveDir.x * this.player.speed * dt;
-      this.player.z += moveDir.z * this.player.speed * dt;
-
-      // Temple boundaries
-      this.player.x = Math.max(-38, Math.min(38, this.player.x));
-      this.player.z = Math.max(-42, Math.min(38, this.player.z));
+      this.resolvePlayerMovement(moveDir, dt);
 
       const targetAngle = Math.atan2(moveDir.x, moveDir.z);
       let diff = targetAngle - this.player.rotationY;
@@ -1682,10 +2268,24 @@ class WishPlaza3DEngine {
       this.player.walkPhase = 0;
     }
 
+    // Prayer Bowing Animation (합장 삼배 모션)
+    if (this.player.isPraying) {
+      this.player.prayPhase += dt * 2.5;
+      if (this.playerGroup) {
+        this.playerGroup.rotation.x = Math.sin(this.player.prayPhase) * 0.45;
+      }
+      if (this.player.prayPhase >= Math.PI) {
+        this.player.isPraying = false;
+        if (this.playerGroup) this.playerGroup.rotation.x = 0;
+      }
+    }
+
     // Apply player position & rotation
     if (this.playerGroup) {
       this.playerGroup.position.set(this.player.x, this.player.y, this.player.z);
-      this.playerGroup.rotation.y = this.player.rotationY;
+      if (!this.player.isPraying) {
+        this.playerGroup.rotation.y = this.player.rotationY;
+      }
 
       if (this.player.leftLeg && this.player.rightLeg) {
         if (!this.player.isGrounded) {
@@ -1703,12 +2303,16 @@ class WishPlaza3DEngine {
     }
 
     // 3. Camera Follow (Up/Down/Left/Right Orbit around player)
-    const orbitDist = this.cameraOrbit.distance;
+    let orbitDist = this.cameraOrbit.distance;
+    if (this.player.z < -34.5) {
+      // Keep camera inside temple interior when entering hall
+      orbitDist = Math.min(orbitDist, 12.0);
+    }
     const elev = this.cameraOrbit.elevation;
     const azim = this.cameraOrbit.azimuth;
 
     const camX = this.player.x + orbitDist * Math.cos(elev) * Math.sin(azim);
-    const camY = Math.max(1.2, this.player.y + orbitDist * Math.sin(elev));
+    const camY = Math.max(this.player.y + 1.2, this.player.y + orbitDist * Math.sin(elev));
     const camZ = this.player.z + orbitDist * Math.cos(elev) * Math.cos(azim);
 
     this.camera.position.lerp(new THREE.Vector3(camX, camY, camZ), 0.16);
@@ -1738,7 +2342,22 @@ class WishPlaza3DEngine {
       this.shrineRing.rotation.z += 0.01;
     }
 
-    // 6. Proximity check
+    // 6. Temple Altar Smoke & Candle Animations
+    if (this.incenseParticles) {
+      this.incenseParticles.forEach((p) => {
+        p.position.y += p.userData.speed * dt;
+        p.position.x = Math.sin(elapsedTime * p.userData.swaySpeed + p.userData.offset) * p.userData.swayAmp;
+        if (p.position.y > 10.5) {
+          p.position.y = p.userData.baseY;
+        }
+      });
+    }
+    if (this.candleLightLeft && this.candleLightRight) {
+      this.candleLightLeft.intensity = 1.5 + Math.sin(elapsedTime * 9.5) * 0.3;
+      this.candleLightRight.intensity = 1.5 + Math.cos(elapsedTime * 8.5) * 0.3;
+    }
+
+    // 7. Proximity check
     this.nearbyLantern = null;
     let closestDist = 5.5;
 
@@ -1753,7 +2372,28 @@ class WishPlaza3DEngine {
     const distToPagoda = Math.hypot(0 - this.player.x, -10 - this.player.z);
     this.isNearShrine = distToPagoda < 7.2;
 
-    // 7. Shooting stars
+    // Check Buddha Altar Proximity (inside temple hall)
+    const distToBuddha = Math.hypot(this.player.x, this.player.z - (-50.5));
+    this.isNearBuddhaAltar = (distToBuddha < 5.8 && this.player.z < -34.5);
+
+    const buddhaPrompt = document.getElementById("wishPlazaBuddhaPrompt");
+    const mobilePrayerBtn = document.getElementById("mobilePrayerBtn");
+    if (buddhaPrompt) {
+      if (this.isNearBuddhaAltar) {
+        buddhaPrompt.classList.remove("hidden");
+      } else {
+        buddhaPrompt.classList.add("hidden");
+      }
+    }
+    if (mobilePrayerBtn) {
+      if (this.isNearBuddhaAltar) {
+        mobilePrayerBtn.classList.remove("hidden");
+      } else {
+        mobilePrayerBtn.classList.add("hidden");
+      }
+    }
+
+    // 8. Shooting stars
     if (elapsedTime - this.lastShootingStarTime > 4.2 && Math.random() < 0.4) {
       this.lastShootingStarTime = elapsedTime;
       this.spawnShootingStar();
@@ -1772,7 +2412,7 @@ class WishPlaza3DEngine {
       }
     }
 
-    // 8. Cheer sparkle particles
+    // 9. Cheer sparkle particles
     for (let p = this.sparkleParticles.length - 1; p >= 0; p--) {
       const sp = this.sparkleParticles[p];
       const posAttr = sp.mesh.geometry.attributes.position;

@@ -666,16 +666,17 @@ dialog.custom-modal::backdrop {
 
 
 /* ==========================================
-   🏮 소원 연등 띄우기 및 힐링 애니메이션
+   🏮 소원 연등 띄우기 및 밤하늘 별똥별 애니메이션
    ========================================== */
 @keyframes floatLanternUp {
-  0% { transform: translateY(0) scale(1); opacity: 1; filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.8)); }
-  50% { transform: translateY(-40px) scale(0.9) rotate(3deg); opacity: 0.95; filter: drop-shadow(0 0 18px rgba(245, 158, 11, 1)); }
-  100% { transform: translateY(-110px) scale(0.55) rotate(-3deg); opacity: 0; filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0)); }
+  0% { transform: translateY(0) scale(1); opacity: 1; filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.9)); }
+  40% { transform: translateY(-70px) scale(0.92) rotate(4deg); opacity: 0.95; filter: drop-shadow(0 0 22px rgba(245, 158, 11, 1)); }
+  75% { transform: translateY(-160px) scale(0.7) rotate(-3deg); opacity: 0.8; filter: drop-shadow(0 0 16px rgba(245, 158, 11, 0.8)); }
+  100% { transform: translateY(-260px) scale(0.4) rotate(2deg); opacity: 0; filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0)); }
 }
 
 .animate-lantern-float {
-  animation: floatLanternUp 2.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  animation: floatLanternUp 2.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
 @keyframes pulseGlowGold {
@@ -685,4 +686,99 @@ dialog.custom-modal::backdrop {
 
 .pulse-glow-gold {
   animation: pulseGlowGold 2.5s infinite ease-in-out;
+}
+
+/* 반짝이는 별빛 (Twinkling Stars) */
+@keyframes twinkleStar {
+  0%, 100% { opacity: 0.25; transform: scale(0.75); }
+  50% { opacity: 1; transform: scale(1.3); }
+}
+
+.star-twinkle {
+  position: absolute;
+  border-radius: 9999px;
+  background: #ffffff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.95);
+  animation: twinkleStar 3.2s infinite ease-in-out;
+  pointer-events: none;
+}
+
+/* 밤하늘을 가로지르는 별똥별 (Shooting Stars / Meteors) */
+@keyframes shootingStarAnim {
+  0% {
+    transform: translate(0, 0) rotate(-35deg) scaleX(0);
+    opacity: 0;
+  }
+  8% {
+    transform: translate(-30px, 20px) rotate(-35deg) scaleX(1);
+    opacity: 1;
+  }
+  65% {
+    transform: translate(-280px, 190px) rotate(-35deg) scaleX(1.3);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate(-420px, 290px) rotate(-35deg) scaleX(0.1);
+    opacity: 0;
+  }
+}
+
+.shooting-star {
+  position: absolute;
+  top: 15px;
+  right: 12%;
+  width: 100px;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(255,255,255,1), rgba(254,240,138,0.85), transparent);
+  border-radius: 9999px;
+  filter: drop-shadow(0 0 8px #fef08a);
+  opacity: 0;
+  pointer-events: none;
+  animation: shootingStarAnim 4.8s infinite ease-out;
+}
+
+.shooting-star-2 {
+  top: 45px;
+  right: 42%;
+  width: 130px;
+  height: 2.5px;
+  background: linear-gradient(90deg, rgba(255,255,255,1), rgba(186,230,253,0.9), transparent);
+  filter: drop-shadow(0 0 10px #7dd3fc);
+  animation: shootingStarAnim 6.8s infinite ease-out;
+  animation-delay: 2.4s;
+}
+
+.shooting-star-3 {
+  top: 8px;
+  right: 72%;
+  width: 80px;
+  height: 1.8px;
+  background: linear-gradient(90deg, rgba(255,255,255,1), rgba(254,202,202,0.85), transparent);
+  filter: drop-shadow(0 0 8px #fca5a5);
+  animation: shootingStarAnim 5.6s infinite ease-out;
+  animation-delay: 4.2s;
+}
+
+/* 밤하늘 배경 은은한 부유 연등 (Ambient Floating Lanterns) */
+@keyframes ambientDrift {
+  0% { transform: translateY(40px) translateX(0) scale(0.7); opacity: 0.2; }
+  50% { transform: translateY(-20px) translateX(12px) scale(0.9); opacity: 0.85; }
+  100% { transform: translateY(-70px) translateX(-8px) scale(0.65); opacity: 0.15; }
+}
+
+.ambient-lantern-drift {
+  animation: ambientDrift 8s infinite ease-in-out alternate;
+  filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.75));
+  pointer-events: none;
+}
+
+/* 응원/추천 시 팝 애니메이션 */
+@keyframes cheerPop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.22); }
+  100% { transform: scale(1); }
+}
+
+.animate-cheer-pop {
+  animation: cheerPop 0.35s ease-in-out;
 }

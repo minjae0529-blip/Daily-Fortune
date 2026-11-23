@@ -130,6 +130,8 @@ const App = {
     this.initTarotDeck();
     this.renderDreamList();
     this.renderMoodPrescription();
+    this.initCommunityWishes();
+    this.renderWishPlaza();
     this.renderWishHistory();
     this.setMode("daily");
     this.checkAuthSession();
@@ -4430,17 +4432,24 @@ https://minjae0529-blip.github.io/Daily-Fortune/`;
   },
 
   // ==========================================================================
-  // 🏮 소원 연등 띄우기 (소원 성취 기원) 컨트롤러
   // ==========================================================================
+  // 🏮 소원 연등 띄우기 & 모두의 은하수 소원 광장 컨트롤러
+  // ==========================================================================
+  currentWishTab: "plaza",
+  communityWishes: [],
+
   openWishModal() {
     const dialog = document.getElementById("wishDialog");
     if (!dialog) return;
+    this.initCommunityWishes();
+    this.switchWishTab(this.currentWishTab || "plaza");
+    this.renderWishPlaza();
+    this.renderWishHistory();
     if (typeof dialog.showModal === "function") {
       dialog.showModal();
     } else {
       dialog.setAttribute("open", "");
     }
-    this.renderWishHistory();
   },
 
   closeWishModal() {
@@ -4468,8 +4477,243 @@ https://minjae0529-blip.github.io/Daily-Fortune/`;
     });
   },
 
+  initCommunityWishes() {
+    if (this.communityWishes && this.communityWishes.length > 0) return;
+    try {
+      const saved = JSON.parse(localStorage.getItem("chunmyung_community_wishes") || "null");
+      if (saved && Array.isArray(saved) && saved.length > 0) {
+        this.communityWishes = saved;
+        return;
+      }
+    } catch (e) {}
+
+    const seed = (window.INITIAL_COMMUNITY_WISHES && Array.isArray(window.INITIAL_COMMUNITY_WISHES))
+      ? JSON.parse(JSON.stringify(window.INITIAL_COMMUNITY_WISHES))
+      : [
+          {
+            id: 101,
+            category: "🌿 건강·장수",
+            author: "어머니의 딸 김도반",
+            text: "다음 주 어머니 큰 수술 무사히 잘 마치시고, 다시 환하게 웃으시며 온 가족 모여 따뜻한 밥상 함께할 수 있기를 간절히 기도합니다.",
+            cheers: 284,
+            date: "2026. 11. 22."
+          },
+          {
+            id: 102,
+            category: "🎓 시험·합격",
+            author: "새벽별 임용고시생",
+            text: "3년 동안 하루도 쉬지 않고 준비한 중등 임용고시, 이번에는 반드시 합격하여 아이들에게 온기와 희망을 전하는 참된 교사가 되고 싶습니다.",
+            cheers: 196,
+            date: "2026. 11. 21."
+          },
+          {
+            id: 103,
+            category: "🏡 가족·화목",
+            author: "두 아이의 가장",
+            text: "우리 네 식구 누구 하나 아프지 않고, 서로 양보하고 배려하며 날마다 웃음꽃 피는 한 해가 되기를 소망합니다. 지친 퇴근길에 언제나 힘이 되는 가족이길.",
+            cheers: 153,
+            date: "2026. 11. 20."
+          },
+          {
+            id: 104,
+            category: "💰 사업·재물",
+            author: "골목길 청년 사장",
+            text: "작은 동네 빵집 개업 후 버텨온 2년의 시간, 올해는 부채도 갚고 직원들과 함께 환하게 웃을 수 있는 결실의 해가 되길 간절히 축원합니다.",
+            cheers: 128,
+            date: "2026. 11. 21."
+          },
+          {
+            id: 105,
+            category: "💖 애정·인연",
+            author: "따뜻한 봄날",
+            text: "서로의 부족함을 너그럽게 감싸주고, 비바람 치는 날에도 든든한 평생의 버팀목이 되어줄 소중한 인연을 만나 아름다운 가정을 꾸리고 싶습니다.",
+            cheers: 105,
+            date: "2026. 11. 19."
+          },
+          {
+            id: 106,
+            category: "🕊️ 마음·평안",
+            author: "마음챙김 도반",
+            text: "오랫동안 가슴을 짓누르던 불안감과 자책을 내려놓고, 온전히 나 자신을 인정하고 사랑하며 하루하루 평온하게 살아갈 수 있는 지혜와 용기를 주세요.",
+            cheers: 92,
+            date: "2026. 11. 22."
+          }
+        ];
+
+    this.communityWishes = seed;
+    try {
+      localStorage.setItem("chunmyung_community_wishes", JSON.stringify(seed));
+    } catch (e) {}
+  },
+
+  switchWishTab(tab) {
+    this.currentWishTab = tab;
+    const tabs = ["plaza", "create", "mine"];
+    tabs.forEach(t => {
+      const btn = document.getElementById(`wishTabBtn-${t}`);
+      const content = document.getElementById(`wishTabContent-${t}`);
+      if (btn) {
+        if (t === tab) {
+          btn.className = "px-3.5 py-1.5 rounded-lg font-bold bg-[#8c1d1d] text-[#ffe8b3] border border-[#d4a359] shadow transition cursor-pointer";
+        } else {
+          btn.className = "px-3.5 py-1.5 rounded-lg font-semibold bg-[#24160f] text-stone-300 hover:text-white border border-stone-700 transition cursor-pointer";
+        }
+      }
+      if (content) {
+        if (t === tab) {
+          content.classList.remove("hidden");
+        } else {
+          content.classList.add("hidden");
+        }
+      }
+    });
+
+    if (tab === "plaza") {
+      this.renderWishPlaza();
+    } else if (tab === "mine") {
+      this.renderWishHistory();
+    }
+  },
+
+  renderWishPlaza() {
+    this.initCommunityWishes();
+    const bannerEl = document.getElementById("weeklyTopWishBanner");
+    const container = document.getElementById("communityWishListContainer");
+    const totalCountEl = document.getElementById("totalCommunityWishCount");
+    const myCountBadge = document.getElementById("myWishCountBadge");
+
+    if (totalCountEl) totalCountEl.textContent = this.communityWishes.length;
+
+    // My wishes count
+    let myWishes = [];
+    try {
+      myWishes = JSON.parse(localStorage.getItem("chunmyung_wishes") || "[]");
+    } catch (e) {}
+    if (myCountBadge) myCountBadge.textContent = myWishes.length;
+
+    if (this.communityWishes.length === 0) return;
+
+    // Find Weekly Top 1 wish (highest cheers)
+    const topWish = this.communityWishes.reduce((max, w) => (w.cheers > max.cheers ? w : max), this.communityWishes[0]);
+
+    if (bannerEl && topWish) {
+      bannerEl.innerHTML = `
+        <div class="flex items-center justify-between text-xs font-bold text-[#fde047] mb-2 flex-wrap gap-1">
+          <div class="flex items-center space-x-1.5">
+            <span class="text-base animate-bounce">👑</span>
+            <span class="font-serif-kr tracking-wide">천명(天命) 주간 최다 응원 1위 연등 · 명예의 전당</span>
+          </div>
+          <span class="px-2.5 py-0.5 rounded-full bg-[#8c1d1d] text-[#ffe8b3] text-[10px] border border-[#d4a359] font-mono shadow-xs">
+            🙏 도반 ${topWish.cheers}명의 응원
+          </span>
+        </div>
+        
+        <div class="p-3 rounded-xl bg-[#140b07]/90 border border-amber-500/50 mb-2.5 shadow-sm">
+          <div class="flex items-center justify-between text-[11px] mb-1">
+            <span class="font-bold text-[#fde68a] flex items-center space-x-1">
+              <span class="text-xs">🏮</span>
+              <span>[${topWish.category}] ${topWish.author} 님의 소원</span>
+            </span>
+            <span class="text-stone-400 text-[10px] font-mono">${topWish.date}</span>
+          </div>
+          <p class="text-xs sm:text-sm font-serif-kr text-[#fff6df] leading-relaxed font-bold">
+            "${topWish.text}"
+          </p>
+        </div>
+
+        <div class="flex items-start space-x-2.5 text-[11px] text-amber-200 bg-[#7c1d1d]/40 p-2.5 rounded-xl border border-amber-500/40">
+          <span class="text-base shrink-0 mt-0.5">🌟</span>
+          <div class="leading-relaxed font-sans">
+            <p class="font-bold text-[#fef08a] mb-0.5">
+              소원연등 1위 소원은 [${topWish.author}] 님의 소원입니다!
+            </p>
+            <p class="text-amber-100/90 text-[10.5px]">
+              천명 도반들의 따뜻한 마음과 간절한 기도가 모여 은하수 하늘을 가장 환하게 밝혔습니다. 소원이 기적처럼 이루어지시길 천명이 온 마음을 다해 간절히 응원합니다! 🏮✨
+            </p>
+          </div>
+        </div>
+      `;
+    }
+
+    if (container) {
+      // Get cheered list from localStorage
+      let cheeredIds = [];
+      try {
+        cheeredIds = JSON.parse(localStorage.getItem("chunmyung_cheered_wish_ids") || "[]");
+      } catch (e) {}
+
+      // Sort by cheers descending
+      const sorted = [...this.communityWishes].sort((a, b) => b.cheers - a.cheers);
+
+      container.innerHTML = sorted.map((w, idx) => {
+        const isCheered = cheeredIds.includes(w.id);
+        const isTop = w.id === topWish.id;
+        return `
+          <div class="p-3 rounded-xl bg-[#24160f] border ${isTop ? 'border-amber-500/80 shadow-[0_0_12px_rgba(245,158,11,0.2)]' : 'border-stone-800'} flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 transition hover:border-amber-700">
+            <div class="space-y-1 flex-1">
+              <div class="flex items-center space-x-2 text-[11px]">
+                ${isTop ? '<span class="text-xs font-bold text-amber-400">👑 1위</span>' : `<span class="text-[10px] text-stone-500 font-mono">${idx + 1}위</span>`}
+                <span class="px-2 py-0.5 rounded-md bg-[#362419] text-amber-300 font-bold border border-amber-900 text-[10px]">${w.category}</span>
+                <span class="text-stone-300 font-semibold">${w.author}</span>
+                <span class="text-stone-500 text-[10px] font-mono">${w.date}</span>
+              </div>
+              <p class="text-xs text-amber-100/90 font-serif-kr leading-relaxed">
+                "${w.text}"
+              </p>
+            </div>
+            <button type="button" onclick="App.cheerWish(${w.id})" class="shrink-0 flex items-center space-x-1.5 px-3 py-1.5 rounded-full ${isCheered ? 'bg-[#991b1b] border-amber-400 text-[#fef08a]' : 'bg-[#362419] hover:bg-[#8c1d1d] border-stone-700 hover:border-amber-600 text-stone-200'} border text-xs font-bold shadow-xs transition active:scale-95 cursor-pointer">
+              <span>${isCheered ? '❤️' : '🙏'}</span>
+              <span>${isCheered ? '응원 완료' : '응원하기'}</span>
+              <span class="px-1.5 py-0.2 rounded-full bg-[#180e08] text-amber-300 text-[10px] font-mono ml-0.5">${w.cheers}</span>
+            </button>
+          </div>
+        `;
+      }).join("");
+    }
+  },
+
+  cheerWish(wishId) {
+    this.initCommunityWishes();
+    const wish = this.communityWishes.find(w => w.id === wishId);
+    if (!wish) return;
+
+    let cheeredIds = [];
+    try {
+      cheeredIds = JSON.parse(localStorage.getItem("chunmyung_cheered_wish_ids") || "[]");
+    } catch (e) {}
+
+    const alreadyCheered = cheeredIds.includes(wishId);
+    wish.cheers += 1;
+
+    if (!alreadyCheered) {
+      cheeredIds.push(wishId);
+      try {
+        localStorage.setItem("chunmyung_cheered_wish_ids", JSON.stringify(cheeredIds));
+      } catch (e) {}
+    }
+
+    try {
+      localStorage.setItem("chunmyung_community_wishes", JSON.stringify(this.communityWishes));
+    } catch (e) {}
+
+    if (window.confetti) {
+      try {
+        window.confetti({ particleCount: 35, spread: 60, origin: { y: 0.7 } });
+      } catch (e) {}
+    }
+
+    this.renderWishPlaza();
+
+    const skyText = document.getElementById("wishSkyText");
+    if (skyText) {
+      skyText.textContent = `✨ [${wish.author}] 님께 따뜻한 응원을 보냈습니다! 서로를 축원하는 마음에 큰 복(福)이 함께합니다.`;
+      skyText.className = "z-10 text-[11px] text-emerald-300 font-bold font-serif-kr mt-1 animate-pulse";
+    }
+  },
+
   launchWishLantern() {
     const input = document.getElementById("wishTextInput");
+    const authorInput = document.getElementById("wishAuthorInput");
     const wishText = input ? input.value.trim() : "";
     if (!wishText) {
       alert("소원 한마디를 입력해주세요.");
@@ -4486,6 +4730,10 @@ https://minjae0529-blip.github.io/Daily-Fortune/`;
       peace: "🕊️ 마음·평안"
     };
 
+    const authorName = (authorInput && authorInput.value.trim()) 
+      ? authorInput.value.trim() 
+      : (this.currentAccount ? this.currentAccount.name : "익명의 도반");
+
     const lantern = document.getElementById("floatingLanternEl");
     const skyText = document.getElementById("wishSkyText");
 
@@ -4493,45 +4741,58 @@ https://minjae0529-blip.github.io/Daily-Fortune/`;
       lantern.classList.add("animate-lantern-float");
     }
     if (skyText) {
-      skyText.textContent = "소원 연등이 은하수를 타고 하늘 높이 날아오릅니다... ✨";
-      skyText.className = "absolute bottom-2 text-[10px] text-amber-300 font-bold animate-pulse";
+      skyText.textContent = "소원 연등이 은하수 밤하늘을 타고 별똥별 사이로 높이 날아오릅니다... ✨";
+      skyText.className = "z-10 text-[11px] text-amber-300 font-bold animate-pulse font-serif-kr mt-1";
     }
 
     if (window.confetti) {
       try {
-        window.confetti({ particleCount: 60, spread: 80, origin: { y: 0.65 } });
+        window.confetti({ particleCount: 70, spread: 90, origin: { y: 0.6 } });
       } catch (e) {}
     }
 
-    // Save wish to localStorage
     const newWish = {
       id: Date.now(),
-      category: catMap[this.currentWishCategory || "health"] || "기원",
+      category: catMap[this.currentWishCategory || "health"] || "🌿 건강·장수",
+      author: authorName,
       text: wishText,
+      cheers: 1,
       date: new Date().toLocaleDateString("ko-KR")
     };
 
+    // 1. Add to community wishes
+    this.initCommunityWishes();
+    this.communityWishes.unshift(newWish);
+    try {
+      localStorage.setItem("chunmyung_community_wishes", JSON.stringify(this.communityWishes.slice(0, 30)));
+    } catch (e) {}
+
+    // 2. Add to personal wish history
     try {
       const saved = JSON.parse(localStorage.getItem("chunmyung_wishes") || "[]");
       saved.unshift(newWish);
-      localStorage.setItem("chunmyung_wishes", JSON.stringify(saved.slice(0, 15)));
+      localStorage.setItem("chunmyung_wishes", JSON.stringify(saved.slice(0, 20)));
     } catch (e) {}
 
     setTimeout(() => {
       if (input) input.value = "";
+      if (authorInput) authorInput.value = "";
       if (lantern) {
         lantern.classList.remove("animate-lantern-float");
       }
       if (skyText) {
-        skyText.textContent = "도반님의 소원이 하늘에 닿았습니다. 앞날에 밝은 복록이 함께합니다 🏮";
-        skyText.className = "absolute bottom-2 text-[10px] text-emerald-300 font-bold font-sans";
+        skyText.textContent = `도반 [${authorName}] 님의 소원 연등이 밤하늘에 닿았습니다. 모두의 응원과 함께 반드시 이루어집니다 🏮`;
+        skyText.className = "z-10 text-[11px] text-emerald-300 font-bold font-serif-kr mt-1";
       }
+      this.switchWishTab("plaza");
+      this.renderWishPlaza();
       this.renderWishHistory();
-    }, 2600);
+    }, 2800);
   },
 
   renderWishHistory() {
     const container = document.getElementById("wishHistoryContainer");
+    const myCountBadge = document.getElementById("myWishCountBadge");
     if (!container) return;
 
     let wishes = [];
@@ -4539,18 +4800,26 @@ https://minjae0529-blip.github.io/Daily-Fortune/`;
       wishes = JSON.parse(localStorage.getItem("chunmyung_wishes") || "[]");
     } catch (e) {}
 
+    if (myCountBadge) myCountBadge.textContent = wishes.length;
+
     if (wishes.length === 0) {
-      container.innerHTML = `<div class="text-stone-500 py-2 text-center text-[10px]">아직 띄운 소원 연등이 없습니다. 첫 소원을 빌어보세요!</div>`;
+      container.innerHTML = `<div class="text-stone-500 py-4 text-center text-xs">아직 내가 띄운 소원 연등이 없습니다. [✍️ 내 소원 연등 띄우기]에서 첫 소원을 밤하늘에 올려보세요!</div>`;
       return;
     }
 
     container.innerHTML = wishes.map(w => `
-      <div class="p-2 rounded-lg bg-[#2a1c15] border border-amber-900/80 flex items-start justify-between gap-2">
-        <div>
-          <span class="text-amber-400 font-bold text-[10px] mr-1.5">[${w.category}]</span>
-          <span class="text-stone-200">${w.text}</span>
+      <div class="p-3 rounded-xl bg-[#24160f] border border-amber-900/80 flex items-start justify-between gap-2.5">
+        <div class="space-y-1">
+          <div class="flex items-center space-x-2 text-[11px]">
+            <span class="text-amber-400 font-bold text-[10px] mr-1.5">[${w.category}]</span>
+            <span class="text-stone-300 font-medium">${w.author || '나의 소원'}</span>
+            <span class="text-stone-500 text-[10px] font-mono">${w.date}</span>
+          </div>
+          <p class="text-xs text-stone-200 font-serif-kr">${w.text}</p>
         </div>
-        <span class="text-stone-500 text-[9px] shrink-0 font-mono">${w.date}</span>
+        <span class="shrink-0 px-2.5 py-1 rounded-full bg-[#180e08] border border-amber-900 text-amber-300 text-[10px] font-mono">
+          ❤️ 응원 ${w.cheers || 1}
+        </span>
       </div>
     `).join("");
   },

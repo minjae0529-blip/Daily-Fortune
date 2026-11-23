@@ -31,8 +31,8 @@ class WishPlaza3DEngine {
     // Camera Orbit around player (Free Mouse Look Up/Down/Left/Right)
     this.cameraOrbit = {
       azimuth: 0.0,         // Horizontal rotation (radians)
-      elevation: 0.32,      // Vertical angle (radians) - pitch
-      distance: 16.0,       // Distance from player
+      elevation: 0.22,      // Vertical angle (radians) - pitch optimal for temple eye-level view
+      distance: 15.0,       // Distance from player
       isDragging: false,
       prevMouseX: 0,
       prevMouseY: 0
@@ -1361,18 +1361,18 @@ class WishPlaza3DEngine {
       if (code === "KeyD" || code === "ArrowRight") this.keys.right = false;
     });
 
-    // Mouse Controls for 360 Look (위, 아래, 양옆 자유 시점)
+    // Mouse Controls for 360 Look (위, 아래, 양옆 자유 시점 - 드래그 및 포인터 락)
     if (this.canvas) {
+      this.canvas.style.cursor = "grab";
+
       this.canvas.addEventListener("mousedown", (e) => {
         if (!this.isRunning) return;
         this.cameraOrbit.isDragging = true;
+        this.canvas.style.cursor = "grabbing";
         this.cameraOrbit.prevMouseX = e.clientX;
         this.cameraOrbit.prevMouseY = e.clientY;
         this.hasDragged = false;
       });
-
-      let lastMoveX = null;
-      let lastMoveY = null;
 
       window.addEventListener("mousemove", (e) => {
         if (!this.isRunning) return;
@@ -1388,29 +1388,23 @@ class WishPlaza3DEngine {
           dy = e.clientY - this.cameraOrbit.prevMouseY;
           this.cameraOrbit.prevMouseX = e.clientX;
           this.cameraOrbit.prevMouseY = e.clientY;
-          if (Math.abs(dx) > 2 || Math.abs(dy) > 2) this.hasDragged = true;
-        } else if (e.target === this.canvas && lastMoveX !== null && lastMoveY !== null) {
-          // Free look when cursor moves over canvas
-          dx = (e.clientX - lastMoveX) * 0.75;
-          dy = (e.clientY - lastMoveY) * 0.75;
+          if (Math.abs(dx) > 3 || Math.abs(dy) > 3) this.hasDragged = true;
         }
 
-        lastMoveX = e.clientX;
-        lastMoveY = e.clientY;
-
         if (dx !== 0 || dy !== 0) {
-          // Look Left / Right (양옆)
+          // Look Left / Right (양옆 360도 회전)
           this.cameraOrbit.azimuth -= dx * 0.0055;
-          // Look Up / Down (위, 아래) - expanded range to look straight up at sky/moon and down
+          // Look Up / Down (위, 아래 시점 조절 - 수평선 및 하늘/지면)
           this.cameraOrbit.elevation = Math.max(
-            -0.30,
-            Math.min(1.48, this.cameraOrbit.elevation + dy * 0.005)
+            -0.35,
+            Math.min(1.42, this.cameraOrbit.elevation + dy * 0.005)
           );
         }
       });
 
       window.addEventListener("mouseup", () => {
         this.cameraOrbit.isDragging = false;
+        if (this.canvas) this.canvas.style.cursor = "grab";
       });
 
       // Canvas click (Raycast to click on Lanterns or Pagoda)

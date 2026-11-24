@@ -198,17 +198,6 @@
             <input type="password" id="loginPwInput" required autocomplete="current-password" placeholder="비밀번호를 입력하세요" class="w-full bg-[#faf6ee] border-2 border-[#cbb799] rounded-lg px-3.5 py-2.5 text-sm text-[#1b140e] focus:outline-none focus:border-[#8c1d1d] transition font-medium">
           </div>
 
-          <!-- 👑 시스템 관리자 로그인 전용 안내 (보안 강화: 비밀번호 평문 노출 차단) -->
-          <div class="p-2.5 rounded-lg bg-[#fbf6ec] border border-[#d5c19e] flex items-center justify-between text-xs text-[#4a3525]">
-            <span class="font-serif-kr flex items-center space-x-1.5">
-              <span>👑</span>
-              <span><strong>최고 관리자 전용</strong>: 사전에 발급된 관리자 계정으로 접속 시 관제실 접근 권한이 부여됩니다.</span>
-            </span>
-            <button type="button" onclick="App.fillAdminCredentials()" class="px-2.5 py-1 rounded bg-[#231710] text-[#f7d88c] border border-[#b48a4e] text-[11px] font-bold hover:bg-[#362419] transition shrink-0">
-              ID 채우기
-            </button>
-          </div>
-
           <button type="submit" id="loginSubmitBtn" class="w-full py-3.5 rounded-lg font-black text-sm text-[#fff6df] bg-gradient-to-r from-[#8c1d1d] via-[#a31d1d] to-[#7f1d1d] hover:from-[#991b1b] hover:to-[#8c1d1d] transition shadow-md border-2 border-[#d4a359] flex items-center justify-center space-x-2">
             <span class="text-[#facc15]">☯</span>
             <span>천명(天命) 만세력 로그인</span>

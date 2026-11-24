@@ -1,0 +1,21 @@
+# 운영(Production) 환경 전용 프로필
+# 실행 시 SPRING_PROFILES_ACTIVE=prod 환경변수를 설정하면 자동 적용됩니다.
+
+server:
+  error:
+    include-stacktrace: never
+    include-message: never
+    include-binding-errors: never
+
+spring:
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+springdoc:
+  swagger-ui:
+    enabled: ${SPRINGDOC_ENABLED:false}
+  api-docs:
+    enabled: ${SPRINGDOC_ENABLED:false}

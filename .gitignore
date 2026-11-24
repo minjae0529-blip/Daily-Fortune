@@ -35,3 +35,11 @@ build/
 ### Mac OS ###
 .DS_Store
 **/.DS_Store
+
+### Environment & Secrets ###
+.env
+.env.*
+!.env.example
+src/main/resources/application-local.yml
+src/main/resources/application-secret.yml
+*.log

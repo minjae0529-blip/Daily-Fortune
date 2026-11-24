@@ -3,18 +3,22 @@ server:
 
 chunmyung:
   security:
-    admin-id: ${ADMIN_ID:admin}
-    admin-password: ${ADMIN_PASSWORD:admin1234!}
+    admin-id: ${ADMIN_ID:}
+    admin-password: ${ADMIN_PASSWORD:}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:8085}
 
 spring:
   application:
     name: chunmyung-saju
-  
+  config:
+    import: optional:file:.env[.properties]
+
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: ${DB_URL:jdbc:mysql://localhost:3306/chunmyung_saju?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul}
     username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:1q2w3e4r!}
+    password: ${DB_PASSWORD:}
     hikari:
       maximum-pool-size: 10
       minimum-idle: 5
@@ -35,8 +39,10 @@ spring:
 
 springdoc:
   swagger-ui:
+    enabled: ${SPRINGDOC_ENABLED:true}
     path: /swagger-ui.html
     tags-sorter: alpha
     operations-sorter: alpha
   api-docs:
+    enabled: ${SPRINGDOC_ENABLED:true}
     path: /v3/api-docs

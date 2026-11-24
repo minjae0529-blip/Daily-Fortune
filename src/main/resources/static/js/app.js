@@ -355,18 +355,6 @@ const App = {
     this.showAuthAlert("warning", "인증번호가 자동 입력되었습니다. 가입 시 등록한 휴대폰 번호를 입력하고 [SMS 인증번호 확인 및 계정 휴면·오류 초기화] 버튼을 눌러주세요.");
   },
 
-  fillAdminCredentials() {
-    this.switchAuthTab("login");
-    const idInput = document.getElementById("loginIdInput");
-    const pwInput = document.getElementById("loginPwInput");
-    if (idInput) idInput.value = "admin";
-    if (pwInput) {
-      pwInput.value = "";
-      pwInput.focus();
-    }
-    this.showAuthAlert("warning", "👑 관리자 계정 ID(admin)가 입력되었습니다. 관리자 전용 비밀번호를 입력해주세요.");
-  },
-
   async checkDuplicateLoginId() {
     const idInput = document.getElementById("signupIdInput");
     const msgEl = document.getElementById("signupIdCheckMsg");

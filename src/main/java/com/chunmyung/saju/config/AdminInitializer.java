@@ -24,10 +24,10 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class AdminInitializer implements ApplicationRunner {
 
-    @Value("${chunmyung.security.admin-id:admin}")
+    @Value("${chunmyung.security.admin-id:}")
     private String adminId;
 
-    @Value("${chunmyung.security.admin-password:admin1234!}")
+    @Value("${chunmyung.security.admin-password:}")
     private String adminPassword;
 
     private final AccountRepository accountRepository;
@@ -35,8 +35,12 @@ public class AdminInitializer implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
-        final String targetAdminId = (adminId != null && !adminId.isBlank()) ? adminId.trim() : "admin";
-        final String targetAdminPw = (adminPassword != null && !adminPassword.isBlank()) ? adminPassword : "admin1234!";
+        if (adminId == null || adminId.isBlank() || adminPassword == null || adminPassword.isBlank()) {
+            log.warn("⚠️ [보안 안내] ADMIN_ID 또는 ADMIN_PASSWORD 환경변수가 설정되지 않아 관리자 계정 자동 초기화를 건너뜁니다.");
+            return;
+        }
+        final String targetAdminId = adminId.trim();
+        final String targetAdminPw = adminPassword;
 
         accountRepository.findByLoginId(targetAdminId).ifPresentOrElse(admin -> {
             boolean updated = false;

@@ -1,13 +1,10 @@
-# Stage 1: Maven Build (Java 21)
-FROM eclipse-temurin:21-jdk-alpine AS build
+# Stage 1: Maven Build (Maven 3.9 + Java 21 내장 이미지 사용 -> mvnw wget 429 오류 원천 차단)
+FROM maven:3.9.9-eclipse-temurin-21-alpine AS build
 WORKDIR /app
 
-COPY .mvn/ .mvn/
-COPY mvnw pom.xml ./
-RUN chmod +x mvnw && ./mvnw dependency:go-offline -B
-
+COPY pom.xml ./
 COPY src ./src
-RUN ./mvnw clean package -DskipTests -B
+RUN mvn -B -DskipTests clean package
 
 # Stage 2: Lightweight JRE Runtime (512MB 무료 티어 최적화)
 FROM eclipse-temurin:21-jre-alpine

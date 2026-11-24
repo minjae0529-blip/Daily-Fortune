@@ -113,8 +113,8 @@ const App = {
   mascotQuoteIdx: 0,
   isBlessingOpen: false,
 
-  // 유료화 (500원 사주 간편결제 - 토스/카카오/네이버페이) 상태
-  isPremiumUnlocked: false,
+  // 데모 버전: 결제 게이트 스킵 (전 기능 무료 즉시 열람)
+  isPremiumUnlocked: true,
   selectedPayMethod: "TOSS_PAY",
   lastSavedSajuId: null,
   lastReceipt: null,
@@ -155,17 +155,15 @@ const App = {
   },
 
   async checkAuthSession() {
-    try {
-      const res = await fetch("/api/auth/me");
-      const result = await res.json();
-      if (result && result.success && result.data && result.data.authenticated) {
-        this.enterAuthenticatedService(result.data);
-      } else {
-        this.showAuthGateScreen();
-      }
-    } catch (e) {
-      this.showAuthGateScreen();
-    }
+    // 데모 버전: 로그인 화면 없이 즉시 서비스 진입 (로그인/회원가입/관리자 UI 비노출)
+    this.enterAuthenticatedService({
+      id: 0,
+      loginId: "demo",
+      name: "천명 도반",
+      role: "ROLE_USER",
+      authenticated: true
+    });
+    this.applyPaywallState(true, null);
   },
 
   showAuthGateScreen() {
@@ -228,27 +226,18 @@ const App = {
     if (inputSec) inputSec.classList.remove("hidden");
 
     if (userBox) {
-      userBox.classList.remove("hidden");
-      userBox.classList.add("flex");
+      // 데모 버전: 상단 로그인/로그아웃 박스 숨김
+      userBox.classList.add("hidden");
+      userBox.classList.remove("flex");
     }
 
-    const isAdmin = accountData.role === "ROLE_ADMIN";
     if (adminBtn) {
-      if (isAdmin) {
-        adminBtn.classList.remove("hidden");
-        adminBtn.classList.add("flex");
-      } else {
-        adminBtn.classList.add("hidden");
-        adminBtn.classList.remove("flex");
-      }
+      adminBtn.classList.add("hidden");
+      adminBtn.classList.remove("flex");
     }
 
     if (userNameText) {
-      if (isAdmin) {
-        userNameText.innerHTML = `👑 <span class="text-[#facc15] font-black">${accountData.name}</span> <span class="text-[10px] text-[#fef08a] bg-[#713f12] px-1.5 py-0.5 rounded border border-[#eab308] font-bold">최고관리자</span>`;
-      } else {
-        userNameText.textContent = `👤 ${accountData.name}(${accountData.loginId}) 님`;
-      }
+      userNameText.textContent = `👤 ${accountData.name} 님`;
     }
     if (vaultBtn) {
       vaultBtn.classList.remove("hidden");
@@ -789,18 +778,13 @@ const App = {
     // 결과 데이터 미리 계산 및 렌더링 준비
     this.renderResults();
 
-    // [유료 게이트키핑] 정통 사주팔자(500원) 모드일 때는 결제를 완료해야만 결과 화면으로 넘어감!
-    if (this.currentMode === "saju") {
-      this.openPaymentModal("TOSS_PAY");
-      return;
-    }
-
-    // [무료 모드] 오늘의 운세는 결제 없이 즉시 DB 저장 및 결과 화면으로 전환
+    // 데모 버전: 결제 게이트 스킵 → 정통 사주팔자 / 오늘의 운세 모두 즉시 무료 열람
+    this.applyPaywallState(true, null);
     this.saveToDatabase();
     document.getElementById("inputSection").classList.add("hidden");
     document.getElementById("resultSection").classList.remove("hidden");
     window.scrollTo({ top: 0, behavior: "smooth" });
-    this.switchResultTab("daily");
+    this.switchResultTab(this.currentMode === "saju" ? "future" : "daily");
 
     setTimeout(() => {
       this.interactMascot();
@@ -1480,8 +1464,9 @@ const App = {
   // 💳 500원 유료 사주 간편결제 (토스페이 · 카카오페이 · 네이버페이) & MySQL 보관함
   // ==========================================================================
   goToPaidSajuFromDaily() {
-    // 결제를 완료해야만 사주팔자 화면으로 넘어가도록 먼저 결제 모달을 호출
-    this.openPaymentModal("TOSS_PAY");
+    // 데모 버전: 결제 모달 스킵 후 정통 사주팔자 탭으로 즉시 이동
+    this.applyPaywallState(true, null);
+    this.switchResultTab("future");
   },
 
   applyPaywallState(unlocked, receipt) {
@@ -1510,9 +1495,9 @@ const App = {
     }
 
     if (banner) {
-      if (this.isPremiumUnlocked) {
+      if (this.isPremiumUnlocked && receipt) {
         banner.classList.remove("hidden");
-        if (meta && receipt) {
+        if (meta) {
           meta.textContent = `결제수단: ${receipt.paymentMethodKr || "간편결제"} · 결제금액: ${receipt.amount || 500}원 · 주문번호: ${receipt.merchantUid || "-"}`;
         }
       } else {
@@ -1903,7 +1888,7 @@ const App = {
       const iljuName = s.iljuDetail ? s.iljuDetail.name : `${s.pillars.day.gan.char}${s.pillars.day.ji.char}`;
       statusEl.textContent = `📜 ${s.userInfo.name} 님 (${iljuName} · 용신 ${s.yongsin || "-"} · 오늘 ${f ? f.totalScore : 85}점) 연동 중`;
     } else if (this.currentAccount) {
-      statusEl.textContent = `👤 ${this.currentAccount.name} 님 로그인됨 · 사주 입력 시 정밀 연동`;
+      statusEl.textContent = `👤 ${this.currentAccount.name} 님 · 사주 입력 시 정밀 연동`;
     } else {
       statusEl.textContent = "사주·일진·오행 실시간 연동 AI 상담";
     }

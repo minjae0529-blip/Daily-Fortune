@@ -2970,7 +2970,89 @@ class WishPlaza3DEngine {
       .catch(() => {});
   }
 
-    reportWishFulfilled(wishId, storyText) {
+  deleteMyWish(wishId) {
+    const idNum = Number(wishId);
+    const idStr = String(wishId);
+
+    // 1. 세션 목록에서 제거
+    if (Array.isArray(this.sessionMyWishes)) {
+      this.sessionMyWishes = this.sessionMyWishes.filter((w) => w.id !== idNum && String(w.id) !== idStr);
+    }
+
+    // 2. localStorage (내 소원함 & 타 이용자 소원함)에서 제거
+    let removedText = "";
+    try {
+      const savedMine = JSON.parse(localStorage.getItem("chunmyung_wishes") || "[]");
+      const target = savedMine.find((w) => w.id === idNum || String(w.id) === idStr);
+      if (target && target.text) removedText = target.text;
+      const nextMine = savedMine.filter((w) => w.id !== idNum && String(w.id) !== idStr);
+      localStorage.setItem("chunmyung_wishes", JSON.stringify(nextMine));
+
+      const savedComm = JSON.parse(localStorage.getItem("chunmyung_community_wishes") || "[]");
+      const nextComm = savedComm.filter((w) => {
+        if (w.id === idNum || String(w.id) === idStr) return false;
+        if (removedText && w.text === removedText) return false;
+        return true;
+      });
+      localStorage.setItem("chunmyung_community_wishes", JSON.stringify(nextComm));
+    } catch (e) {}
+
+    // 3. 연등광장 서버 캐시 & 성취 목록 & 3D 씬 연등 제거
+    if (Array.isArray(this.plazaWishes)) {
+      this.plazaWishes = this.plazaWishes.filter((w) => w.id !== idNum && String(w.id) !== idStr);
+    }
+    if (Array.isArray(this.plazaFulfillments)) {
+      this.plazaFulfillments = this.plazaFulfillments.filter((f) => f.wishId !== idNum && String(f.wishId) !== idStr);
+    }
+    if (Array.isArray(this.lanterns)) {
+      for (let i = this.lanterns.length - 1; i >= 0; i--) {
+        const l = this.lanterns[i];
+        if (l && l.wish && (l.wish.id === idNum || String(l.wish.id) === idStr)) {
+          if (l.group && this.scene) this.scene.remove(l.group);
+          this.lanterns.splice(i, 1);
+        }
+      }
+    }
+
+    // 4. 백엔드 서버에서 삭제 동기화
+    fetch(`/api/plaza/wishes/${encodeURIComponent(idStr)}`, {
+      method: "DELETE"
+    })
+      .then(() => this.fetchPlazaServerState())
+      .catch(() => {});
+
+    // 5. 3D 에마 소원판 & 축하 패널 & App 목록 동기화
+    this.refreshMyWishBoard();
+    this.refreshOtherWishBoard();
+    this.renderFulfillmentPlazaPanel();
+
+    if (window.App) {
+      if (Array.isArray(window.App.communityWishes)) {
+        window.App.communityWishes = window.App.communityWishes.filter((w) => {
+          if (w.id === idNum || String(w.id) === idStr) return false;
+          if (removedText && w.text === removedText) return false;
+          return true;
+        });
+      }
+      if (typeof window.App.renderWishHistory === "function") window.App.renderWishHistory();
+      if (typeof window.App.renderWishPlaza === "function") window.App.renderWishPlaza();
+      if (typeof window.App.renderHomeCommunityWishes === "function") window.App.renderHomeCommunityWishes(0);
+    }
+
+    // 6. 열린 모달 즉시 갱신
+    const modal = document.getElementById("myWishBoardModal");
+    if (modal && modal.open) {
+      this.openMyWishModal();
+    }
+    const otherModal = document.getElementById("otherWishBoardModal");
+    if (otherModal && otherModal.open && typeof this.openOtherWishesListModal === "function") {
+      this.openOtherWishesListModal(this.otherWishesOffset || 0);
+    }
+
+    this.showToast("🗑️ 소원이 내 소원함과 타 이용자 소원함에서 삭제되었습니다.");
+  }
+
+  reportWishFulfilled(wishId, storyText) {
     const myWishes = this.loadMyWishes();
     const target = myWishes.find((w) => w.id === wishId);
     const author = (target && target.author) || this.player.name || "천명 도반";
@@ -3587,9 +3669,15 @@ class WishPlaza3DEngine {
       wishes.forEach((w) => {
         html += `
           <div style="border:1px solid ${w.fulfilled ? "#f59e0b" : "#5b3a1c"};background:${w.fulfilled ? "#2e1c0c" : "#26180f"};border-radius:12px;padding:12px 14px;margin-bottom:10px;">
-            <div style="display:flex;justify-content:space-between;font-size:11px;color:#fbbf24;margin-bottom:5px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11px;color:#fbbf24;margin-bottom:5px;">
               <span>${w.category || "소원"} · ${w.author || defaultAuthor}</span>
-              <span>${w.date || ""}  ❤️ ${w.cheers || 0}</span>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span>${w.date || ""}  ❤️ ${w.cheers || 0}</span>
+                <button type="button" onclick="WishPlaza.deleteMyWish(${JSON.stringify(w.id)})"
+                  style="padding:3px 8px;border-radius:6px;background:rgba(127,29,29,0.85);color:#fecaca;border:1px solid #ef4444;font-size:10px;font-weight:800;cursor:pointer;">
+                  🗑️ 삭제
+                </button>
+              </div>
             </div>
             <div style="font-size:13px;line-height:1.55;color:#f7eedc;margin-bottom:8px;">"${w.text || ""}"</div>
             ${

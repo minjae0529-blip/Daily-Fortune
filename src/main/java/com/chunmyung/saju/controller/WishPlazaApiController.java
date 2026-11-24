@@ -203,6 +203,21 @@ public class WishPlazaApiController {
         return ResponseEntity.ok(ApiResponseDto.ok(created, "소원이 이루어졌다면, 다시 와서 알려주세요"));
     }
 
+    @Operation(summary = "소원 삭제 (내 소원함 + 타 이용자 소원함 및 관련 성취 이벤트 동시 삭제)")
+    @DeleteMapping("/wishes/{id}")
+    public ResponseEntity<ApiResponseDto<Map<String, Object>>> deleteWish(@PathVariable long id) {
+        boolean removed = wishes.removeIf(w -> w.getId() == id);
+        fulfillments.removeIf(f -> f.getWishId() == id);
+        return ResponseEntity.ok(ApiResponseDto.ok(
+                Map.of(
+                        "deletedId", id,
+                        "removed", removed,
+                        "totalWishes", wishes.size()
+                ),
+                "소원이 삭제되었습니다."
+        ));
+    }
+
     @Operation(summary = "소원 응원하기")
     @PostMapping("/wishes/{id}/cheer")
     public ResponseEntity<ApiResponseDto<PlazaWishDto>> cheerWish(@PathVariable long id) {

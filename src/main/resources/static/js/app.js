@@ -5098,7 +5098,7 @@ https://minjae0529-blip.github.io/Daily-Fortune/`;
 
     container.innerHTML = wishes.map(w => `
       <div class="p-3 rounded-xl bg-[#24160f] border border-amber-900/80 flex items-start justify-between gap-2.5">
-        <div class="space-y-1">
+        <div class="space-y-1 flex-1">
           <div class="flex items-center space-x-2 text-[11px]">
             <span class="text-amber-400 font-bold text-[10px] mr-1.5">[${w.category}]</span>
             <span class="text-stone-300 font-medium">${w.author || '나의 소원'}</span>
@@ -5106,11 +5106,50 @@ https://minjae0529-blip.github.io/Daily-Fortune/`;
           </div>
           <p class="text-xs text-stone-200 font-serif-kr">${w.text}</p>
         </div>
-        <span class="shrink-0 px-2.5 py-1 rounded-full bg-[#180e08] border border-amber-900 text-amber-300 text-[10px] font-mono">
-          ❤️ 응원 ${w.cheers || 1}
-        </span>
+        <div class="shrink-0 flex items-center space-x-1.5">
+          <span class="px-2.5 py-1 rounded-full bg-[#180e08] border border-amber-900 text-amber-300 text-[10px] font-mono">
+            ❤️ 응원 ${w.cheers || 1}
+          </span>
+          <button type="button" onclick="App.deleteMyWish(${JSON.stringify(w.id)})" class="px-2.5 py-1 rounded-full bg-[#450a0a] hover:bg-[#7f1d1d] border border-red-500/70 text-red-200 text-[10px] font-bold transition cursor-pointer">
+            🗑️ 삭제
+          </button>
+        </div>
       </div>
     `).join("");
+  },
+
+  deleteMyWish(wishId) {
+    if (window.WishPlaza && typeof window.WishPlaza.deleteMyWish === "function") {
+      window.WishPlaza.deleteMyWish(wishId);
+      return;
+    }
+    const idNum = Number(wishId);
+    const idStr = String(wishId);
+    let removedText = "";
+    try {
+      const saved = JSON.parse(localStorage.getItem("chunmyung_wishes") || "[]");
+      const target = saved.find((w) => w.id === idNum || String(w.id) === idStr);
+      if (target && target.text) removedText = target.text;
+      localStorage.setItem(
+        "chunmyung_wishes",
+        JSON.stringify(saved.filter((w) => w.id !== idNum && String(w.id) !== idStr))
+      );
+
+      this.initCommunityWishes();
+      this.communityWishes = this.communityWishes.filter((w) => {
+        if (w.id === idNum || String(w.id) === idStr) return false;
+        if (removedText && w.text === removedText) return false;
+        return true;
+      });
+      localStorage.setItem("chunmyung_community_wishes", JSON.stringify(this.communityWishes));
+    } catch (e) {}
+
+    fetch(`/api/plaza/wishes/${encodeURIComponent(idStr)}`, { method: "DELETE" }).catch(() => {});
+    this.renderWishHistory();
+    this.renderWishPlaza();
+    if (typeof this.renderHomeCommunityWishes === "function") {
+      this.renderHomeCommunityWishes(0);
+    }
   },
 
 };

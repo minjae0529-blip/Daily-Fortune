@@ -813,6 +813,43 @@
         </div>
       </div>
 
+      <!-- ==================================================================
+           🏮 홈페이지 하단 스크롤 영역: 타 이용자 소원함 (한 페이지 8개 offset 출력)
+           ================================================================== -->
+      <div id="homeCommunityWishSection" class="max-w-3xl mx-auto mt-8 modern-card p-5 sm:p-7 space-y-4 bg-[#1c130d] border-2 border-[#d4a359] text-[#f7eedc] rounded-2xl shadow-xl">
+        <div class="dancheong-bar -mx-5 sm:-mx-7 -mt-5 sm:-mt-7 mb-3 rounded-t-xl"></div>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#b48a4e]/40 pb-3.5">
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="text-xl">🏮</span>
+              <h3 class="text-base sm:text-lg font-black font-serif-kr text-[#fce8bd]">타 이용자 소원함 (도반들의 소원판)</h3>
+              <span id="homeOtherWishOffsetBadge" class="px-2.5 py-0.5 rounded-full bg-[#8c1d1d] text-[#ffe8b3] text-[10px] font-bold border border-[#d4a359] font-mono">
+                offset: 0 · 8개 출력
+              </span>
+            </div>
+            <p class="text-[11px] text-[#d6c0a0] mt-0.5">
+              사찰 내부 내 소원함과 타 이용자 소원함에 등록된 소원들이 한 페이지당 8개씩 출력됩니다.
+            </p>
+          </div>
+          <div class="flex items-center space-x-2 shrink-0">
+            <button type="button" onclick="App.openWishPlaza()" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#d97706] to-[#b45309] hover:from-[#f59e0b] hover:to-[#d97706] text-white border border-[#fde68a] text-xs font-extrabold shadow flex items-center space-x-1.5 cursor-pointer">
+              <span>🏮</span>
+              <span>3D 사찰 연등광장으로 이동</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 8 Wishes Grid (1페이지당 최대 8개 출력) -->
+        <div id="homeCommunityWishGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          <!-- Populated dynamically by App.renderHomeCommunityWishes(offset) -->
+        </div>
+
+        <!-- Offset Pagination Controls (8개 단위 페이지 이동) -->
+        <div id="homeCommunityWishPagination" class="pt-2 flex items-center justify-between flex-wrap gap-2 border-t border-stone-800 text-xs">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
     </section>
 
     <!-- SECTION 2: Results Dashboard View -->

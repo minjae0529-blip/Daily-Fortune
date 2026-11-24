@@ -133,6 +133,7 @@ const App = {
     this.initCommunityWishes();
     this.renderWishPlaza();
     this.renderWishHistory();
+    this.renderHomeCommunityWishes(0);
     this.setMode("daily");
     this.checkAuthSession();
 
@@ -4488,20 +4489,25 @@ https://minjae0529-blip.github.io/Daily-Fortune/`;
       date: new Date().toLocaleDateString("ko-KR")
     };
 
-    // 1. Add to WishPlaza engine world directly
+    // 2. Add to localStorage community & my wishes (내 소원함 + 타 이용자 소원함 동시 반영)
+    this.initCommunityWishes();
+    if (!this.communityWishes.some((w) => w.id === newWish.id)) {
+      this.communityWishes.unshift(newWish);
+    }
+    try {
+      localStorage.setItem("chunmyung_community_wishes", JSON.stringify(this.communityWishes.slice(0, 60)));
+      const mySaved = JSON.parse(localStorage.getItem("chunmyung_wishes") || "[]");
+      if (!mySaved.some((w) => w.id === newWish.id)) {
+        mySaved.unshift(newWish);
+      }
+      localStorage.setItem("chunmyung_wishes", JSON.stringify(mySaved.slice(0, 40)));
+    } catch (e) {}
+
+    // 1. Add to WishPlaza engine world directly (also syncs both 3D boards & server)
     if (window.WishPlaza) {
       window.WishPlaza.addPlayerNewLantern(newWish);
     }
-
-    // 2. Add to localStorage community & my wishes
-    this.initCommunityWishes();
-    this.communityWishes.unshift(newWish);
-    try {
-      localStorage.setItem("chunmyung_community_wishes", JSON.stringify(this.communityWishes.slice(0, 30)));
-      const mySaved = JSON.parse(localStorage.getItem("chunmyung_wishes") || "[]");
-      mySaved.unshift(newWish);
-      localStorage.setItem("chunmyung_wishes", JSON.stringify(mySaved.slice(0, 20)));
-    } catch (e) {}
+    this.renderHomeCommunityWishes(0);
 
     // Close modal & reset inputs
     const dialog = document.getElementById("plazaLaunchModal");
@@ -4510,6 +4516,146 @@ https://minjae0529-blip.github.io/Daily-Fortune/`;
       else dialog.removeAttribute("open");
     }
     if (textEl) textEl.value = "";
+  },
+
+  homeWishOffset: 0,
+  homeWishLimit: 8,
+
+  /* 사찰 내부 타 이용자 소원함에서 "타 이용자의 소원을 보시겠습니까 ?" -> [예] 클릭 시 화면 전환 & 스크롤 */
+  navigateToHomeOtherWishes() {
+    this.closeWishPlaza();
+    const resultSec = document.getElementById("resultSection");
+    const inputSec = document.getElementById("inputSection");
+    if (resultSec && !resultSec.classList.contains("hidden")) {
+      resultSec.classList.add("hidden");
+    }
+    if (inputSec && inputSec.classList.contains("hidden")) {
+      inputSec.classList.remove("hidden");
+    }
+    this.renderHomeCommunityWishes(0);
+    setTimeout(() => {
+      const target = document.getElementById("homeCommunityWishSection");
+      if (target) {
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 120);
+  },
+
+  /* 홈페이지 첫 화면 하단 타 이용자 소원함: 한 페이지에 8개만(offset 단위) 출력 */
+  renderHomeCommunityWishes(offset = 0) {
+    this.initCommunityWishes();
+    let allWishes = [];
+    try {
+      const saved = JSON.parse(localStorage.getItem("chunmyung_community_wishes") || "null");
+      if (saved && Array.isArray(saved) && saved.length > 0) {
+        allWishes = saved;
+        this.communityWishes = saved;
+      } else {
+        allWishes = this.communityWishes || [];
+      }
+    } catch (e) {
+      allWishes = this.communityWishes || [];
+    }
+
+    const limit = 8; // 한 페이지당 8개 고정 출력
+    const total = allWishes.length;
+    const maxOffset = Math.max(0, Math.floor(Math.max(0, total - 1) / limit) * limit);
+    const safeOffset = Math.max(0, Math.min(offset, maxOffset));
+    this.homeWishOffset = safeOffset;
+    this.homeWishLimit = limit;
+
+    const slice = allWishes.slice(safeOffset, safeOffset + limit);
+    const gridEl = document.getElementById("homeCommunityWishGrid");
+    const pagEl = document.getElementById("homeCommunityWishPagination");
+    const badgeEl = document.getElementById("homeOtherWishOffsetBadge");
+
+    if (badgeEl) {
+      badgeEl.textContent = `offset: ${safeOffset} · ${slice.length}개 출력 (전체 ${total}개)`;
+    }
+
+    let cheeredIds = [];
+    try {
+      cheeredIds = JSON.parse(localStorage.getItem("chunmyung_cheered_wish_ids") || "[]");
+    } catch (e) {}
+
+    if (gridEl) {
+      if (slice.length === 0) {
+        gridEl.innerHTML = `<div class="col-span-2 p-6 text-center text-stone-400">아직 등록된 소원이 없습니다.</div>`;
+      } else {
+        gridEl.innerHTML = slice.map((w, idx) => {
+          const isCheered = cheeredIds.includes(w.id);
+          const itemNo = safeOffset + idx + 1;
+          return `
+            <div class="p-3.5 rounded-xl bg-[#26180f] border ${w.fulfilled ? "border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.25)]" : "border-[#5b3a1c]"} flex flex-col justify-between gap-2.5">
+              <div class="space-y-1.5">
+                <div class="flex items-center justify-between text-[11px]">
+                  <div class="flex items-center space-x-1.5">
+                    <span class="px-1.5 py-0.5 rounded bg-[#18100b] text-amber-400 font-mono text-[10px] border border-amber-900">#${itemNo}</span>
+                    <span class="px-2 py-0.5 rounded bg-[#362419] text-amber-200 font-bold text-[10px]">${w.category || "소원"}</span>
+                    <span class="text-stone-200 font-bold">${w.author || "익명의 도반"}</span>
+                  </div>
+                  <span class="text-stone-400 text-[10px] font-mono">${w.date || ""}</span>
+                </div>
+                <p class="text-xs text-[#fff6df] font-serif-kr leading-relaxed">
+                  "${w.text || ""}"
+                </p>
+                ${
+                  w.fulfilled
+                    ? `<div class="p-2 rounded-lg bg-amber-500/15 border border-amber-400/60 text-[11px] text-amber-200">
+                         🎊 <strong>[소원 성취]</strong> "${w.fulfillmentStory || "소원이 이루어졌습니다!"}"
+                       </div>`
+                    : ""
+                }
+              </div>
+              <div class="flex items-center justify-between pt-1.5 border-t border-stone-800/80">
+                <span class="text-[10px] text-stone-400">${w.fulfilled ? "🌟 성취된 소원" : "🏮 간절한 소원"}</span>
+                <button type="button" onclick="App.cheerWish(${w.id})" class="px-3 py-1 rounded-full ${isCheered ? "bg-[#991b1b] border-amber-400 text-[#fef08a]" : "bg-[#362419] hover:bg-[#8c1d1d] border-stone-700 text-stone-200"} border text-[11px] font-bold flex items-center space-x-1 transition cursor-pointer">
+                  <span>${isCheered ? "❤️" : "🙏"}</span>
+                  <span>${isCheered ? "응원 완료" : "응원하기"}</span>
+                  <span class="ml-1 px-1.5 py-0.2 rounded-full bg-[#140c07] text-amber-300 font-mono text-[10px]">${w.cheers || 1}</span>
+                </button>
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+    }
+
+    if (pagEl) {
+      const totalPages = Math.max(1, Math.ceil(total / limit));
+      const currentPage = Math.floor(safeOffset / limit) + 1;
+      const prevOffset = Math.max(0, safeOffset - limit);
+      const nextOffset = Math.min(maxOffset, safeOffset + limit);
+
+      let pageBtns = "";
+      for (let p = 1; p <= totalPages; p++) {
+        const pOff = (p - 1) * limit;
+        const active = p === currentPage;
+        pageBtns += `
+          <button type="button" onclick="App.renderHomeCommunityWishes(${pOff})"
+            class="px-2.5 py-1 rounded-lg font-mono text-xs font-bold border cursor-pointer ${active ? "bg-[#8c1d1d] text-[#ffe8b3] border-[#f59e0b]" : "bg-[#26180f] text-stone-300 border-stone-700 hover:border-amber-600"}">
+            ${p}
+          </button>
+        `;
+      }
+
+      pagEl.innerHTML = `
+        <div class="text-[11px] text-[#d6c0a0] font-mono">
+          페이지 <strong>${currentPage} / ${totalPages}</strong> (offset: <strong>${safeOffset}</strong> · limit: <strong>8</strong> · 표시: ${total === 0 ? 0 : safeOffset + 1}~${safeOffset + slice.length} / 총 ${total}개)
+        </div>
+        <div class="flex items-center space-x-1.5">
+          <button type="button" onclick="App.renderHomeCommunityWishes(${prevOffset})" ${safeOffset === 0 ? "disabled" : ""}
+            class="px-2.5 py-1 rounded-lg bg-[#26180f] text-stone-200 border border-stone-700 text-xs font-bold ${safeOffset === 0 ? "opacity-40 cursor-not-allowed" : "hover:border-amber-500 cursor-pointer"}">
+            ◀ 이전 8개
+          </button>
+          ${pageBtns}
+          <button type="button" onclick="App.renderHomeCommunityWishes(${nextOffset})" ${safeOffset >= maxOffset ? "disabled" : ""}
+            class="px-2.5 py-1 rounded-lg bg-[#26180f] text-stone-200 border border-stone-700 text-xs font-bold ${safeOffset >= maxOffset ? "opacity-40 cursor-not-allowed" : "hover:border-amber-500 cursor-pointer"}">
+            다음 8개 ▶
+          </button>
+        </div>
+      `;
+    }
   },
 
   // ==========================================================================
@@ -4558,12 +4704,12 @@ https://minjae0529-blip.github.io/Daily-Fortune/`;
   },
 
   initCommunityWishes() {
-    if (this.communityWishes && this.communityWishes.length > 0) return;
+    if (this.communityWishes && this.communityWishes.length >= 12) return;
+    let existing = [];
     try {
       const saved = JSON.parse(localStorage.getItem("chunmyung_community_wishes") || "null");
       if (saved && Array.isArray(saved) && saved.length > 0) {
-        this.communityWishes = saved;
-        return;
+        existing = saved;
       }
     } catch (e) {}
 
@@ -4617,12 +4763,66 @@ https://minjae0529-blip.github.io/Daily-Fortune/`;
             text: "오랫동안 가슴을 짓누르던 불안감과 자책을 내려놓고, 온전히 나 자신을 인정하고 사랑하며 하루하루 평온하게 살아갈 수 있는 지혜와 용기를 주세요.",
             cheers: 92,
             date: "2026. 11. 22."
+          },
+          {
+            id: 107,
+            category: "🎓 시험·합격",
+            author: "간호학과 4학년",
+            text: "국가고시 전원 합격하고 환자분들의 손을 따뜻하게 잡아주는 멋진 간호사가 되겠습니다!",
+            cheers: 88,
+            date: "2026. 11. 18."
+          },
+          {
+            id: 108,
+            category: "🌿 건강·장수",
+            author: "효자 손자",
+            text: "할아버지 할머니 오래오래 건강하셔서 손주 결혼하는 모습까지 꼭 지켜봐 주세요.",
+            cheers: 84,
+            date: "2026. 11. 18."
+          },
+          {
+            id: 109,
+            category: "💰 재물·번창",
+            author: "청년 창업가 박도반",
+            text: "밤낮으로 준비한 첫 서비스가 세상에 좋은 가치를 전하고 팀원들 모두 보람과 결실을 맺기를 바랍니다.",
+            cheers: 79,
+            date: "2026. 11. 17."
+          },
+          {
+            id: 110,
+            category: "🏡 가족·화목",
+            author: "예비 신부",
+            text: "다가오는 달에 올리는 결혼식과 새로운 출발에 축복과 평안이 가득하기를 소원합니다.",
+            cheers: 72,
+            date: "2026. 11. 17."
+          },
+          {
+            id: 111,
+            category: "🕊️ 마음·평안",
+            author: "수험생 어머니",
+            text: "그동안 애쓴 우리 아이가 결과에 상관없이 스스로를 자랑스러워하며 평안한 마음을 갖기를 기도합니다.",
+            cheers: 67,
+            date: "2026. 11. 16."
+          },
+          {
+            id: 112,
+            category: "💖 애정·인연",
+            author: "오랜 친구",
+            text: "멀어진 소중한 인연과 다시 마음이 닿아 웃으며 안부를 나눌 수 있는 날이 오기를 바랍니다.",
+            cheers: 61,
+            date: "2026. 11. 16."
           }
         ];
 
-    this.communityWishes = seed;
+    const merged = [...existing];
+    for (const s of seed) {
+      if (!merged.some((w) => w.id === s.id || (w.text === s.text && w.author === s.author))) {
+        merged.push(s);
+      }
+    }
+    this.communityWishes = merged;
     try {
-      localStorage.setItem("chunmyung_community_wishes", JSON.stringify(seed));
+      localStorage.setItem("chunmyung_community_wishes", JSON.stringify(merged));
     } catch (e) {}
   },
 
@@ -4783,6 +4983,8 @@ https://minjae0529-blip.github.io/Daily-Fortune/`;
     }
 
     this.renderWishPlaza();
+    this.renderHomeCommunityWishes(this.homeWishOffset || 0);
+    fetch(`/api/plaza/wishes/${wishId}/cheer`, { method: "POST" }).catch(() => {});
 
     const skyText = document.getElementById("wishSkyText");
     if (skyText) {
@@ -4844,15 +5046,22 @@ https://minjae0529-blip.github.io/Daily-Fortune/`;
     this.initCommunityWishes();
     this.communityWishes.unshift(newWish);
     try {
-      localStorage.setItem("chunmyung_community_wishes", JSON.stringify(this.communityWishes.slice(0, 30)));
+      localStorage.setItem("chunmyung_community_wishes", JSON.stringify(this.communityWishes.slice(0, 60)));
     } catch (e) {}
 
     // 2. Add to personal wish history
     try {
       const saved = JSON.parse(localStorage.getItem("chunmyung_wishes") || "[]");
       saved.unshift(newWish);
-      localStorage.setItem("chunmyung_wishes", JSON.stringify(saved.slice(0, 20)));
+      localStorage.setItem("chunmyung_wishes", JSON.stringify(saved.slice(0, 40)));
     } catch (e) {}
+
+    fetch("/api/plaza/wishes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newWish)
+    }).catch(() => {});
+    this.renderHomeCommunityWishes(0);
 
     setTimeout(() => {
       if (input) input.value = "";

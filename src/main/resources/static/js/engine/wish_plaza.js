@@ -77,7 +77,13 @@ class WishPlaza3DEngine {
     this.isNearShrine = false;
     this.isNearBuddhaAltar = false;
     this.isNearWishBoard = false;
+    this.isNearOtherWishBoard = false;
     this.isNearCoinPond = false;
+    this.otherWishBoardGroup = null;
+    this.otherWishBoardPlaques = null;
+    this.plazaFulfillments = [];
+    this.plazaPollTimer = null;
+    this.fulfillmentPanelEl = null;
     this.fireworks = [];        // 소원 등불 폭죽 파티클
     this.launching = [];        // 하늘로 올라가는 소원 등불
     this.timeline = [];         // 지연 실행 이벤트
@@ -171,6 +177,7 @@ class WishPlaza3DEngine {
     this.buildLotusPondAndBridge();
     this.buildPineTreesAndNature();
     this.buildMyWishBoard();
+    this.buildOtherWishBoard();
     this.buildCoinPond();
     this.buildPlayerCharacter();
     this.initLanterns();
@@ -200,6 +207,8 @@ class WishPlaza3DEngine {
 
     this.ensureOverlayUI();
     this.refreshMyWishBoard();
+    this.refreshOtherWishBoard();
+    this.startPlazaServerSync();
     this.updateHudCount();
     if (this.clock) this.clock.start();
     this.loop();
@@ -207,6 +216,7 @@ class WishPlaza3DEngine {
 
   close() {
     this.isRunning = false;
+    this.stopPlazaServerSync();
     if (this.animFrameId) {
       cancelAnimationFrame(this.animFrameId);
       this.animFrameId = null;
@@ -2101,8 +2111,18 @@ class WishPlaza3DEngine {
   /* ==========================================================================
      소원 등불 발사: 열기구처럼 천천히 하늘로 → 폭죽처럼 터짐 → 축복 문구
      ========================================================================== */
-  addPlayerNewLantern(newWish) {
+  addPlayerNewLantern(newWish, fromMyBoard = false) {
     this.sessionMyWishes.unshift(newWish);
+
+    // 서버(연등광장)에도 동기화하여 타 이용자 소원함에 즉시 반영
+    fetch("/api/plaza/wishes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newWish)
+    }).then(() => this.fetchPlazaServerState()).catch(() => {});
+
+    this.refreshMyWishBoard();
+    this.refreshOtherWishBoard();
 
     const inHall = this.player.z < -33 && Math.abs(this.player.x) < 30;
     const start = inHall
@@ -2131,12 +2151,13 @@ class WishPlaza3DEngine {
     this.launching.push(obj);
     this.focusLaunch = obj;
 
-    // 하늘로 올라가는 모습이 보이도록 카메라를 낮고 멀리
-    this.cameraOrbit.elevation = 0.08;
-    this.cameraOrbit.distance = Math.max(this.cameraOrbit.distance, 14);
+    if (!fromMyBoard) {
+      this.cameraOrbit.elevation = 0.08;
+      this.cameraOrbit.distance = Math.max(this.cameraOrbit.distance, 14);
+    }
 
     this.playTempleBellSound();
-    this.showToast("🏮 소원 등불이 하늘 높이 천천히 올라갑니다… 끝까지 지켜봐 주세요");
+    this.showToast("🏮 소원이 이루어졌다면, 다시 와서 알려주세요! (소원 등불이 하늘로 올라갑니다)");
   }
 
   burstLaunchedLantern(obj) {
@@ -2156,12 +2177,10 @@ class WishPlaza3DEngine {
     });
 
     const BLESS = [
-      "좋은 일만 있을 거예요 ✨",
-      "당신의 소원, 하늘이 꼭 들어줄 거예요",
-      "곧 환하게 웃는 날이 올 거예요",
-      "당신은 이미 충분히 잘 해내고 있어요",
-      "걸음마다 행운이 함께할 거예요",
-      "간절한 마음이 별빛이 되어 전해졌어요"
+      "좋은 일만 있을 거예요 ✨ (소원이 이루어졌다면, 다시 와서 알려주세요)",
+      "당신의 소원, 하늘이 꼭 들어줄 거예요 · 이루어지면 다시 와서 알려주세요!",
+      "곧 환하게 웃는 날이 올 거예요 · 소원이 이루어졌다면 다시 찾아와 알려주세요",
+      "걸음마다 행운이 함께할 거예요 · 소원이 이루어지면 다시 와서 기쁨을 나눠주세요"
     ];
     const msg = BLESS[Math.floor(Math.random() * BLESS.length)];
     this.timeline.push({
@@ -2169,13 +2188,13 @@ class WishPlaza3DEngine {
       fn: () => this.showBlessing("🎆", "당신의 소원이 하늘에 닿았어요", msg, 6500)
     });
 
-    // 폭죽이 지나간 뒤, 소원은 하늘 위 등불로 남고 내 소원함에도 걸림
     this.timeline.push({
       delay: 3.4,
       fn: () => {
         const skyCount = this.lanterns.filter((l) => l.isSky).length;
         this.lanterns.push(this.createSkyWishLantern(obj.wish, skyCount, true));
         this.refreshMyWishBoard();
+        this.refreshOtherWishBoard();
         this.updateHudCount();
       }
     });
@@ -2219,7 +2238,6 @@ class WishPlaza3DEngine {
   }
 
   updateSkyEffects(dt, elapsedTime) {
-    // 1) 상승 중인 소원 등불
     for (let i = this.launching.length - 1; i >= 0; i--) {
       const o = this.launching[i];
       o.t += dt;
@@ -2238,7 +2256,6 @@ class WishPlaza3DEngine {
       }
     }
 
-    // 2) 폭죽 파티클
     for (let i = this.fireworks.length - 1; i >= 0; i--) {
       const fw = this.fireworks[i];
       const attr = fw.mesh.geometry.attributes.position;
@@ -2261,7 +2278,6 @@ class WishPlaza3DEngine {
       }
     }
 
-    // 3) 지연 이벤트
     for (let i = this.timeline.length - 1; i >= 0; i--) {
       const ev = this.timeline[i];
       ev.delay -= dt;
@@ -2271,14 +2287,234 @@ class WishPlaza3DEngine {
       }
     }
 
-    // 4) 동전/물결 효과
     for (let i = this.fxList.length - 1; i >= 0; i--) {
       if (this.fxList[i].update(dt)) this.fxList.splice(i, 1);
     }
   }
 
   /* ==========================================================================
-     내 소원함 (絵馬掛所): 사찰 본당 안 서쪽 벽, 내가 빈 소원이 에마(絵馬) 패로 걸림
+     연등광장 내부 전용 서버 동기화 & 소원 성취 실시간 축하 보드 (연등광장 내부에서만 동작)
+     ========================================================================== */
+  startPlazaServerSync() {
+    this.ensureFulfillmentPlazaPanel();
+    this.fetchPlazaServerState();
+    if (this.plazaPollTimer) clearInterval(this.plazaPollTimer);
+    this.plazaPollTimer = setInterval(() => {
+      if (this.isRunning) {
+        this.fetchPlazaServerState();
+      }
+    }, 4000);
+  }
+
+  stopPlazaServerSync() {
+    if (this.plazaPollTimer) {
+      clearInterval(this.plazaPollTimer);
+      this.plazaPollTimer = null;
+    }
+  }
+
+  ensureFulfillmentPlazaPanel() {
+    if (this.fulfillmentPanelEl || !this.container) return;
+    const panel = document.createElement("aside");
+    panel.id = "wishPlazaFulfillmentPanel";
+    panel.style.cssText =
+      "position:absolute;left:16px;top:76px;z-index:20;width:300px;max-width:calc(100vw - 32px);" +
+      "background:rgba(24,14,8,0.92);border:1.5px solid #f59e0b;border-radius:16px;padding:12px 14px;" +
+      "box-shadow:0 0 25px rgba(245,158,11,0.3);color:#f7eedc;font-family:'Noto Serif KR',serif;" +
+      "backdrop-filter:blur(6px);pointer-events:auto;";
+    this.container.appendChild(panel);
+    this.fulfillmentPanelEl = panel;
+    this.renderFulfillmentPlazaPanel();
+  }
+
+  fetchPlazaServerState() {
+    if (!this.isRunning) return;
+    fetch("/api/plaza/state")
+      .then((r) => r.json())
+      .then((res) => {
+        if (!res || !res.success || !res.data) return;
+        const serverWishes = res.data.wishes || [];
+        const serverFulfillments = res.data.fulfillments || [];
+
+        // 동기화: 서버 소원 목록과 로컬 타 이용자 소원함 병합
+        if (serverWishes.length > 0) {
+          try {
+            const localComm = JSON.parse(localStorage.getItem("chunmyung_community_wishes") || "[]");
+            const merged = [...serverWishes];
+            if (Array.isArray(localComm)) {
+              for (const lw of localComm) {
+                if (!merged.some((sw) => sw.id === lw.id || (sw.text === lw.text && sw.author === lw.author))) {
+                  merged.push(lw);
+                }
+              }
+            }
+            localStorage.setItem("chunmyung_community_wishes", JSON.stringify(merged.slice(0, 60)));
+            if (window.App) {
+              window.App.communityWishes = merged;
+            }
+          } catch (e) {}
+          this.refreshOtherWishBoard();
+        }
+
+        // 새로운 성취 소식이 도착했는지 확인
+        if (this.plazaFulfillments.length > 0 && serverFulfillments.length > this.plazaFulfillments.length) {
+          const newest = serverFulfillments[0];
+          this.spawnFirework({ x: this.player.x, y: this.player.y + 16, z: this.player.z - 10 }, 0xffd166, 160, 9);
+          this.playFireworkSound();
+          this.showBlessing(
+            "🎊",
+            "[연등광장 소원 성취] " + newest.author + " 도반님의 소원이 이루어졌습니다!",
+            "\"" + newest.fulfillmentStory + "\"",
+            6000
+          );
+        }
+        this.plazaFulfillments = serverFulfillments;
+        this.renderFulfillmentPlazaPanel();
+      })
+      .catch(() => {});
+  }
+
+  renderFulfillmentPlazaPanel() {
+    if (!this.fulfillmentPanelEl) return;
+    const list = (this.plazaFulfillments || []).slice(0, 2);
+    let cheeredFulfillIds = [];
+    try {
+      cheeredFulfillIds = JSON.parse(localStorage.getItem("chunmyung_congrats_ids") || "[]");
+    } catch (e) {}
+
+    let html = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;border-bottom:1px solid rgba(212,163,89,0.35);padding-bottom:6px;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:16px;">🎊</span>
+          <div>
+            <div style="font-size:12px;font-weight:900;color:#fde047;">소원 성취 도반 축하하기</div>
+            <div style="font-size:10px;color:#d6c0a0;">연등광장 내부 접속자 실시간 축하</div>
+          </div>
+        </div>
+        <button type="button" onclick="WishPlaza.openMyWishModal()" style="font-size:10px;padding:3px 8px;border-radius:8px;background:#8c1d1d;color:#ffe8b3;border:1px solid #d4a359;font-weight:700;cursor:pointer;">
+          성취 알리기
+        </button>
+      </div>
+    `;
+
+    if (list.length === 0) {
+      html += `<div style="font-size:11px;color:#a8957a;padding:6px 0;">소원이 이루어졌다면 내 소원함에서 기쁜 소식을 알려 축하를 받아보세요!</div>`;
+    } else {
+      list.forEach((f) => {
+        const done = cheeredFulfillIds.includes(f.id);
+        html += `
+          <div style="background:rgba(38,24,15,0.9);border:1px solid #78350f;border-radius:10px;padding:8px 10px;margin-bottom:6px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#fbbf24;font-weight:700;margin-bottom:3px;">
+              <span>${f.category || "🌟 소원 성취"} · ${f.author}</span>
+              <span style="color:#a8957a;">${f.date || ""}</span>
+            </div>
+            <div style="font-size:11px;color:#fff3c4;line-height:1.45;margin-bottom:6px;font-weight:600;">
+              "${f.fulfillmentStory}"
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:10px;color:#fed7aa;">🎉 광장 도반 축하 <strong style="color:#fde047;">${f.congratsCount || 1}</strong>회</span>
+              <button type="button" onclick="WishPlaza.congratulateFulfillment(${f.id})"
+                style="font-size:10px;padding:4px 10px;border-radius:8px;font-weight:800;cursor:pointer;border:1px solid #fbbf24;${done ? "background:#442918;color:#fde68a;" : "background:linear-gradient(to right,#d97706,#b45309);color:#fff;"}">
+                ${done ? "👏 축하 완료 (" + (f.congratsCount || 1) + ")" : "👏 축하 보내기"}
+              </button>
+            </div>
+          </div>
+        `;
+      });
+    }
+    this.fulfillmentPanelEl.innerHTML = html;
+  }
+
+  congratulateFulfillment(fulfillId) {
+    fetch("/api/plaza/fulfillments/" + fulfillId + "/congratulate", { method: "POST" })
+      .then((r) => r.json())
+      .then((res) => {
+        if (!res || !res.success || !res.data) return;
+        const updated = res.data;
+        try {
+          const ids = JSON.parse(localStorage.getItem("chunmyung_congrats_ids") || "[]");
+          if (!ids.includes(fulfillId)) ids.push(fulfillId);
+          localStorage.setItem("chunmyung_congrats_ids", JSON.stringify(ids));
+        } catch (e) {}
+
+        const idx = this.plazaFulfillments.findIndex((f) => f.id === fulfillId);
+        if (idx !== -1) this.plazaFulfillments[idx] = updated;
+        this.renderFulfillmentPlazaPanel();
+
+        this.playTempleBellSound();
+        this.spawnFirework({ x: this.player.x, y: this.player.y + 12, z: this.player.z - 6 }, 0xffd166, 120, 8);
+        this.showToast("👏 " + updated.author + " 도반님의 소원 성취에 따뜻한 축하를 보냈습니다! (축하 " + updated.congratsCount + "회)");
+      })
+      .catch(() => {});
+  }
+
+  reportWishFulfilled(wishId, storyText) {
+    const myWishes = this.loadMyWishes();
+    const target = myWishes.find((w) => w.id === wishId);
+    const author = (target && target.author) || this.player.name || "천명 도반";
+    const category = (target && target.category) || "🌟 소원 성취";
+    const wishText = (target && target.text) || "간절히 빌었던 소원";
+
+    if (!storyText || !storyText.trim()) {
+      this.showToast("✨ 소원이 어떻게 이루어졌는지 한 줄 소감을 적어주세요!");
+      return;
+    }
+
+    // 로컬 내 소원함 & 타 이용자 소원함 업데이트
+    try {
+      const savedMine = JSON.parse(localStorage.getItem("chunmyung_wishes") || "[]");
+      savedMine.forEach((w) => {
+        if (w.id === wishId) {
+          w.fulfilled = true;
+          w.fulfillmentStory = storyText.trim();
+        }
+      });
+      localStorage.setItem("chunmyung_wishes", JSON.stringify(savedMine));
+
+      const savedComm = JSON.parse(localStorage.getItem("chunmyung_community_wishes") || "[]");
+      savedComm.forEach((w) => {
+        if (w.id === wishId || w.text === wishText) {
+          w.fulfilled = true;
+          w.fulfillmentStory = storyText.trim();
+        }
+      });
+      localStorage.setItem("chunmyung_community_wishes", JSON.stringify(savedComm));
+    } catch (e) {}
+
+    fetch("/api/plaza/fulfillments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        wishId: wishId,
+        author: author,
+        category: category,
+        wishText: wishText,
+        fulfillmentStory: storyText.trim()
+      })
+    })
+      .then((r) => r.json())
+      .then((res) => {
+        if (res && res.success && res.data) {
+          this.plazaFulfillments.unshift(res.data);
+          this.renderFulfillmentPlazaPanel();
+        }
+        const modal = document.getElementById("myWishBoardModal");
+        if (modal && modal.open) this.openMyWishModal();
+
+        this.spawnFirework({ x: this.player.x, y: this.player.y + 14, z: this.player.z - 8 }, 0xffd166, 180, 10);
+        this.playFireworkSound();
+        this.showBlessing(
+          "🎊",
+          "소원 성취 소식이 연등광장에 울려 퍼집니다!",
+          "연등광장에 들어와 있는 도반들에게 축하를 받으실 수 있습니다 ✨",
+          6200
+        );
+      })
+      .catch(() => {});
+  }
+
+  /* ==========================================================================
+     내 소원함 (서쪽 벽 x=-28.0) & 반대편 타 이용자 소원함 (동쪽 벽 x=+28.0)
      ========================================================================== */
   buildMyWishBoard() {
     const g = new THREE.Group();
@@ -2311,6 +2547,38 @@ class WishPlaza3DEngine {
     this.scene.add(g);
   }
 
+  /* 사찰 내부 내 소원함 정반대편(동쪽 벽 x=+28.0, z=-40.5)에 동일한 형태로 타 이용자 소원함 배치 */
+  buildOtherWishBoard() {
+    const g = new THREE.Group();
+    g.position.set(28.0, 3.85, -40.5);
+
+    const wood = new THREE.MeshStandardMaterial({ color: 0x4a2a16, roughness: 0.7 });
+    const dark = new THREE.MeshStandardMaterial({ color: 0x1d120b, roughness: 0.8 });
+
+    const back = new THREE.Mesh(new THREE.BoxGeometry(0.35, 5.6, 8.6), wood);
+    back.position.set(0, 3.0, 0);
+    g.add(back);
+
+    for (const z of [-4.5, 4.5]) {
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.6, 6.4, 0.6), dark);
+      post.position.set(-0.1, 3.2, z);
+      g.add(post);
+    }
+    const beam = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.35, 10.2), dark);
+    beam.position.set(-0.1, 6.4, 0);
+    g.add(beam);
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.2, 10.8), new THREE.MeshStandardMaterial({ color: 0x182028, roughness: 0.7 }));
+    roof.position.set(-0.35, 6.75, 0);
+    roof.rotation.z = 0.22;
+    g.add(roof);
+
+    this.otherWishBoardPlaques = new THREE.Group();
+    g.add(this.otherWishBoardPlaques);
+
+    this.otherWishBoardGroup = g;
+    this.scene.add(g);
+  }
+
   loadMyWishes() {
     let list = [];
     try {
@@ -2325,13 +2593,27 @@ class WishPlaza3DEngine {
     return list;
   }
 
+  loadOtherWishes() {
+    let list = [];
+    try {
+      list = JSON.parse(localStorage.getItem("chunmyung_community_wishes") || "[]");
+      if (!Array.isArray(list)) list = [];
+    } catch (e) {
+      list = [];
+    }
+    if (list.length === 0 && window.App && Array.isArray(window.App.communityWishes)) {
+      list = window.App.communityWishes;
+    }
+    return list;
+  }
+
   makePlaqueTexture(wish) {
     const cv = document.createElement("canvas");
     cv.width = 160;
     cv.height = 140;
     const x = cv.getContext("2d");
-    x.fillStyle = "#d9a066";
-    x.strokeStyle = "#5b3416";
+    x.fillStyle = wish && wish.fulfilled ? "#fde68a" : "#d9a066";
+    x.strokeStyle = wish && wish.fulfilled ? "#d97706" : "#5b3416";
     x.lineWidth = 6;
     x.beginPath();
     x.moveTo(80, 6);
@@ -2349,9 +2631,9 @@ class WishPlaza3DEngine {
     x.fillStyle = "#3b1d0a";
     x.textAlign = "center";
     x.font = "bold 16px 'Noto Serif JP','Noto Serif KR',serif";
-    x.fillText("祈 願", 80, 54);
+    x.fillText(wish && wish.fulfilled ? "成就" : "祈 願", 80, 54);
     x.font = "bold 12px 'Noto Serif KR',sans-serif";
-    const text = (wish.text || "").replace(/\s+/g, " ");
+    const text = ((wish && wish.text) || "").replace(/\s+/g, " ");
     const lines = [text.slice(0, 9), text.slice(9, 18), text.slice(18, 26) + (text.length > 26 ? "…" : "")];
     lines.forEach((ln, i) => x.fillText(ln, 80, 78 + i * 18));
     return new THREE.CanvasTexture(cv);
@@ -2396,75 +2678,280 @@ class WishPlaza3DEngine {
     x.fillStyle = "#fde68a";
     x.textAlign = "center";
     x.textBaseline = "middle";
-    x.font = "bold 40px 'Noto Serif KR',sans-serif";
-    x.fillText("📜 내 소원함 (" + wishes.length + ")", 256, 66);
+    x.font = "bold 38px 'Noto Serif KR',sans-serif";
+    x.fillText("📜 내 소원함 · 소원판 (" + wishes.length + ")", 256, 66);
     const sign = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), transparent: true }));
-    sign.scale.set(5.6, 1.4, 1);
+    sign.scale.set(5.8, 1.4, 1);
     sign.position.set(0.7, 8.0, 0);
     grp.add(sign);
   }
 
-  openMyWishModal() {
-    const wishes = this.loadMyWishes();
-    let dialog = document.getElementById("myWishBoardModal");
-    if (!dialog) {
-      dialog = document.createElement("dialog");
-      dialog.id = "myWishBoardModal";
-      dialog.style.cssText = "background:#1c120b;color:#f7eedc;border:2px solid #d4a359;border-radius:16px;padding:22px;" +
-        "max-width:520px;width:92%;max-height:80vh;overflow:auto;font-family:'Noto Serif KR',serif;";
-      document.body.appendChild(dialog);
+  refreshOtherWishBoard() {
+    if (!this.otherWishBoardPlaques) return;
+    const grp = this.otherWishBoardPlaques;
+    while (grp.children.length) {
+      const ch = grp.children[0];
+      grp.remove(ch);
+      if (ch.material && ch.material.map) ch.material.map.dispose();
+      if (ch.material) ch.material.dispose();
+      if (ch.geometry) ch.geometry.dispose();
     }
-    dialog.textContent = "";
 
-    const title = document.createElement("div");
-    title.style.cssText = "font-size:18px;font-weight:800;color:#fde68a;margin-bottom:4px;";
-    title.textContent = "📜 내 소원함 (絵馬掛所)";
-    dialog.appendChild(title);
-
-    const sub = document.createElement("div");
-    sub.style.cssText = "font-size:12px;color:#d6c0a0;margin-bottom:14px;";
-    sub.textContent = "내가 하늘로 띄운 소원 " + wishes.length + "개가 이곳에 걸려 있어요.";
-    dialog.appendChild(sub);
-
-    if (wishes.length === 0) {
-      const empty = document.createElement("div");
-      empty.style.cssText = "padding:24px 8px;text-align:center;color:#a8957a;font-size:13px;";
-      empty.textContent = "아직 띄운 소원이 없어요. 상단의 [내 소원 띄우기]로 첫 소원을 하늘에 올려 보세요 🏮";
-      dialog.appendChild(empty);
-    }
-    wishes.forEach((w) => {
-      const card = document.createElement("div");
-      card.style.cssText = "border:1px solid #5b3a1c;background:#26180f;border-radius:12px;padding:12px 14px;margin-bottom:10px;";
-      const head = document.createElement("div");
-      head.style.cssText = "display:flex;justify-content:space-between;font-size:11px;color:#fbbf24;margin-bottom:6px;";
-      const a = document.createElement("span");
-      a.textContent = w.category || "소원";
-      const b = document.createElement("span");
-      b.textContent = (w.date || "") + "  ❤️ " + (w.cheers || 0);
-      head.appendChild(a);
-      head.appendChild(b);
-      const body = document.createElement("div");
-      body.style.cssText = "font-size:13px;line-height:1.6;color:#f7eedc;";
-      body.textContent = w.text || "";
-      card.appendChild(head);
-      card.appendChild(body);
-      dialog.appendChild(card);
+    const wishes = this.loadOtherWishes();
+    const shown = wishes.slice(0, 12);
+    shown.forEach((w, i) => {
+      const col = i % 4;
+      const row = Math.floor(i / 4);
+      const plaque = new THREE.Mesh(
+        new THREE.PlaneGeometry(1.5, 1.3),
+        new THREE.MeshBasicMaterial({ map: this.makePlaqueTexture(w), transparent: true, color: 0xdddddd })
+      );
+      plaque.position.set(-0.25, 4.5 - row * 1.6, (col - 1.5) * 1.95);
+      plaque.rotation.y = -Math.PI / 2;
+      grp.add(plaque);
     });
 
-    const close = document.createElement("button");
-    close.type = "button";
-    close.textContent = "닫기";
-    close.style.cssText = "margin-top:6px;width:100%;padding:10px;border-radius:12px;background:#8c1d1d;color:#ffe8b3;" +
-      "border:1px solid #f59e0b;font-weight:800;cursor:pointer;";
-    close.onclick = () => dialog.close();
-    dialog.appendChild(close);
+    const cv = document.createElement("canvas");
+    cv.width = 512;
+    cv.height = 128;
+    const x = cv.getContext("2d");
+    x.fillStyle = "rgba(24,14,8,0.9)";
+    x.strokeStyle = "#f59e0b";
+    x.lineWidth = 6;
+    x.beginPath();
+    x.roundRect(6, 6, 500, 116, 18);
+    x.fill();
+    x.stroke();
+    x.fillStyle = "#fde68a";
+    x.textAlign = "center";
+    x.textBaseline = "middle";
+    x.font = "bold 38px 'Noto Serif KR',sans-serif";
+    x.fillText("🏮 타 이용자 소원함 (" + wishes.length + ")", 256, 66);
+    const sign = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), transparent: true }));
+    sign.scale.set(5.8, 1.4, 1);
+    sign.position.set(-0.7, 8.0, 0);
+    grp.add(sign);
+  }
+
+  /* 타 이용자 소원함 클릭/상호작용 시: "타 이용자의 소원을 보시겠습니까 ?" 예 / 아니요 */
+  promptViewOtherWishes() {
+    let dialog = document.getElementById("otherWishConfirmModal");
+    if (!dialog) {
+      dialog = document.createElement("dialog");
+      dialog.id = "otherWishConfirmModal";
+      dialog.style.cssText =
+        "background:#1c120b;color:#f7eedc;border:2px solid #f59e0b;border-radius:18px;padding:24px;" +
+        "max-width:420px;width:92%;text-align:center;font-family:'Noto Serif KR',serif;box-shadow:0 0 35px rgba(245,158,11,0.4);";
+      document.body.appendChild(dialog);
+    }
+    dialog.innerHTML = `
+      <div style="font-size:32px;margin-bottom:8px;">🏮</div>
+      <h3 style="font-size:18px;font-weight:900;color:#fde68a;margin-bottom:10px;">
+        타 이용자의 소원을 보시겠습니까 ?
+      </h3>
+      <p style="font-size:12px;color:#d6c0a0;line-height:1.6;margin-bottom:18px;">
+        <strong>[예]</strong>를 선택하시면 홈페이지 첫 화면 하단 타 이용자 소원함으로 이동하여 한 페이지에 8개씩(offset 단위) 도반들의 소원을 열람합니다.
+      </p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <button type="button" id="otherWishNoBtn"
+          style="padding:11px;border-radius:12px;background:#374151;color:#e5e7eb;border:1px solid #6b7280;font-weight:800;font-size:13px;cursor:pointer;">
+          아니요
+        </button>
+        <button type="button" id="otherWishYesBtn"
+          style="padding:11px;border-radius:12px;background:linear-gradient(to right,#d97706,#b45309);color:#ffffff;border:1px solid #fde68a;font-weight:900;font-size:13px;cursor:pointer;">
+          예
+        </button>
+      </div>
+    `;
+    dialog.querySelector("#otherWishNoBtn").onclick = () => {
+      dialog.close();
+      if (this.canvas) this.canvas.focus();
+    };
+    dialog.querySelector("#otherWishYesBtn").onclick = () => {
+      dialog.close();
+      if (window.App && typeof window.App.navigateToHomeOtherWishes === "function") {
+        window.App.navigateToHomeOtherWishes();
+      } else {
+        this.close();
+      }
+    };
 
     if (typeof dialog.showModal === "function") dialog.showModal();
     else dialog.setAttribute("open", "");
   }
 
+  /* 내 소원함에서 소원을 적고 걸면: 내 소원함 + 타 이용자 소원함에 동시 추가 & 안내 멘트 출력 */
+  submitWishFromMyBoard() {
+    const catEl = document.getElementById("myBoardWishCategory");
+    const authorEl = document.getElementById("myBoardWishAuthor");
+    const textEl = document.getElementById("myBoardWishText");
+    const noticeEl = document.getElementById("myBoardGuidanceNotice");
+
+    const category = (catEl && catEl.value) || "🌿 건강·장수";
+    const author = ((authorEl && authorEl.value) || "").trim() || this.player.name || "천명 도반";
+    const text = ((textEl && textEl.value) || "").trim();
+
+    if (!text) {
+      this.showToast("✍️ 갈망하시는 소원 내용을 적어주세요!");
+      if (textEl) textEl.focus();
+      return;
+    }
+
+    const newWish = {
+      id: Date.now(),
+      category: category,
+      author: author,
+      text: text,
+      cheers: 1,
+      date: new Date().toLocaleDateString("ko-KR"),
+      fulfilled: false,
+      fulfillmentStory: null,
+      congratsCount: 0
+    };
+
+    // 1) 내 소원함(chunmyung_wishes) + 타 이용자 소원함(chunmyung_community_wishes) 동시 추가!
+    try {
+      const mySaved = JSON.parse(localStorage.getItem("chunmyung_wishes") || "[]");
+      mySaved.unshift(newWish);
+      localStorage.setItem("chunmyung_wishes", JSON.stringify(mySaved.slice(0, 40)));
+
+      const commSaved = JSON.parse(localStorage.getItem("chunmyung_community_wishes") || "[]");
+      commSaved.unshift(newWish);
+      localStorage.setItem("chunmyung_community_wishes", JSON.stringify(commSaved.slice(0, 60)));
+    } catch (e) {}
+
+    if (window.App) {
+      window.App.initCommunityWishes();
+      if (!window.App.communityWishes.some((w) => w.id === newWish.id)) {
+        window.App.communityWishes.unshift(newWish);
+      }
+      if (typeof window.App.renderHomeCommunityWishes === "function") {
+        window.App.renderHomeCommunityWishes(0);
+      }
+    }
+
+    // 2) 3D 광장 하늘 등불 발사 + 양쪽 소원판 갱신 + 서버 동기화
+    this.addPlayerNewLantern(newWish, true);
+
+    // 3) 모달 갱신 및 "소원이 이루어졌다면, 다시 와서 알려주세요" 안내 멘트 표시
+    this.openMyWishModal("소원이 이루어졌다면, 다시 와서 알려주세요");
+    this.showBlessing(
+      "📜",
+      "내 소원함과 타 이용자 소원함에 소원이 함께 걸렸습니다",
+      "소원이 이루어졌다면, 다시 와서 알려주세요 ✨",
+      6000
+    );
+  }
+
+  openMyWishModal(guidanceMessage) {
+    const wishes = this.loadMyWishes();
+    let dialog = document.getElementById("myWishBoardModal");
+    if (!dialog) {
+      dialog = document.createElement("dialog");
+      dialog.id = "myWishBoardModal";
+      dialog.style.cssText =
+        "background:#1c120b;color:#f7eedc;border:2px solid #d4a359;border-radius:16px;padding:22px;" +
+        "max-width:560px;width:94%;max-height:86vh;overflow:auto;font-family:'Noto Serif KR',serif;";
+      document.body.appendChild(dialog);
+    }
+
+    const defaultAuthor = (window.App && window.App.currentAccount && window.App.currentAccount.name) || this.player.name || "천명 도반";
+
+    let html = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <div style="font-size:18px;font-weight:900;color:#fde68a;">📜 사찰 내부 내 소원판 (絵馬掛所)</div>
+        <button type="button" onclick="document.getElementById('myWishBoardModal').close()" style="color:#d6c0a0;font-size:18px;font-weight:800;background:none;border:none;cursor:pointer;">✕</button>
+      </div>
+      <div style="font-size:12px;color:#d6c0a0;margin-bottom:12px;">
+        갈망하는 소원을 적어 걸어두시면 <strong>내 소원함 + 타 이용자 소원함</strong>에 함께 등재됩니다.
+      </div>
+    `;
+
+    // 안내 멘트 배너 ("소원이 이루어졌다면, 다시 와서 알려주세요")
+    html += `
+      <div id="myBoardGuidanceNotice" style="margin-bottom:14px;padding:12px 14px;border-radius:12px;background:linear-gradient(to right,#3b1d0a,#4a2410);border:2px solid #fbbf24;text-align:center;box-shadow:0 0 18px rgba(251,191,36,0.3);">
+        <div style="font-size:11px;color:#fcd34d;font-weight:700;margin-bottom:2px;">🙏 천명전 소원판 안내</div>
+        <div style="font-size:14px;font-weight:900;color:#fffbeb;">
+          "${guidanceMessage || "소원이 이루어졌다면, 다시 와서 알려주세요"}"
+        </div>
+      </div>
+    `;
+
+    // 1) 소원 적고 가기 작성 폼
+    html += `
+      <div style="background:#26180f;border:1.5px solid #8c6b3f;border-radius:14px;padding:14px;margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:800;color:#fde68a;margin-bottom:10px;">✍️ 갈망하는 내 소원 적고 가기</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+          <select id="myBoardWishCategory" style="background:#18100b;border:1px solid #a8824b;border-radius:10px;padding:8px;font-size:12px;color:#fef3c7;">
+            <option value="🌿 건강·장수">🌿 건강·장수</option>
+            <option value="🎓 시험·합격">🎓 시험·합격</option>
+            <option value="💰 재물·번창">💰 재물·번창</option>
+            <option value="💖 애정·인연">💖 애정·인연</option>
+            <option value="🏡 가족·화목">🏡 가족·화목</option>
+            <option value="🕊️ 마음·평안">🕊️ 마음·평안</option>
+          </select>
+          <input type="text" id="myBoardWishAuthor" maxlength="15" value="${defaultAuthor}" placeholder="이름 / 닉네임"
+            style="background:#18100b;border:1px solid #a8824b;border-radius:10px;padding:8px;font-size:12px;color:#fef3c7;" />
+        </div>
+        <textarea id="myBoardWishText" rows="2" maxlength="120" placeholder="간절히 갈망하는 소원을 이곳에 적어 걸어두세요..."
+          style="width:100%;box-sizing:border-box;background:#18100b;border:1px solid #a8824b;border-radius:10px;padding:10px;font-size:12px;color:#fef3c7;margin-bottom:8px;"></textarea>
+        <button type="button" onclick="WishPlaza.submitWishFromMyBoard()"
+          style="width:100%;padding:10px;border-radius:10px;background:linear-gradient(to right,#d97706,#b45309);color:#fff;border:1px solid #fde68a;font-weight:900;font-size:13px;cursor:pointer;">
+          📜 소원판에 내 소원 적고 걸기 (내 소원함 + 타 이용자 소원함 등록)
+        </button>
+      </div>
+    `;
+
+    // 2) 내가 적은 소원 목록 & 성취 소식 다시 와서 알리기
+    html += `<div style="font-size:13px;font-weight:800;color:#fde68a;margin-bottom:8px;">📜 내가 적고 간 소원 (${wishes.length}개) — 이루어졌다면 알려주세요!</div>`;
+
+    if (wishes.length === 0) {
+      html += `<div style="padding:18px 8px;text-align:center;color:#a8957a;font-size:12px;">아직 적어둔 소원이 없습니다. 위 소원판에 첫 소원을 적어 걸어보세요!</div>`;
+    } else {
+      wishes.forEach((w) => {
+        html += `
+          <div style="border:1px solid ${w.fulfilled ? "#f59e0b" : "#5b3a1c"};background:${w.fulfilled ? "#2e1c0c" : "#26180f"};border-radius:12px;padding:12px 14px;margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:#fbbf24;margin-bottom:5px;">
+              <span>${w.category || "소원"} · ${w.author || defaultAuthor}</span>
+              <span>${w.date || ""}  ❤️ ${w.cheers || 0}</span>
+            </div>
+            <div style="font-size:13px;line-height:1.55;color:#f7eedc;margin-bottom:8px;">"${w.text || ""}"</div>
+            ${
+              w.fulfilled
+                ? `<div style="padding:8px 10px;border-radius:8px;background:rgba(245,158,11,0.15);border:1px solid #f59e0b;font-size:11px;color:#fde68a;">
+                     🎊 <strong>[소원 성취 완료]</strong> "${w.fulfillmentStory || "소원이 이루어졌습니다!"}" · 연등광장 도반들에게 축하를 받고 있습니다!
+                   </div>`
+                : `<div style="display:flex;gap:6px;align-items:center;">
+                     <input type="text" id="fulfillInput-${w.id}" placeholder="소원이 이루어졌다면 기쁜 성취 소식을 적어주세요!"
+                       style="flex:1;background:#18100b;border:1px solid #a8824b;border-radius:8px;padding:6px 10px;font-size:11px;color:#fef3c7;" />
+                     <button type="button" onclick="WishPlaza.reportWishFulfilled(${w.id}, document.getElementById('fulfillInput-${w.id}').value)"
+                       style="padding:6px 10px;border-radius:8px;background:#8c1d1d;color:#ffe8b3;border:1px solid #f59e0b;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;">
+                       🎊 성취 알리기
+                     </button>
+                   </div>`
+            }
+          </div>
+        `;
+      });
+    }
+
+    html += `
+      <button type="button" onclick="document.getElementById('myWishBoardModal').close()"
+        style="margin-top:6px;width:100%;padding:10px;border-radius:12px;background:#374151;color:#f3f4f6;border:1px solid #6b7280;font-weight:800;cursor:pointer;">
+        닫기
+      </button>
+    `;
+
+    dialog.innerHTML = html;
+    if (typeof dialog.showModal === "function") {
+      if (!dialog.open) dialog.showModal();
+    } else {
+      dialog.setAttribute("open", "");
+    }
+  }
+
   /* ==========================================================================
-     동전 연못 (投銭池): 연못 가운데 작은 구멍 바위에 동전을 넣으면 덕담
+     동전 연못 (投銭池): 실제 착지 좌표가 구멍(반경 0.26m) 안에 정확히 들어갈 때만 성공 판정!
      ========================================================================== */
   buildCoinPond() {
     const g = new THREE.Group();
@@ -2527,10 +3014,10 @@ class WishPlaza3DEngine {
     x.fillStyle = "#fde68a";
     x.textAlign = "center";
     x.textBaseline = "middle";
-    x.font = "bold 38px 'Noto Serif KR',sans-serif";
-    x.fillText("🪙 投銭池 · 동전 던지기 [C]", 256, 66);
+    x.font = "bold 36px 'Noto Serif KR',sans-serif";
+    x.fillText("🪙 投銭池 · 구멍 정중앙 조준 [C/클릭]", 256, 66);
     const sign = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), transparent: true }));
-    sign.scale.set(5.6, 1.4, 1);
+    sign.scale.set(5.8, 1.4, 1);
     sign.position.set(5.3, 3.2, 0);
     g.add(sign);
 
@@ -2539,7 +3026,7 @@ class WishPlaza3DEngine {
     this.scene.add(g);
   }
 
-  throwCoin() {
+  throwCoin(clickedPoint) {
     if (this.player.isPraying) return;
     const nowMs = performance.now();
     if (nowMs < this.coinCooldownUntil) return;
@@ -2554,51 +3041,117 @@ class WishPlaza3DEngine {
     }
     this.coinCooldownUntil = nowMs + 1400;
 
-    // 연못을 바라보고 던질수록, 적당한 거리일수록 잘 들어감
-    const heading = Math.atan2(dx, dz);
-    let diff = heading - this.player.rotationY;
-    while (diff < -Math.PI) diff += Math.PI * 2;
-    while (diff > Math.PI) diff -= Math.PI * 2;
-    const facingErr = Math.min(Math.abs(diff), 2.0);
-    const distErr = Math.min(Math.abs(d - 6.5) / 5, 1.2);
-    const mag = 0.25 + facingErr * 1.8 + distErr * 1.1 + Math.random() * 0.8;
-    const ang = Math.random() * Math.PI * 2;
-    const success = mag <= 0.85;
-    const land = {
-      x: hole.x + (success ? 0 : Math.cos(ang) * Math.max(mag, 0.9)),
-      z: hole.z + (success ? 0 : Math.sin(ang) * Math.max(mag, 0.9))
-    };
-    const landY = success ? 0.98 : 0.24;
+    // 1. 실제 착지 좌표(land.x, land.z) 계산:
+    // - 마우스로 연못/구멍을 직접 클릭한 경우: 클릭한 3D 지점을 조준점으로 삼고 미세한 손떨림(±0.14m)만 반영
+    // - 키보드 [C] 키로 던진 경우: 캐릭터가 실제로 바라보는 방향(rotationY)과 거리 기반으로 착지점 산출
+    let aimX;
+    let aimZ;
+    if (clickedPoint && typeof clickedPoint.x === "number" && typeof clickedPoint.z === "number") {
+      const jitterR = Math.random() * 0.14;
+      const jitterA = Math.random() * Math.PI * 2;
+      aimX = clickedPoint.x + Math.cos(jitterA) * jitterR;
+      aimZ = clickedPoint.z + Math.sin(jitterA) * jitterR;
+      this.player.rotationY = Math.atan2(aimX - this.player.x, aimZ - this.player.z);
+    } else {
+      const headingToHole = Math.atan2(dx, dz);
+      let diff = headingToHole - this.player.rotationY;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      while (diff > Math.PI) diff -= Math.PI * 2;
 
-    this.player.rotationY = heading; // 던지는 방향을 바라봄
+      // 캐릭터가 구멍 방향을 거의 바라보고 있으면(±30도 이내) 구멍 쪽으로 던지되 거리/각도 오차와 손떨림 반영
+      const throwAngle = Math.abs(diff) < 0.55 ? headingToHole + diff * 0.35 : this.player.rotationY;
+      const throwDist = d + (Math.random() - 0.5) * 0.55;
+      const lateralJitter = (Math.random() - 0.5) * 0.38;
+      aimX = this.player.x + Math.sin(throwAngle) * throwDist + Math.cos(throwAngle) * lateralJitter;
+      aimZ = this.player.z + Math.cos(throwAngle) * throwDist - Math.sin(throwAngle) * lateralJitter;
+    }
+
+    // 2. 구멍 중심(-18, 8)과 실제 동전 착지점(aimX, aimZ) 사이의 정확한 거리 판정
+    // 구멍 검은 개구부 반경 = 0.40m, 동전 반경 = 0.18m → 중심 거리 0.25m 이내일 때만 테두리에 걸리지 않고 구멍 안으로 쏙 들어감!
+    const exactDist = Math.hypot(aimX - hole.x, aimZ - hole.z);
+    const HOLE_INNER_RADIUS = 0.25;
+    const ROCK_OUTER_RADIUS = 1.18;
+
+    const isExactHoleIn = exactDist <= HOLE_INNER_RADIUS;
+    const isHitRockRim = !isExactHoleIn && exactDist <= ROCK_OUTER_RADIUS;
+
+    const land = { x: aimX, z: aimZ };
+    const targetSurfaceY = (isExactHoleIn || isHitRockRim) ? 0.98 : 0.24;
 
     const coin = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.24, 0.24, 0.06, 16),
-      new THREE.MeshStandardMaterial({ color: 0xffd34d, emissive: 0x8a5a00, emissiveIntensity: 0.5, metalness: 0.9, roughness: 0.25 })
+      new THREE.CylinderGeometry(0.18, 0.18, 0.05, 18),
+      new THREE.MeshStandardMaterial({ color: 0xffd34d, emissive: 0x9a6400, emissiveIntensity: 0.55, metalness: 0.92, roughness: 0.22 })
     );
     const sx = this.player.x;
-    const sy = this.player.y + 2.2;
+    const sy = this.player.y + 2.1;
     const sz = this.player.z;
     coin.position.set(sx, sy, sz);
     this.scene.add(coin);
 
-    const dur = 1.05;
-    const arc = 3.2 + d * 0.25;
+    const dur = 0.95;
+    const arc = 2.8 + d * 0.22;
     let t = 0;
+    let phase = "flight";
+    let postT = 0;
+    const bounceDirX = exactDist > 0.001 ? (aimX - hole.x) / exactDist : 1;
+    const bounceDirZ = exactDist > 0.001 ? (aimZ - hole.z) / exactDist : 0;
+
     this.fxList.push({
       update: (dt) => {
-        t += dt;
-        const u = Math.min(1, t / dur);
-        coin.position.x = sx + (land.x - sx) * u;
-        coin.position.z = sz + (land.z - sz) * u;
-        coin.position.y = sy + (landY - sy) * u + Math.sin(Math.PI * u) * arc;
-        coin.rotation.x += dt * 14;
-        coin.rotation.z += dt * 6;
-        if (u < 1) return false;
-        this.scene.remove(coin);
-        coin.geometry.dispose();
-        coin.material.dispose();
-        this.onCoinLanded(success, land);
+        if (phase === "flight") {
+          t += dt;
+          const u = Math.min(1, t / dur);
+          coin.position.x = sx + (land.x - sx) * u;
+          coin.position.z = sz + (land.z - sz) * u;
+          coin.position.y = sy + (targetSurfaceY - sy) * u + Math.sin(Math.PI * u) * arc;
+          coin.rotation.x += dt * 13;
+          coin.rotation.z += dt * 6;
+          if (u < 1) return false;
+
+          if (isExactHoleIn) {
+            // 구멍 정중앙 진입! 동전이 구멍 안으로 수직 낙하하는 모습을 보여줌
+            phase = "sink_in_hole";
+            coin.position.set(land.x, 0.97, land.z);
+            coin.rotation.set(0, 0, 0);
+            return false;
+          } else if (isHitRockRim) {
+            // 바위/황금 테두리에 맞고 물속으로 튕겨 나감!
+            phase = "rim_bounce";
+            return false;
+          } else {
+            // 구멍 밖 연못 물속에 직접 착수
+            this.scene.remove(coin);
+            coin.geometry.dispose();
+            coin.material.dispose();
+            this.onCoinLanded("water_miss", land, exactDist);
+            return true;
+          }
+        } else if (phase === "sink_in_hole") {
+          postT += dt;
+          const su = Math.min(1, postT / 0.32);
+          coin.position.y = 0.97 - su * 0.55;
+          coin.scale.setScalar(1 - su * 0.45);
+          if (su < 1) return false;
+          this.scene.remove(coin);
+          coin.geometry.dispose();
+          coin.material.dispose();
+          this.onCoinLanded("hole_in", land, exactDist);
+          return true;
+        } else if (phase === "rim_bounce") {
+          postT += dt;
+          const bu = Math.min(1, postT / 0.36);
+          coin.position.x = land.x + bounceDirX * bu * 0.95;
+          coin.position.z = land.z + bounceDirZ * bu * 0.95;
+          coin.position.y = 0.98 + Math.sin(Math.PI * bu) * 0.55 - bu * 0.74;
+          coin.rotation.x += dt * 18;
+          if (bu < 1) return false;
+          const splashPos = { x: coin.position.x, z: coin.position.z };
+          this.scene.remove(coin);
+          coin.geometry.dispose();
+          coin.material.dispose();
+          this.onCoinLanded("rim_miss", splashPos, exactDist);
+          return true;
+        }
         return true;
       }
     });
@@ -2627,8 +3180,8 @@ class WishPlaza3DEngine {
     });
   }
 
-  onCoinLanded(success, land) {
-    if (success) {
+  onCoinLanded(outcome, land, exactDist) {
+    if (outcome === "hole_in") {
       let wins = 0;
       try {
         wins = parseInt(localStorage.getItem("chunmyung_coin_wins") || "0", 10) + 1;
@@ -2651,11 +3204,15 @@ class WishPlaza3DEngine {
         "좋은 일만 가득할 거예요. 언제나 응원합니다!"
       ];
       const msg = LUCK[Math.floor(Math.random() * LUCK.length)];
-      this.showBlessing("🪙", "쏙! 동전이 구멍에 들어갔어요 (누적 " + wins + "회)", msg, 5600);
+      this.showBlessing("🪙", "쏙! 동전이 구멍 정중앙에 정확히 들어갔어요! (누적 " + wins + "회)", msg, 5600);
+    } else if (outcome === "rim_miss") {
+      this.playSplashSound();
+      this.spawnRipple(land.x, land.z);
+      this.showToast("🪨 쨍그랑! 구멍 테두리 바위에 맞고 튕겨 나갔어요 (중심 오차 " + Math.round(exactDist * 100) + "cm). 검은 구멍 정중앙을 정확히 클릭해보세요!");
     } else {
       this.playSplashSound();
       this.spawnRipple(land.x, land.z);
-      this.showToast("💦 퐁당! 아깝다… 연못을 바라보고 가운데 구멍을 노려 한 번 더 던져보세요 [C]");
+      this.showToast("💦 퐁당! 구멍에 들어가지 않고 물속에 빠졌어요 (구멍과 " + exactDist.toFixed(2) + "m 거리). 가운데 작은 검은 구멍 안을 정확히 조준해 던져보세요!");
     }
   }
 
@@ -2664,12 +3221,14 @@ class WishPlaza3DEngine {
     const px = this.player.x;
     const pz = this.player.z;
     this.isNearWishBoard = pz < -34 && Math.hypot(px + 26.5, pz + 40.5) < 6.5;
+    this.isNearOtherWishBoard = pz < -34 && Math.hypot(px - 26.5, pz + 40.5) < 6.5;
     this.isNearCoinPond = Math.hypot(px + 18, pz - 8) < 11.5;
 
     if (!this.hintEl) return;
     let text = "";
-    if (this.isNearWishBoard) text = "📜 [E] 또는 클릭 — 내 소원함 열어보기";
-    else if (this.isNearCoinPond) text = "🪙 [C] 동전 던지기 — 연못을 바라보고 가운데 작은 구멍을 노려보세요";
+    if (this.isNearWishBoard) text = "📜 [E] 또는 클릭 — 내 소원판에 소원 적기 · 성취 소식 알리기";
+    else if (this.isNearOtherWishBoard) text = "🏮 [E] 또는 클릭 — 타 이용자 소원함 보기 (예/아니요 화면 전환)";
+    else if (this.isNearCoinPond) text = "🪙 가운데 검은 구멍 정중앙을 마우스로 클릭하거나 구멍을 향해 [C] 키를 눌러 동전을 넣으세요";
     if (text) {
       this.hintEl.textContent = text;
       this.hintEl.style.display = "block";
@@ -2842,19 +3401,25 @@ class WishPlaza3DEngine {
           }
         }
 
-        // Click My Wish Board (내 소원함) / Coin Pond (동전 연못)
+        // Click My Wish Board (내 소원함 - 서쪽 벽) / Other Wish Board (타 이용자 소원함 - 동쪽 벽) / Coin Pond (동전 연못)
         if (this.wishBoardGroup) {
           const bh = this.raycaster.intersectObjects(this.wishBoardGroup.children, true);
           if (bh.length > 0) {
-            if (this.isNearWishBoard) this.openMyWishModal();
-            else this.showToast("📜 내 소원함에 조금 더 가까이 다가가 주세요 (본당 안 서쪽 벽)");
+            this.openMyWishModal();
+            return;
+          }
+        }
+        if (this.otherWishBoardGroup) {
+          const obh = this.raycaster.intersectObjects(this.otherWishBoardGroup.children, true);
+          if (obh.length > 0) {
+            this.promptViewOtherWishes();
             return;
           }
         }
         if (this.coinPondGroup) {
           const ph = this.raycaster.intersectObjects(this.coinPondGroup.children, true);
           if (ph.length > 0) {
-            this.throwCoin();
+            this.throwCoin(ph[0].point);
             return;
           }
         }
@@ -2935,6 +3500,8 @@ class WishPlaza3DEngine {
   interactWithNearby() {
     if (this.isNearWishBoard) {
       this.openMyWishModal();
+    } else if (this.isNearOtherWishBoard) {
+      this.promptViewOtherWishes();
     } else if (this.isNearBuddhaAltar) {
       this.offerPrayerAtBuddha();
     } else if (this.isNearShrine) {
@@ -3050,7 +3617,8 @@ class WishPlaza3DEngine {
       "wishWeeklyTopModal",
       "buddhaBlessingModal",
       "plazaLaunchModal",
-      "myWishBoardModal"
+      "myWishBoardModal",
+      "otherWishConfirmModal"
     ];
     for (const id of otherModals) {
       const el = document.getElementById(id);
@@ -3291,8 +3859,9 @@ class WishPlaza3DEngine {
     if (px >= 19.0 - radius && px <= 26.0 + radius && pz >= -64.0 && pz <= -56.0) return true;
     if (px <= -19.0 + radius && px >= -26.0 - radius && pz >= -64.0 && pz <= -56.0) return true;
 
-    // My Wish Board (내 소원함, 서쪽 벽면)
+    // My Wish Board (내 소원함, 서쪽 벽면) & Other Wish Board (타 이용자 소원함, 동쪽 벽면)
     if (px <= -26.95 && pz >= -45.3 && pz <= -35.7) return true;
+    if (px >= 26.95 && pz >= -45.3 && pz <= -35.7) return true;
 
     return false;
   }

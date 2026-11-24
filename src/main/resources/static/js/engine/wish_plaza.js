@@ -1734,19 +1734,22 @@ class WishPlaza3DEngine {
   }
 
   /* ==========================================================================
-     다른 도반 유저들 (만나면 서로 90도 인사 가능!)
+     다른 도반 유저들 (최대 5명 NPC: 무작위 이동 · NPC끼리 90도 인사 · 절하기)
      ========================================================================== */
   buildOtherUsers() {
+    const MAX_NPCS = 5;
     const visitors = [
       {
         id: "visitor_1",
         name: "김서연",
         robeColor: 0x1b4d3e, // 비취청록 도포
         accentColor: 0xd4a359,
-        x: 3.4, y: 0, z: 11.5,
-        homeX: 3.4, homeZ: 11.5,
-        patrolRadius: 2.2,
-        rotY: -0.6,
+        zone: "courtyard",
+        x: 3.0, y: 0, z: 11.2,
+        rotY: -0.9,
+        speed: 2.25,
+        bowCushionX: -3.2,
+        initialBowCooldown: 14,
         greetingReply: "반갑습니다! 오늘도 평안하고 좋은 일만 가득하시길 바랍니다 ✨"
       },
       {
@@ -1754,10 +1757,12 @@ class WishPlaza3DEngine {
         name: "박지훈",
         robeColor: 0x4c1d4b, // 연자주 도포
         accentColor: 0xfbbf24,
-        x: -3.8, y: 0, z: -2.0,
-        homeX: -3.8, homeZ: -2.0,
-        patrolRadius: 2.4,
-        rotY: 0.5,
+        zone: "courtyard",
+        x: -2.4, y: 0, z: 9.8,
+        rotY: 0.9,
+        speed: 2.35,
+        bowCushionX: 3.2,
+        initialBowCooldown: 18,
         greetingReply: "안녕하세요 도반님! 간절히 품은 소원이 꼭 이루어지길 응원합니다 🏮"
       },
       {
@@ -1765,13 +1770,41 @@ class WishPlaza3DEngine {
         name: "이하늘",
         robeColor: 0x5c3a1e, // 황토갈색 도포
         accentColor: 0x991b1b,
-        x: 4.5, y: 3.85, z: -42.0,
-        homeX: 4.5, homeZ: -42.0,
-        patrolRadius: 1.8,
+        zone: "temple",
+        x: 4.0, y: 3.85, z: -47.0,
         rotY: -1.1,
+        speed: 2.15,
+        bowCushionX: 3.2,
+        initialBowCooldown: 3.5,
         greetingReply: "천명전 본당에서 뵙게 되어 반갑습니다! 부처님 가피가 함께하길 기원합니다 🪷"
+      },
+      {
+        id: "visitor_4",
+        name: "정민수",
+        robeColor: 0x1e3a5f, // 남청색 도포
+        accentColor: 0x38bdf8,
+        zone: "courtyard",
+        x: 6.4, y: 0, z: 1.5,
+        rotY: -0.4,
+        speed: 2.2,
+        bowCushionX: -6.4,
+        initialBowCooldown: 12,
+        greetingReply: "연등이 참 아름답네요! 걸음마다 행운이 함께하시길 기원합니다 🌕"
+      },
+      {
+        id: "visitor_5",
+        name: "최수아",
+        robeColor: 0x7f1d1d, // 단청홍색 도포
+        accentColor: 0xfde047,
+        zone: "temple",
+        x: -4.2, y: 3.85, z: -45.5,
+        rotY: 0.8,
+        speed: 2.1,
+        bowCushionX: -3.2,
+        initialBowCooldown: 9.5,
+        greetingReply: "평온한 산사에서 만나 반갑습니다! 간절한 기도가 꼭 닿기를 바랍니다 🙏"
       }
-    ];
+    ].slice(0, MAX_NPCS);
 
     this.otherUsers = [];
     visitors.forEach((v, idx) => {
@@ -1781,46 +1814,137 @@ class WishPlaza3DEngine {
         hasHat: true,
         hasLantern: false
       });
-      av.root.position.set(v.x, v.y, v.z);
+      const groundY = this.getGroundElevation(v.x, v.z);
+      av.root.position.set(v.x, groundY, v.z);
       av.root.rotation.y = v.rotY;
 
-      const tag = this.createOtherUserTagSprite(v.name);
-      tag.position.set(0, 3.1, 0);
+      const tag = this.createOtherUserTagSprite(v.name, "");
+      tag.position.set(0, 3.15, 0);
       av.root.add(tag);
 
       this.scene.add(av.root);
-      this.otherUsers.push({
+      const npc = {
         ...v,
+        y: groundY,
         avatar: av,
+        tagSprite: tag,
+        tagStatus: "",
+        state: "wander",
         isGreeting: false,
+        isBowing: false,
         greetTimer: 0,
+        greetCooldown: 2.5 + idx * 0.8,
+        greetPartner: null,
+        bowPhase: 0,
+        bowCount: 2,
+        bowCooldown: v.initialBowCooldown,
+        targetX: v.x,
+        targetZ: v.z,
+        stateTimer: 0,
+        idleDuration: 1.5 + Math.random() * 2.0,
         walkPhase: idx * 2.1,
         wanderOffset: idx * 1.9
-      });
+      };
+      this.pickNpcWaypoint(npc);
+      this.otherUsers.push(npc);
     });
   }
 
-  createOtherUserTagSprite(name) {
+  createOtherUserTagSprite(name, statusText = "") {
     const canvas = document.createElement("canvas");
-    canvas.width = 256;
-    canvas.height = 64;
+    canvas.width = 320;
+    canvas.height = statusText ? 96 : 64;
     const ctx = canvas.getContext("2d");
-    ctx.fillStyle = "rgba(18, 22, 32, 0.85)";
-    ctx.strokeStyle = "#38bdf8";
+    ctx.fillStyle = "rgba(18, 22, 32, 0.86)";
+    ctx.strokeStyle = statusText ? "#fbbf24" : "#38bdf8";
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.roundRect(8, 8, 240, 48, 12);
+    ctx.roundRect(8, 8, 304, canvas.height - 16, 12);
     ctx.fill();
     ctx.stroke();
     ctx.fillStyle = "#e0f2fe";
-    ctx.font = "bold 19px 'Noto Serif KR', sans-serif";
+    ctx.font = "bold 20px 'Noto Serif KR', sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(`도반 ${name}`, 128, 32);
+    if (statusText) {
+      ctx.fillText(`도반 ${name}`, 160, 34);
+      ctx.fillStyle = "#fde047";
+      ctx.font = "bold 17px 'Noto Serif KR', sans-serif";
+      ctx.fillText(statusText, 160, 64);
+    } else {
+      ctx.fillText(`도반 ${name}`, 160, 32);
+    }
     const tex = new THREE.CanvasTexture(canvas);
     const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true }));
-    sprite.scale.set(2.9, 0.72, 1);
+    sprite.scale.set(3.2, statusText ? 0.96 : 0.68, 1);
     return sprite;
+  }
+
+  setNpcTagStatus(npc, statusText) {
+    if (!npc || !npc.avatar || npc.tagStatus === statusText) return;
+    npc.tagStatus = statusText;
+    if (npc.tagSprite) {
+      npc.avatar.root.remove(npc.tagSprite);
+      if (npc.tagSprite.material && npc.tagSprite.material.map) {
+        npc.tagSprite.material.map.dispose();
+      }
+      if (npc.tagSprite.material) npc.tagSprite.material.dispose();
+    }
+    const nextTag = this.createOtherUserTagSprite(npc.name, statusText);
+    nextTag.position.set(0, statusText ? 3.28 : 3.15, 0);
+    npc.avatar.root.add(nextTag);
+    npc.tagSprite = nextTag;
+  }
+
+  pickNpcWaypoint(npc) {
+    for (let attempt = 0; attempt < 24; attempt++) {
+      let tx, tz;
+      if (npc.zone === "temple") {
+        // 대웅전 실내 자유 거닐기 영역
+        tx = (Math.random() * 2 - 1) * 12.5;
+        tz = -55.0 + Math.random() * 17.5; // -55.0 ~ -37.5
+      } else {
+        // 사찰 마당 자유 거닐기 영역 (연등 기둥 안쪽 마당)
+        tx = (Math.random() * 2 - 1) * 9.2;
+        tz = -3.0 + Math.random() * 20.5; // -3.0 ~ 17.5
+      }
+      if (!this.checkCollision(tx, tz, 0.85) && Math.hypot(tx - npc.x, tz - npc.z) > 2.2) {
+        npc.targetX = tx;
+        npc.targetZ = tz;
+        npc.state = "wander";
+        npc.stateTimer = 0;
+        return;
+      }
+    }
+    npc.state = "idle";
+    npc.stateTimer = 0;
+    npc.idleDuration = 1.5;
+  }
+
+  startNpcMutualGreeting(u1, u2) {
+    const dx = u2.x - u1.x;
+    const dz = u2.z - u1.z;
+    u1.rotY = Math.atan2(dx, dz);
+    u2.rotY = Math.atan2(-dx, -dz);
+    u1.avatar.root.rotation.y = u1.rotY;
+    u2.avatar.root.rotation.y = u2.rotY;
+
+    [u1, u2].forEach((u) => {
+      u.state = "greeting";
+      u.isGreeting = true;
+      u.isBowing = false;
+      u.greetTimer = 0;
+      u.greetCooldown = 14 + Math.random() * 8;
+      this.setNpcTagStatus(u, "🙇 90도 인사 중");
+    });
+    u1.greetPartner = u2;
+    u2.greetPartner = u1;
+
+    this.spawnCheerSparkles({
+      x: (u1.x + u2.x) * 0.5,
+      y: Math.max(u1.y, u2.y) + 1.5,
+      z: (u1.z + u2.z) * 0.5
+    });
   }
 
   /* 다른 유저와 만나면 서로 마주 보고 90도 인사하기! */
@@ -1829,6 +1953,11 @@ class WishPlaza3DEngine {
     const user = targetUser || this.nearbyOtherUser;
     if (!user) {
       this.showToast("🙇 인사할 도반에게 조금 더 가까이 다가가 주세요!");
+      return;
+    }
+
+    if (user.isBowing) {
+      this.showToast("🪷 도반 " + user.name + " 님이 정성껏 절을 올리는 중입니다. 잠시 후 인사해 주세요!");
       return;
     }
 
@@ -1845,15 +1974,20 @@ class WishPlaza3DEngine {
     user.rotY = Math.atan2(-dx, -dz);
     user.avatar.root.rotation.y = user.rotY;
 
-    // 2. 양쪽 모두 90도 인사 시퀀스 시작 (총 2.4초: 숙이기 0.55s -> 90도 정지 0.9s -> 일어나기 0.55s)
+    // 2. 양쪽 모두 90도 인사 시퀀스 시작
     this.player.isGreeting = true;
     this.player.greetTimer = 0;
     this.player.greetTargetUser = user;
     this.player.targetX = null;
     this.player.targetZ = null;
 
+    user.state = "greeting";
     user.isGreeting = true;
+    user.isBowing = false;
     user.greetTimer = 0;
+    user.greetPartner = null;
+    user.greetCooldown = 10;
+    this.setNpcTagStatus(user, "🙇 90도 인사 중");
 
     this.playTempleBellSound();
     this.spawnCheerSparkles({
@@ -4528,6 +4662,246 @@ class WishPlaza3DEngine {
     this.animFrameId = requestAnimationFrame(() => this.loop());
   }
 
+  applyTempleBowPose(av, p, smoothstep) {
+    if (!av) return;
+    const hapjang = smoothstep(0.0, 0.14, p) * (1 - smoothstep(0.88, 1.0, p));
+    const kneel = smoothstep(0.14, 0.36, p) * (1 - smoothstep(0.76, 0.96, p));
+    const prostrate = smoothstep(0.34, 0.50, p) * (1 - smoothstep(0.64, 0.80, p));
+
+    const hipY = 0.78 - kneel * 0.48;
+    if (av.upperBody) {
+      av.upperBody.position.y = hipY;
+      av.upperBody.rotation.x = kneel * 0.22 + prostrate * 1.25;
+    }
+    if (av.leftLeg && av.rightLeg) {
+      av.leftLeg.position.y = hipY;
+      av.rightLeg.position.y = hipY;
+      av.leftLeg.rotation.x = -kneel * 1.32;
+      av.rightLeg.rotation.x = -kneel * 1.32;
+    }
+    if (av.leftKnee && av.rightKnee) {
+      av.leftKnee.rotation.x = kneel * 2.52;
+      av.rightKnee.rotation.x = kneel * 2.52;
+    }
+    if (av.leftArm && av.rightArm) {
+      const armForward = -(hapjang * 0.75 + prostrate * 0.72);
+      const armInward = hapjang * 0.36 * (1 - prostrate * 0.55);
+      av.leftArm.rotation.x = armForward;
+      av.rightArm.rotation.x = armForward;
+      av.leftArm.rotation.z = -armInward;
+      av.rightArm.rotation.z = armInward;
+    }
+  }
+
+  updateOtherUsers(dt, elapsedTime, smoothstep) {
+    if (!this.otherUsers || this.otherUsers.length === 0) return;
+
+    // 1. NPC끼리 가까워지면 서로 마주 보고 90도 인사 트리거
+    for (let i = 0; i < this.otherUsers.length; i++) {
+      const u1 = this.otherUsers[i];
+      if ((u1.state !== "wander" && u1.state !== "idle") || u1.greetCooldown > 0) continue;
+      for (let j = i + 1; j < this.otherUsers.length; j++) {
+        const u2 = this.otherUsers[j];
+        if (u1.zone !== u2.zone) continue;
+        if ((u2.state !== "wander" && u2.state !== "idle") || u2.greetCooldown > 0) continue;
+        const d = Math.hypot(u1.x - u2.x, u1.z - u2.z);
+        if (d < 3.6 && d > 0.9) {
+          this.startNpcMutualGreeting(u1, u2);
+          break;
+        }
+      }
+    }
+
+    // 2. 개별 NPC 상태 머신 (90도 인사 / 현실적 절하기 / 방석 이동 / 무작위 거닐기 / 휴식)
+    const GREET_DUR = 2.1;
+    const BOW_SEC = 3.2;
+
+    this.otherUsers.forEach((u) => {
+      const av = u.avatar;
+      u.greetCooldown = Math.max(0, (u.greetCooldown || 0) - dt);
+      u.bowCooldown = Math.max(0, (u.bowCooldown || 0) - dt);
+
+      if (u.state === "greeting" || u.isGreeting) {
+        u.greetTimer += dt;
+        if (u.greetTimer < GREET_DUR) {
+          const gp = u.greetTimer / GREET_DUR;
+          const bow90 = smoothstep(0.0, 0.28, gp) * (1 - smoothstep(0.68, 1.0, gp));
+          av.upperBody.position.y = 0.78;
+          av.upperBody.rotation.x = bow90 * (Math.PI / 2); // 정확히 90도 인사!
+          av.leftArm.rotation.x = -bow90 * 0.35;
+          av.rightArm.rotation.x = -bow90 * 0.35;
+          av.leftArm.rotation.z = -bow90 * 0.28;
+          av.rightArm.rotation.z = bow90 * 0.28;
+          if (av.leftLeg && av.rightLeg) {
+            av.leftLeg.position.y = 0.78;
+            av.rightLeg.position.y = 0.78;
+            av.leftLeg.rotation.x = 0;
+            av.rightLeg.rotation.x = 0;
+          }
+          if (av.leftKnee && av.rightKnee) {
+            av.leftKnee.rotation.x = 0;
+            av.rightKnee.rotation.x = 0;
+          }
+        } else {
+          u.isGreeting = false;
+          u.greetPartner = null;
+          u.state = "idle";
+          u.stateTimer = 0;
+          u.idleDuration = 1.0 + Math.random() * 1.4;
+          this.resetAvatarPose(av);
+          this.setNpcTagStatus(u, "");
+        }
+        return;
+      }
+
+      if (u.state === "bowing" || u.isBowing) {
+        u.bowPhase += dt;
+        const totalBowDur = BOW_SEC * (u.bowCount || 2);
+        if (u.bowPhase < totalBowDur) {
+          const p = (u.bowPhase % BOW_SEC) / BOW_SEC;
+          this.applyTempleBowPose(av, p, smoothstep);
+        } else {
+          u.isBowing = false;
+          u.bowPhase = 0;
+          u.bowCooldown = u.zone === "temple" ? 16 + Math.random() * 10 : 20 + Math.random() * 12;
+          u.state = "idle";
+          u.stateTimer = 0;
+          u.idleDuration = 1.4 + Math.random() * 1.5;
+          this.resetAvatarPose(av);
+          this.setNpcTagStatus(u, "");
+        }
+        return;
+      }
+
+      // 절하기 쿨타임 만료 시: 본당 NPC는 불단 방석으로 걸어가서 절, 마당 NPC는 제자리에서 법당/석탑 향해 절
+      if (u.bowCooldown <= 0 && (u.state === "wander" || u.state === "idle")) {
+        if (u.zone === "temple") {
+          u.targetX = u.bowCushionX;
+          u.targetZ = -57.5;
+          u.state = "goto_bow";
+          u.stateTimer = 0;
+        } else {
+          u.rotY = Math.PI; // 북쪽 대웅전 & 삼층석탑 방향
+          av.root.rotation.y = u.rotY;
+          u.state = "bowing";
+          u.isBowing = true;
+          u.bowPhase = 0;
+          u.bowCount = 1;
+          this.setNpcTagStatus(u, "🪷 합장 절하는 중");
+          return;
+        }
+      }
+
+      if (u.state === "wander" || u.state === "goto_bow") {
+        u.stateTimer += dt;
+        const dx = u.targetX - u.x;
+        const dz = u.targetZ - u.z;
+        const dist = Math.hypot(dx, dz);
+
+        if (dist < 0.45) {
+          if (u.state === "goto_bow") {
+            u.x = u.targetX;
+            u.z = u.targetZ;
+            u.rotY = Math.PI; // 부처님(북쪽 -Z) 정면 바라보기
+            av.root.rotation.y = u.rotY;
+            u.state = "bowing";
+            u.isBowing = true;
+            u.bowPhase = 0;
+            u.bowCount = 2;
+            this.setNpcTagStatus(u, "🪷 참배 절하는 중");
+            this.spawnCheerSparkles({ x: u.x, y: u.y + 0.9, z: u.z });
+          } else {
+            u.state = "idle";
+            u.stateTimer = 0;
+            u.idleDuration = 1.4 + Math.random() * 2.6;
+            this.resetAvatarPose(av);
+          }
+          return;
+        }
+
+        // 이동 방향 + 다른 캐릭터와의 가벼운 회피력
+        let vx = dx / dist;
+        let vz = dz / dist;
+        const step = (u.speed || 2.2) * dt;
+        const nextX = u.x + vx * step;
+        const nextZ = u.z + vz * step;
+        let moved = false;
+        if (!this.checkCollision(nextX, u.z, 0.65)) {
+          u.x = nextX;
+          moved = true;
+        }
+        if (!this.checkCollision(u.x, nextZ, 0.65)) {
+          u.z = nextZ;
+          moved = true;
+        }
+
+        // 막혔거나 너무 오래 걸리면 새 무작위 목표지 재선택
+        if (!moved || u.stateTimer > 9.0) {
+          if (u.state === "goto_bow") {
+            u.bowCooldown = 8;
+          }
+          this.pickNpcWaypoint(u);
+          return;
+        }
+
+        u.y = this.getGroundElevation(u.x, u.z);
+        av.root.position.set(u.x, u.y, u.z);
+
+        const targetAngle = Math.atan2(vx, vz);
+        let diff = targetAngle - u.rotY;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        u.rotY += diff * Math.min(1, dt * 7.5);
+        av.root.rotation.y = u.rotY;
+
+        // 자연스러운 보행 관절 애니메이션
+        u.walkPhase += dt * 7.6;
+        const swing = Math.sin(u.walkPhase);
+        av.upperBody.position.y = 0.78;
+        av.upperBody.rotation.x = 0.05;
+        if (av.leftLeg && av.rightLeg) {
+          av.leftLeg.position.y = 0.78;
+          av.rightLeg.position.y = 0.78;
+          av.leftLeg.rotation.x = swing * 0.42;
+          av.rightLeg.rotation.x = -swing * 0.42;
+        }
+        if (av.leftKnee && av.rightKnee) {
+          av.leftKnee.rotation.x = Math.max(0, -swing) * 0.5;
+          av.rightKnee.rotation.x = Math.max(0, swing) * 0.5;
+        }
+        if (av.leftArm && av.rightArm) {
+          av.leftArm.rotation.x = -swing * 0.34;
+          av.rightArm.rotation.x = swing * 0.34;
+          av.leftArm.rotation.z = 0;
+          av.rightArm.rotation.z = 0;
+        }
+      } else {
+        // idle 상태: 은은한 호흡 후 다시 무작위 이동 시작
+        u.stateTimer += dt;
+        const breath = Math.sin(elapsedTime * 1.6 + u.wanderOffset) * 0.022;
+        av.upperBody.position.y = 0.78;
+        av.upperBody.rotation.x = breath;
+        if (av.leftLeg && av.rightLeg) {
+          av.leftLeg.rotation.x = 0;
+          av.rightLeg.rotation.x = 0;
+        }
+        if (av.leftKnee && av.rightKnee) {
+          av.leftKnee.rotation.x = 0;
+          av.rightKnee.rotation.x = 0;
+        }
+        if (av.leftArm && av.rightArm) {
+          av.leftArm.rotation.x = 0;
+          av.rightArm.rotation.x = 0;
+          av.leftArm.rotation.z = 0;
+          av.rightArm.rotation.z = 0;
+        }
+        if (u.stateTimer >= (u.idleDuration || 2.0)) {
+          this.pickNpcWaypoint(u);
+        }
+      }
+    });
+  }
+
   resetAvatarPose(av) {
     if (!av) return;
     if (av.upperBody) {
@@ -4768,36 +5142,8 @@ class WishPlaza3DEngine {
       }
     }
 
-    // D. 다른 도반 유저들 자연스러운 거닐기 & 상호 90도 인사 애니메이션 업데이트
-    if (this.otherUsers && this.otherUsers.length > 0) {
-      this.otherUsers.forEach((u) => {
-        const av = u.avatar;
-        if (u.isGreeting) {
-          u.greetTimer += dt;
-          const GREET_DUR = 2.1;
-          if (u.greetTimer < GREET_DUR) {
-            const gp = u.greetTimer / GREET_DUR;
-            const bow90 = smoothstep(0.0, 0.28, gp) * (1 - smoothstep(0.68, 1.0, gp));
-            av.upperBody.rotation.x = bow90 * (Math.PI / 2); // 상대 도반도 똑같이 90도 답례 인사!
-            av.leftArm.rotation.x = -bow90 * 0.35;
-            av.rightArm.rotation.x = -bow90 * 0.35;
-            av.leftArm.rotation.z = -bow90 * 0.28;
-            av.rightArm.rotation.z = bow90 * 0.28;
-          } else {
-            u.isGreeting = false;
-            this.resetAvatarPose(av);
-          }
-        } else {
-          // 은은하게 제자리 호흡 및 천천히 주위를 둘러보는 평온한 대기 모션
-          const breath = Math.sin(elapsedTime * 1.6 + u.wanderOffset) * 0.025;
-          av.upperBody.rotation.x = breath;
-          av.leftArm.rotation.x = 0;
-          av.rightArm.rotation.x = 0;
-          av.leftArm.rotation.z = 0;
-          av.rightArm.rotation.z = 0;
-        }
-      });
-    }
+    // D. 다른 도반 유저들(최대 5명 NPC) 무작위 이동 · NPC끼리 90도 인사 · 절하기 업데이트
+    this.updateOtherUsers(dt, elapsedTime, smoothstep);
 
     // Apply player position & rotation
     if (this.playerGroup) {

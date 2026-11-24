@@ -340,7 +340,7 @@
         </button>
         <button type="button" onclick="App.setMode('saju')" id="modeBtnSaju" class="py-2.5 px-1 rounded-lg text-xs font-semibold transition flex flex-col items-center justify-center text-[#36281c] hover:text-black">
           <span>📜 사주</span>
-          <span class="text-[9px] px-1 rounded-xs bg-[#8c1d1d] text-[#fff3d1] font-black mt-0.5">500원</span>
+          <span class="text-[9px] px-1 rounded-xs bg-[#0f5132] text-[#f7e6c4] font-black mt-0.5">무료</span>
         </button>
         <button type="button" onclick="App.setMode('tarot')" id="modeBtnTarot" class="py-2.5 px-1 rounded-lg text-xs font-semibold transition flex flex-col items-center justify-center text-[#36281c] hover:text-black">
           <span>🔮 타로</span>
@@ -1056,7 +1056,7 @@
               </p>
             </div>
             <button type="button" onclick="App.goToPaidSajuFromDaily()" class="shrink-0 px-5 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-300 text-stone-950 font-black text-xs sm:text-sm hover:from-amber-300 hover:to-yellow-200 transition shadow-md whitespace-nowrap">
-              📜 내 사주팔자 심층 풀이 보기 (500원) ➔
+              📜 내 사주팔자 심층 풀이 보기 ➔
             </button>
           </div>
         </div>
@@ -1066,18 +1066,18 @@
       <div id="tabContent-saju" class="tab-pane hidden space-y-4">
         
         <!-- 4 Pillars Table -->
-        <div class="modern-card p-5 bg-white">
-          <div class="flex items-center justify-between mb-4 pb-2 border-b border-[#e8ded2]">
+        <div class="modern-card p-3.5 sm:p-5 bg-white">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-2 border-b border-[#e8ded2]">
             <div>
               <h3 class="text-sm font-black text-stone-900 font-serif-kr">사주 4주 8자 (四柱八字) 원국표</h3>
               <p class="text-[11px] text-stone-500 font-medium">나의 일간(本元)을 중심으로 천간과 지지의 오행 배합</p>
             </div>
-            <span class="text-xs text-amber-900 font-bold bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200">시주(時) · 일주(日) · 월주(月) · 년주(年)</span>
+            <span class="text-[11px] sm:text-xs text-amber-900 font-bold bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200 whitespace-nowrap">시주(時) · 일주(日) · 월주(月) · 년주(年)</span>
           </div>
 
-          <div class="grid grid-cols-4 gap-2 text-center">
+          <div class="grid grid-cols-4 gap-1.5 sm:gap-2 text-center">
             <!-- 시주 -->
-            <div id="pillarHourCard" class="p-3 rounded-2xl bg-slate-50 border border-slate-300">
+            <div id="pillarHourCard" class="p-2 sm:p-3 rounded-2xl bg-slate-50 border border-slate-300">
               <div class="text-[10px] text-slate-600 mb-0.5 font-bold">시주 (時)</div>
               <div id="hourTenGodGan" class="text-[10px] text-amber-800 font-extrabold mb-1">-</div>
               <div id="hourGanBadge" class="w-11 h-11 sm:w-14 sm:h-14 mx-auto rounded-xl flex flex-col items-center justify-center font-serif-kr text-lg sm:text-xl font-black my-1 shadow-sm">
@@ -1091,8 +1091,8 @@
             </div>
 
             <!-- 일주 -->
-            <div class="p-3 rounded-2xl bg-amber-50 border-2 border-amber-400 relative shadow-sm">
-              <span class="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-amber-500 text-slate-900 text-[10px] font-black shadow-sm">본원</span>
+            <div class="p-2 sm:p-3 rounded-2xl bg-amber-50 border-2 border-amber-400 relative shadow-sm">
+              <span class="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-amber-500 text-slate-900 text-[10px] font-black shadow-sm whitespace-nowrap">본원</span>
               <div class="text-[10px] text-amber-900 font-extrabold mb-0.5">일주 (日)</div>
               <div class="text-[10px] text-amber-800 font-extrabold mb-1">본원(나)</div>
               <div id="dayGanBadge" class="w-11 h-11 sm:w-14 sm:h-14 mx-auto rounded-xl flex flex-col items-center justify-center font-serif-kr text-lg sm:text-xl font-black my-1 shadow-sm">
@@ -1106,7 +1106,7 @@
             </div>
 
             <!-- 월주 -->
-            <div class="p-3 rounded-2xl bg-slate-50 border border-slate-300">
+            <div class="p-2 sm:p-3 rounded-2xl bg-slate-50 border border-slate-300">
               <div class="text-[10px] text-slate-600 mb-0.5 font-bold">월주 (月)</div>
               <div id="monthTenGodGan" class="text-[10px] text-amber-800 font-extrabold mb-1">-</div>
               <div id="monthGanBadge" class="w-11 h-11 sm:w-14 sm:h-14 mx-auto rounded-xl flex flex-col items-center justify-center font-serif-kr text-lg sm:text-xl font-black my-1 shadow-sm">
@@ -1120,7 +1120,7 @@
             </div>
 
             <!-- 년주 -->
-            <div class="p-3 rounded-2xl bg-slate-50 border border-slate-300">
+            <div class="p-2 sm:p-3 rounded-2xl bg-slate-50 border border-slate-300">
               <div class="text-[10px] text-slate-600 mb-0.5 font-bold">년주 (年)</div>
               <div id="yearTenGodGan" class="text-[10px] text-amber-800 font-extrabold mb-1">-</div>
               <div id="yearGanBadge" class="w-11 h-11 sm:w-14 sm:h-14 mx-auto rounded-xl flex flex-col items-center justify-center font-serif-kr text-lg sm:text-xl font-black my-1 shadow-sm">
@@ -1149,11 +1149,11 @@
           </button>
         </div>
 
-        <!-- 🔒 유료 500원 심층 사주 페이월 영역 (결제 전 블러 잠금 -> 500원 결제 시 즉시 해제) -->
-        <div id="sajuPaywallContainer" class="paywall-locked-area rounded-3xl">
+        <!-- 🔒 유료 500원 심층 사주 페이월 영역 (데모 버전: 기본 잠금 해제) -->
+        <div id="sajuPaywallContainer" class="paywall-locked-area paywall-unlocked rounded-3xl">
           
           <!-- 페이월 잠금 오버레이 카드 -->
-          <div id="sajuPaywallOverlay" class="paywall-overlay-card rounded-3xl">
+          <div id="sajuPaywallOverlay" class="hidden paywall-overlay-card rounded-3xl">
             <div class="max-w-md w-full modern-card p-6 bg-white border-2 border-amber-400 shadow-2xl text-center space-y-4">
               <div class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-950 border border-amber-400 text-xs font-black">
                 <span>🔒 정통 사주팔자 심층 리포트 잠금 해제</span>

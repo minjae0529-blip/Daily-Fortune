@@ -784,7 +784,7 @@ const App = {
     document.getElementById("inputSection").classList.add("hidden");
     document.getElementById("resultSection").classList.remove("hidden");
     window.scrollTo({ top: 0, behavior: "smooth" });
-    this.switchResultTab(this.currentMode === "saju" ? "future" : "daily");
+    this.switchResultTab(this.currentMode === "saju" ? "saju" : "daily");
 
     setTimeout(() => {
       this.interactMascot();
@@ -1464,9 +1464,12 @@ const App = {
   // 💳 500원 유료 사주 간편결제 (토스페이 · 카카오페이 · 네이버페이) & MySQL 보관함
   // ==========================================================================
   goToPaidSajuFromDaily() {
-    // 데모 버전: 결제 모달 스킵 후 정통 사주팔자 탭으로 즉시 이동
+    // 데모 버전: 결제 모달 스킵 후 정통 사주 모드로 완전 전환 + 전체 결과 렌더링 + 사주 원국표 탭 표시
+    this.currentMode = "saju";
+    this.renderResults();
     this.applyPaywallState(true, null);
-    this.switchResultTab("future");
+    this.switchResultTab("saju");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   },
 
   applyPaywallState(unlocked, receipt) {

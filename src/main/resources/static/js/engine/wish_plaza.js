@@ -1272,50 +1272,99 @@ class WishPlaza3DEngine {
   /* ==========================================================================
      석등 및 연화지(Lotus Pond) & 홍예교(Bridge)
      ========================================================================== */
+  /* ==========================================================================
+     일본 사찰식 연등 기둥(提灯柱) 및 기둥-기둥 공중 연결선(로프) 시스템
+     (바닥에 석등을 두지 않고, 기둥과 기둥을 연결한 공중 선에 연등을 매달아 띄움)
+     ========================================================================== */
+  getRopeSpans() {
+    // 8기의 대형 목조 기둥 상단 매듭 높이: y = 8.9m
+    // 좌측 열: x = -11.0, z = 16, 3, -9, -21
+    // 우측 열: x = +11.0, z = 16, 3, -9, -21
+    return [
+      // 좌측 기둥-기둥 세로 연결선 (3구간)
+      { p1: { x: -11.0, y: 8.9, z: 16.0 },  p2: { x: -11.0, y: 8.9, z: 3.0 },   sag: 0.75, count: 3, zone: "좌측 기둥 공중선 (남)" },
+      { p1: { x: -11.0, y: 8.9, z: 3.0 },   p2: { x: -11.0, y: 8.9, z: -9.0 },  sag: 0.75, count: 3, zone: "좌측 기둥 공중선 (중)" },
+      { p1: { x: -11.0, y: 8.9, z: -9.0 },  p2: { x: -11.0, y: 8.9, z: -21.0 }, sag: 0.75, count: 3, zone: "좌측 기둥 공중선 (북)" },
+
+      // 우측 기둥-기둥 세로 연결선 (3구간)
+      { p1: { x: 11.0, y: 8.9, z: 16.0 },   p2: { x: 11.0, y: 8.9, z: 3.0 },    sag: 0.75, count: 3, zone: "우측 기둥 공중선 (남)" },
+      { p1: { x: 11.0, y: 8.9, z: 3.0 },    p2: { x: 11.0, y: 8.9, z: -9.0 },   sag: 0.75, count: 3, zone: "우측 기둥 공중선 (중)" },
+      { p1: { x: 11.0, y: 8.9, z: -9.0 },   p2: { x: 11.0, y: 8.9, z: -21.0 },  sag: 0.75, count: 3, zone: "우측 기둥 공중선 (북)" },
+
+      // 좌우 기둥을 가로질러 마당 하늘 위를 연결하는 횡단 공중선 (3구간)
+      { p1: { x: -11.0, y: 8.9, z: 16.0 },  p2: { x: 11.0, y: 8.9, z: 16.0 },   sag: 1.05, count: 4, zone: "참배로 상공 횡단선 (남)" },
+      { p1: { x: -11.0, y: 8.9, z: 3.0 },   p2: { x: 11.0, y: 8.9, z: 3.0 },    sag: 1.05, count: 4, zone: "참배로 상공 횡단선 (중)" },
+      { p1: { x: -11.0, y: 8.9, z: -21.0 }, p2: { x: 11.0, y: 8.9, z: -21.0 },  sag: 1.05, count: 4, zone: "계단 앞 상공 횡단선 (북)" },
+
+      // 북측 기둥에서 대웅전(본당) 전면 처마 기둥으로 이어지는 상공 연결선 (2구간)
+      { p1: { x: -11.0, y: 8.9, z: -21.0 }, p2: { x: -9.2, y: 12.2, z: -32.8 }, sag: 0.85, count: 2, zone: "본당 처마 연결선 (좌)" },
+      { p1: { x: 11.0, y: 8.9, z: -21.0 },  p2: { x: 9.2, y: 12.2, z: -32.8 },  sag: 0.85, count: 2, zone: "본당 처마 연결선 (우)" }
+    ];
+  }
+
   buildStoneLanterns() {
-    const lanternCoords = [
-      { x: -7.0, z: 12 },
-      { x: 7.0, z: 12 },
-      { x: -8.0, z: 2 },
-      { x: 8.0, z: 2 },
-      { x: -9.5, z: -18 },
-      { x: 9.5, z: -18 },
-      { x: -15.0, z: -21 },
-      { x: 15.0, z: -21 }
+    // 바닥 석등 대신, 일본 사찰처럼 기둥을 세우고 기둥과 기둥 사이에 공중 로프(선)를 묶어 연결
+    const pillarCoords = [
+      { x: -11.0, z: 16.0 }, { x: 11.0, z: 16.0 },
+      { x: -11.0, z: 3.0 },  { x: 11.0, z: 3.0 },
+      { x: -11.0, z: -9.0 }, { x: 11.0, z: -9.0 },
+      { x: -11.0, z: -21.0 },{ x: 11.0, z: -21.0 }
     ];
 
-    const stoneMat = new THREE.MeshStandardMaterial({ color: 0x544c45, roughness: 0.85 });
-    const glowMat = new THREE.MeshStandardMaterial({ color: 0xff9922, emissive: 0xff7700, roughness: 0.2 });
+    const stoneMat = new THREE.MeshStandardMaterial({ color: 0x4a423a, roughness: 0.88 });
+    const woodMat = new THREE.MeshStandardMaterial({ color: 0x23140c, roughness: 0.55 });
+    const knotMat = new THREE.MeshStandardMaterial({ color: 0x991b1b, roughness: 0.5 });
+    const goldMat = new THREE.MeshStandardMaterial({ color: 0xd4a359, metalness: 0.85, roughness: 0.25 });
+    const ropeMat = new THREE.MeshStandardMaterial({ color: 0x3b2313, emissive: 0x1a0e06, roughness: 0.7 });
 
-    lanternCoords.forEach((pos) => {
-      const slGroup = new THREE.Group();
-      slGroup.position.set(pos.x, 0, pos.z);
+    pillarCoords.forEach((pos) => {
+      const pGroup = new THREE.Group();
+      pGroup.position.set(pos.x, 0, pos.z);
 
-      const base = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.3, 0.5, 8), stoneMat);
-      base.position.y = 0.25;
-      slGroup.add(base);
+      // 1) 화강암 주춧돌 기단 (바닥에는 기둥 받침만 깔끔하게 위치)
+      const plinth = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.45, 0.95), stoneMat);
+      plinth.position.y = 0.225;
+      pGroup.add(plinth);
 
-      const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 2.0, 8), stoneMat);
-      pillar.position.y = 1.25;
-      slGroup.add(pillar);
+      // 2) 높이 9.5m의 흑갈색 편백나무 기둥 (提灯柱)
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.20, 0.24, 9.2, 12), woodMat);
+      pole.position.y = 4.8;
+      pole.castShadow = true;
+      pGroup.add(pole);
 
-      const firebox = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.0, 1.1), glowMat);
-      firebox.position.y = 2.6;
-      slGroup.add(firebox);
+      // 3) 기둥 상단 로프 묶음 매듭 (y = 8.9m)
+      const knot = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.065, 8, 18), knotMat);
+      knot.rotation.x = Math.PI / 2;
+      knot.position.y = 8.9;
+      pGroup.add(knot);
 
-      const roof = new THREE.Mesh(new THREE.ConeGeometry(1.7, 0.8, 8), stoneMat);
-      roof.position.y = 3.5;
-      slGroup.add(roof);
+      // 4) 기둥 꼭대기 황동 보주 캡
+      const cap = new THREE.Mesh(new THREE.ConeGeometry(0.32, 0.45, 12), goldMat);
+      cap.position.y = 9.55;
+      pGroup.add(cap);
 
-      const light = new THREE.PointLight(0xffa238, 1.3, 16);
-      light.position.set(0, 2.6, 0);
-      slGroup.add(light);
+      this.scene.add(pGroup);
+    });
 
-      this.scene.add(slGroup);
+    // 기둥과 기둥을 연결하는 공중 현수선(Catenary Ropes) 생성
+    const spans = this.getRopeSpans();
+    spans.forEach((sp) => {
+      const v1 = new THREE.Vector3(sp.p1.x, sp.p1.y, sp.p1.z);
+      const v2 = new THREE.Vector3(sp.p2.x, sp.p2.y, sp.p2.z);
+      const midY = (sp.p1.y + sp.p2.y) * 0.5 - 2.0 * sp.sag;
+      const vMid = new THREE.Vector3(
+        (sp.p1.x + sp.p2.x) * 0.5,
+        midY,
+        (sp.p1.z + sp.p2.z) * 0.5
+      );
+      const curve = new THREE.QuadraticBezierCurve3(v1, vMid, v2);
+      const tubeGeo = new THREE.TubeGeometry(curve, 24, 0.045, 6, false);
+      const ropeMesh = new THREE.Mesh(tubeGeo, ropeMat);
+      this.scene.add(ropeMesh);
     });
   }
 
-  buildLotusPondAndBridge() {
+    buildLotusPondAndBridge() {
     const pondGroup = new THREE.Group();
     pondGroup.position.set(0, 0, 32);
 
@@ -1564,36 +1613,36 @@ class WishPlaza3DEngine {
     const add = (x, y, z, zone, type, extra) =>
       this.lanternSlots.push(Object.assign({ slotIndex: slotIdx++, x, y, z, zone, type }, extra || {}));
 
-    // 1. 본당 내부: 불단 좌우 츠리도로 2기 (실내는 최소화)
+    // 1. 본당 내부: 불단 좌우 츠리도로 2기 (공중 매달림)
     add(-7.0, 8.2, -59.5, "본당 불단 츠리도로 (좌)", "hanging", { cordLen: 6.2 });
     add(7.0, 8.2, -59.5, "본당 불단 츠리도로 (우)", "hanging", { cordLen: 6.2 });
 
-    // 2. 본당 정문 처마 제등 2기
+    // 2. 본당 정문 처마 대형 제등 2기 (처마 아래 공중 매달림)
     add(-5.0, 8.8, -33.2, "본당 정문 제등 (좌)", "hanging", { cordLen: 3.4 });
     add(5.0, 8.8, -33.2, "본당 정문 제등 (우)", "hanging", { cordLen: 3.4 });
 
-    // 3. 대석계단 입구 석주 등 2기 (해태상 바깥)
-    add(-12.5, 2.6, -24.0, "대석계단 유도등 (좌)", "post");
-    add(12.5, 2.6, -24.0, "대석계단 유도등 (우)", "post");
-
-    // 4. 참배로(어도) 양편 4기 (탑 충돌 영역 바깥)
-    for (const z of [6.0, -19.0]) {
-      add(-4.6, 2.6, z, "참배로 석등", "post");
-      add(4.6, 2.6, z, "참배로 석등", "post");
-    }
-
-    // 5. 삼층석탑(0, -10) 4방위 등
-    add(0, 2.6, -17.8, "석탑 북측 등", "post");
-    add(0, 2.6, -2.2, "석탑 남측 등", "post");
-    add(-7.6, 2.6, -10.0, "석탑 서측 등", "post");
-    add(7.6, 2.6, -10.0, "석탑 동측 등", "post");
-
-    // 6. 연화지 수면 부유 연화등 2기
-    add(-6.5, 1.0, 31.0, "연화지 수중등 (좌)", "float");
-    add(6.5, 1.0, 31.0, "연화지 수중등 (우)", "float");
+    // 3. 기둥과 기둥을 연결한 공중 선(Rope Spans)에 주렁주렁 매달린 공중 연등들 (바닥 연등 0개!)
+    const spans = this.getRopeSpans();
+    spans.forEach((sp) => {
+      const n = sp.count || 3;
+      for (let k = 1; k <= n; k++) {
+        const t = k / (n + 1);
+        const rx = sp.p1.x + (sp.p2.x - sp.p1.x) * t;
+        const rz = sp.p1.z + (sp.p2.z - sp.p1.z) * t;
+        // 2차 베지어 곡선 상의 정확한 로프 높이: y(t) = (1-t)*y1 + t*y2 - 4*sag*t*(1-t)
+        const ropeY = (1 - t) * sp.p1.y + t * sp.p2.y - 4 * sp.sag * t * (1 - t);
+        const dropLen = 1.05; // 로프에서 아래로 매달리는 끈 길이
+        const lanternY = ropeY - dropLen - 0.72; // 연등 중심 높이 (공중 y ≈ 6.3m ~ 8.8m)
+        add(rx, lanternY, rz, sp.zone, "rope_hanging", {
+          cordLen: dropLen,
+          ropeY: ropeY,
+          hasLight: (k === Math.ceil(n / 2)) // 각 로프 구간 중앙 연등에 대표 광원 부여
+        });
+      }
+    });
   }
 
-  /* 소원 등불이 하늘에 머무는 위치 (바닥이 아니라 밤하늘 높이 흩어져 떠 있음) */
+    /* 소원 등불이 하늘에 머무는 위치 (바닥이 아니라 밤하늘 높이 흩어져 떠 있음) */
   skyPosForIndex(i) {
     const ang = i * 2.399;
     const r = 8 + (i % 6) * 5.2;
@@ -1717,21 +1766,6 @@ class WishPlaza3DEngine {
     });
     this.lanterns = [];
 
-    // 1) 사찰 기본 제등 (소원이 없어도 경내를 밝힘, 항상 고정)
-    this.lanternSlots.forEach((slot, idx) => {
-      const defaultWish = {
-        id: 9000 + idx,
-        category: "🕊️ 사찰 제등 (奉納)",
-        author: "천명 사찰 수호 도반",
-        text: "경내를 은은하게 밝히는 봉납 제등(奉納 提灯)입니다. [내 소원 띄우기]로 소원을 쓰면 소원 등불이 하늘 높이 올라가 폭죽처럼 터지며 축복을 전합니다.",
-        cheers: 0,
-        date: "사찰 상시 조명",
-        isDefaultLight: true
-      };
-      this.lanterns.push(this.createLanternMesh(defaultWish, slot, true));
-    });
-
-    // 2) 도반들의 소원 등불: 바닥이 아니라 밤하늘 높이 천천히 떠다님
     let communityData = [];
     try {
       const saved = JSON.parse(localStorage.getItem("chunmyung_community_wishes") || "null");
@@ -1739,7 +1773,30 @@ class WishPlaza3DEngine {
     } catch (e) {
       communityData = [];
     }
-    communityData.slice(0, 40).forEach((w, i) => {
+
+    // 기둥과 기둥을 연결한 공중 로프 슬롯들에 도반들의 소원 연등과 사찰 제등을 매달아 띄움 (바닥 배치 없음!)
+    this.lanternSlots.forEach((slot, idx) => {
+      // 앞쪽 4개(본당 내부 2 + 본당 처마 2)는 사찰 고정 제등, 이후 기둥 연결선 슬롯에는 소원 연등들을 우선 매달고 남은 자리는 봉납 제등으로 채움
+      const wishIdx = idx - 4;
+      if (wishIdx >= 0 && wishIdx < communityData.length) {
+        const wish = communityData[wishIdx];
+        this.lanterns.push(this.createLanternMesh(wish, slot, false));
+      } else {
+        const defaultWish = {
+          id: 9000 + idx,
+          category: "🕊️ 사찰 공중 제등 (奉納)",
+          author: "천명 사찰 수호 도반",
+          text: "기둥과 기둥을 연결한 공중 선에 매달려 경내를 은은하게 밝히는 봉납 제등(奉納 提灯)입니다. [내 소원 띄우기]로 소원을 쓰면 열기구 등불이 하늘 높이 올라가 폭죽처럼 터지며 축복을 전합니다.",
+          cheers: 0,
+          date: "사찰 공중 연등선",
+          isDefaultLight: true
+        };
+        this.lanterns.push(this.createLanternMesh(defaultWish, slot, true));
+      }
+    });
+
+    // 추가로 밤하늘 더 높은 상공에도 열기구 소원 등불들이 은은하게 떠다니도록 배치
+    communityData.slice(0, 18).forEach((w, i) => {
       this.lanterns.push(this.createSkyWishLantern(w, i, false));
     });
 
@@ -1750,7 +1807,6 @@ class WishPlaza3DEngine {
     const group = new THREE.Group();
     group.position.set(slot.x, slot.y, slot.z);
 
-    // Warm Candlelight Amber Glow (일본식 화지 온등)
     let hexColor = 0xffd175;
     let emissiveColor = 0xff9922;
 
@@ -1769,57 +1825,42 @@ class WishPlaza3DEngine {
       }
     }
 
-    // 1. Structural Mount / Stand based on slot type
-    if (slot.type === "hanging") {
-      const cordLen = slot.cordLen || 2.2;
-      const cordGeo = new THREE.CylinderGeometry(0.015, 0.015, cordLen, 4);
-      const cordMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.6 });
-      const cord = new THREE.Mesh(cordGeo, cordMat);
-      cord.position.set(0, 0.75 + cordLen / 2, 0);
-      group.add(cord);
+    // 1. 공중 로프/처마에 매달리는 연결 끈 및 매듭 (바닥 기둥 없음 - 모두 하늘/공중에 매달림!)
+    const cordLen = slot.cordLen || 1.2;
+    const cordGeo = new THREE.CylinderGeometry(0.02, 0.02, cordLen, 6);
+    const cordMat = new THREE.MeshStandardMaterial({ color: 0x26150c, roughness: 0.6 });
+    const cord = new THREE.Mesh(cordGeo, cordMat);
+    cord.position.set(0, 0.75 + cordLen / 2, 0);
+    group.add(cord);
 
-      // Brass suspension ring (금구 / 츠리토로 고리)
-      const ringGeo = new THREE.TorusGeometry(0.12, 0.03, 8, 16);
-      const ringMat = new THREE.MeshStandardMaterial({ color: 0xd4a359, metalness: 0.85, roughness: 0.25 });
-      const ring = new THREE.Mesh(ringGeo, ringMat);
-      ring.position.set(0, 0.78, 0);
-      group.add(ring);
-    } else if (slot.type === "post") {
-      const postHeight = slot.y;
-      // Dark Hinoki / Blackened wood post with square plinth
-      const postBase = new THREE.Mesh(
-        new THREE.BoxGeometry(0.48, 0.35, 0.48),
-        new THREE.MeshStandardMaterial({ color: 0x221a14, roughness: 0.85 })
-      );
-      postBase.position.set(0, -postHeight + 0.17, 0);
-      group.add(postBase);
+    // 연등 상단 황동 고리
+    const ringGeo = new THREE.TorusGeometry(0.12, 0.03, 8, 16);
+    const ringMat = new THREE.MeshStandardMaterial({ color: 0xd4a359, metalness: 0.85, roughness: 0.25 });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.position.set(0, 0.78, 0);
+    group.add(ring);
 
-      const postPole = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.08, 0.1, postHeight, 8),
-        new THREE.MeshStandardMaterial({ color: 0x1a120b, roughness: 0.6 })
+    // 기둥-기둥 연결 로프와 맞닿는 상단 붉은 매듭 고리
+    if (slot.type === "rope_hanging") {
+      const topKnot = new THREE.Mesh(
+        new THREE.TorusGeometry(0.08, 0.035, 6, 12),
+        new THREE.MeshStandardMaterial({ color: 0x991b1b, roughness: 0.5 })
       );
-      postPole.position.set(0, -postHeight / 2, 0);
-      group.add(postPole);
-    } else if (slot.type === "float") {
-      const leafGeo = new THREE.CircleGeometry(0.9, 12);
-      const leafMat = new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.7, side: THREE.DoubleSide });
-      const leaf = new THREE.Mesh(leafGeo, leafMat);
-      leaf.rotation.x = -Math.PI / 2;
-      leaf.position.set(0, -0.65, 0);
-      group.add(leaf);
+      topKnot.position.set(0, 0.75 + cordLen, 0);
+      group.add(topKnot);
     }
 
-    // 2. Japanese Chochin (提灯) Body: softly rounded oblong washi paper lantern with black lacquer collars
-    const bodyGeo = new THREE.CylinderGeometry(0.70, 0.62, 1.45, 16);
+    // 2. Japanese Chochin (提灯) Body
+    const bodyGeo = new THREE.CylinderGeometry(0.68, 0.60, 1.40, 16);
     const bodyMat = new THREE.MeshStandardMaterial({
       color: hexColor,
       emissive: emissiveColor,
-      emissiveIntensity: isDefaultLight ? 0.62 : 0.82,
+      emissiveIntensity: isDefaultLight ? 0.68 : 0.88,
       map: isDefaultLight ? this.textures.chochin : this.textures.hanji,
       roughness: 0.35
     });
     const body = new THREE.Mesh(bodyGeo, bodyMat);
-    body.castShadow = true;
+    body.castShadow = false;
     group.add(body);
 
     // Black Lacquered Collars (黒漆 縁) top and bottom
@@ -1828,14 +1869,14 @@ class WishPlaza3DEngine {
       roughness: 0.35,
       metalness: 0.15
     });
-    const topCap = new THREE.Mesh(new THREE.CylinderGeometry(0.76, 0.76, 0.12, 16), collarMat);
-    topCap.position.y = 0.76;
-    const botCap = new THREE.Mesh(new THREE.CylinderGeometry(0.68, 0.68, 0.12, 16), collarMat);
-    botCap.position.y = -0.76;
+    const topCap = new THREE.Mesh(new THREE.CylinderGeometry(0.74, 0.74, 0.12, 16), collarMat);
+    topCap.position.y = 0.74;
+    const botCap = new THREE.Mesh(new THREE.CylinderGeometry(0.66, 0.66, 0.12, 16), collarMat);
+    botCap.position.y = -0.74;
     group.add(topCap);
     group.add(botCap);
 
-    // 3. Hanging Streamer (소원지) or Minimalist Silk Tassel (술)
+    // 3. Hanging Streamer (소원지) or Silk Tassel (술)
     let streamer = null;
     if (!isDefaultLight) {
       const streamerGeo = new THREE.PlaneGeometry(0.36, 1.15);
@@ -1857,27 +1898,27 @@ class WishPlaza3DEngine {
         transparent: true
       });
       streamer = new THREE.Mesh(streamerGeo, streamerMat);
-      streamer.position.set(0, -1.38, 0);
+      streamer.position.set(0, -1.36, 0);
       group.add(streamer);
     } else {
       const tasselGeo = new THREE.CylinderGeometry(0.04, 0.12, 0.65, 8);
       const tasselMat = new THREE.MeshStandardMaterial({ color: 0x851717, roughness: 0.6 });
       const tassel = new THREE.Mesh(tasselGeo, tasselMat);
-      tassel.position.set(0, -1.1, 0);
+      tassel.position.set(0, -1.08, 0);
       group.add(tassel);
     }
 
-    // 4. Illumination Point Light (소원/조명이 직접 주변 사찰 공간을 은은하게 비춤)
+    // 4. Illumination Point Light (성능과 자연스러운 공중 조명을 위해 대표 슬롯들에 광원 배치)
     let pLight = null;
-    if (slot.type !== "float") {
-      pLight = new THREE.PointLight(hexColor, isDefaultLight ? 1.2 : 1.5, 14.0);
+    if (slot.type === "hanging" || slot.hasLight) {
+      pLight = new THREE.PointLight(hexColor, isDefaultLight ? 1.3 : 1.6, 16.0);
       pLight.castShadow = false;
       group.add(pLight);
     }
 
-    // 5. Billboard Name Sprite (정갈한 일본 사찰 명패)
+    // 5. Billboard Name Sprite
     const labelSprite = this.createWishLabelSprite(wishData, isDefaultLight);
-    labelSprite.position.set(0, 1.45, 0);
+    labelSprite.position.set(0, -1.95, 0);
     group.add(labelSprite);
 
     this.scene.add(group);
@@ -1888,21 +1929,22 @@ class WishPlaza3DEngine {
       author: wishData.author,
       text: wishData.text,
       cheers: wishData.cheers || 0,
-      date: wishData.date || "2026. 11. 23.",
+      date: wishData.date || "2026. 11. 24.",
       isDefaultLight: isDefaultLight,
+      isRopeHung: slot.type === "rope_hanging",
       slot: slot,
       group: group,
       streamer: streamer,
       pLight: pLight,
       baseY: slot.y,
-      floatSpeed: 0.5 + Math.random() * 0.3,
-      floatAmp: slot.type === "hanging" ? 0.06 : (slot.type === "float" ? 0.10 : 0.0),
+      floatSpeed: 1.1 + Math.random() * 0.4,
+      floatAmp: 0.05,
       floatOffset: Math.random() * Math.PI * 2,
       rotSpeed: (Math.random() - 0.5) * 0.15
     };
   }
 
-  createWishLabelSprite(wishData, isDefaultLight) {
+    createWishLabelSprite(wishData, isDefaultLight) {
     const canvas = document.createElement("canvas");
     canvas.width = 256;
     canvas.height = 64;
@@ -2191,8 +2233,7 @@ class WishPlaza3DEngine {
     this.timeline.push({
       delay: 3.4,
       fn: () => {
-        const skyCount = this.lanterns.filter((l) => l.isSky).length;
-        this.lanterns.push(this.createSkyWishLantern(obj.wish, skyCount, true));
+        this.initLanterns();
         this.refreshMyWishBoard();
         this.refreshOtherWishBoard();
         this.updateHudCount();
@@ -2374,13 +2415,33 @@ class WishPlaza3DEngine {
       .catch(() => {});
   }
 
+  getMyCongratsMap() {
+    try {
+      const obj = JSON.parse(localStorage.getItem("chunmyung_congrats_counts") || "{}");
+      return (obj && typeof obj === "object" && !Array.isArray(obj)) ? obj : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  getPlazaClientId() {
+    try {
+      let cid = localStorage.getItem("chunmyung_plaza_client_id");
+      if (!cid) {
+        cid = "client_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
+        localStorage.setItem("chunmyung_plaza_client_id", cid);
+      }
+      return cid;
+    } catch (e) {
+      return "anon_client";
+    }
+  }
+
   renderFulfillmentPlazaPanel() {
     if (!this.fulfillmentPanelEl) return;
     const list = (this.plazaFulfillments || []).slice(0, 2);
-    let cheeredFulfillIds = [];
-    try {
-      cheeredFulfillIds = JSON.parse(localStorage.getItem("chunmyung_congrats_ids") || "[]");
-    } catch (e) {}
+    const countsMap = this.getMyCongratsMap();
+    const MAX_PER_USER = 3;
 
     let html = `
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;border-bottom:1px solid rgba(212,163,89,0.35);padding-bottom:6px;">
@@ -2388,7 +2449,7 @@ class WishPlaza3DEngine {
           <span style="font-size:16px;">🎊</span>
           <div>
             <div style="font-size:12px;font-weight:900;color:#fde047;">소원 성취 도반 축하하기</div>
-            <div style="font-size:10px;color:#d6c0a0;">연등광장 내부 접속자 실시간 축하</div>
+            <div style="font-size:10px;color:#d6c0a0;">연등광장 실시간 · 1인 최대 3회 축하 가능</div>
           </div>
         </div>
         <button type="button" onclick="WishPlaza.openMyWishModal()" style="font-size:10px;padding:3px 8px;border-radius:8px;background:#8c1d1d;color:#ffe8b3;border:1px solid #d4a359;font-weight:700;cursor:pointer;">
@@ -2401,7 +2462,8 @@ class WishPlaza3DEngine {
       html += `<div style="font-size:11px;color:#a8957a;padding:6px 0;">소원이 이루어졌다면 내 소원함에서 기쁜 소식을 알려 축하를 받아보세요!</div>`;
     } else {
       list.forEach((f) => {
-        const done = cheeredFulfillIds.includes(f.id);
+        const myCnt = Number(countsMap[f.id] || 0);
+        const reachedLimit = myCnt >= MAX_PER_USER;
         html += `
           <div style="background:rgba(38,24,15,0.9);border:1px solid #78350f;border-radius:10px;padding:8px 10px;margin-bottom:6px;">
             <div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#fbbf24;font-weight:700;margin-bottom:3px;">
@@ -2412,10 +2474,10 @@ class WishPlaza3DEngine {
               "${f.fulfillmentStory}"
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;">
-              <span style="font-size:10px;color:#fed7aa;">🎉 광장 도반 축하 <strong style="color:#fde047;">${f.congratsCount || 1}</strong>회</span>
+              <span style="font-size:10px;color:#fed7aa;">🎉 누적 축하 <strong style="color:#fde047;">${f.congratsCount || 1}</strong>회 <span style="color:#a8957a;">(나: ${myCnt}/${MAX_PER_USER}회)</span></span>
               <button type="button" onclick="WishPlaza.congratulateFulfillment(${f.id})"
-                style="font-size:10px;padding:4px 10px;border-radius:8px;font-weight:800;cursor:pointer;border:1px solid #fbbf24;${done ? "background:#442918;color:#fde68a;" : "background:linear-gradient(to right,#d97706,#b45309);color:#fff;"}">
-                ${done ? "👏 축하 완료 (" + (f.congratsCount || 1) + ")" : "👏 축하 보내기"}
+                style="font-size:10px;padding:4px 10px;border-radius:8px;font-weight:800;cursor:pointer;border:1px solid #fbbf24;${reachedLimit ? "background:#3f2e21;color:#d6c0a0;opacity:0.85;" : "background:linear-gradient(to right,#d97706,#b45309);color:#fff;"}">
+                ${reachedLimit ? "👏 축하 완료 (3/3회)" : "👏 축하 보내기 (" + myCnt + "/3)"}
               </button>
             </div>
           </div>
@@ -2426,15 +2488,33 @@ class WishPlaza3DEngine {
   }
 
   congratulateFulfillment(fulfillId) {
-    fetch("/api/plaza/fulfillments/" + fulfillId + "/congratulate", { method: "POST" })
+    const MAX_PER_USER = 3;
+    const countsMap = this.getMyCongratsMap();
+    const currentMyCnt = Number(countsMap[fulfillId] || 0);
+
+    if (currentMyCnt >= MAX_PER_USER) {
+      this.showToast("🙏 축하는 한 명당 최대 3번까지만 보낼 수 있습니다! (3/3회 완료)");
+      return;
+    }
+
+    fetch("/api/plaza/fulfillments/" + fulfillId + "/congratulate", {
+      method: "POST",
+      headers: { "X-Plaza-Client": this.getPlazaClientId() }
+    })
       .then((r) => r.json())
       .then((res) => {
-        if (!res || !res.success || !res.data) return;
+        if (!res || !res.success || !res.data) {
+          this.showToast((res && res.message) || "🙏 축하는 한 명당 최대 3번까지만 보낼 수 있습니다! (3/3회 완료)");
+          countsMap[fulfillId] = MAX_PER_USER;
+          try { localStorage.setItem("chunmyung_congrats_counts", JSON.stringify(countsMap)); } catch (e) {}
+          this.renderFulfillmentPlazaPanel();
+          return;
+        }
         const updated = res.data;
+        const nextMyCnt = Math.min(MAX_PER_USER, currentMyCnt + 1);
+        countsMap[fulfillId] = nextMyCnt;
         try {
-          const ids = JSON.parse(localStorage.getItem("chunmyung_congrats_ids") || "[]");
-          if (!ids.includes(fulfillId)) ids.push(fulfillId);
-          localStorage.setItem("chunmyung_congrats_ids", JSON.stringify(ids));
+          localStorage.setItem("chunmyung_congrats_counts", JSON.stringify(countsMap));
         } catch (e) {}
 
         const idx = this.plazaFulfillments.findIndex((f) => f.id === fulfillId);
@@ -2443,12 +2523,12 @@ class WishPlaza3DEngine {
 
         this.playTempleBellSound();
         this.spawnFirework({ x: this.player.x, y: this.player.y + 12, z: this.player.z - 6 }, 0xffd166, 120, 8);
-        this.showToast("👏 " + updated.author + " 도반님의 소원 성취에 따뜻한 축하를 보냈습니다! (축하 " + updated.congratsCount + "회)");
+        this.showToast("👏 " + updated.author + " 도반님의 소원 성취를 축하했습니다! (내 축하 " + nextMyCnt + "/3회 · 누적 " + updated.congratsCount + "회)");
       })
       .catch(() => {});
   }
 
-  reportWishFulfilled(wishId, storyText) {
+    reportWishFulfilled(wishId, storyText) {
     const myWishes = this.loadMyWishes();
     const target = myWishes.find((w) => w.id === wishId);
     const author = (target && target.author) || this.player.name || "천명 도반";
@@ -3754,13 +3834,12 @@ class WishPlaza3DEngine {
   updateHudCount() {
     const countEl = document.getElementById("wishPlazaTotalCount");
     const statusEl = document.getElementById("wishPlazaLightingStatus");
-    const wishCount = this.lanterns.filter((l) => l.isSky).length;
-    const lampCount = this.lanterns.filter((l) => l.isDefaultLight).length;
-    if (countEl) countEl.textContent = wishCount;
+    const ropeWishCount = this.lanterns.filter((l) => !l.isDefaultLight && !l.isSky).length;
+    const skyWishCount = this.lanterns.filter((l) => l.isSky).length;
+    const totalHanging = this.lanternSlots ? this.lanternSlots.length : 35;
+    if (countEl) countEl.textContent = Math.max(ropeWishCount, skyWishCount);
     if (statusEl) {
-      statusEl.textContent = wishCount === 0
-        ? "사찰 제등 " + lampCount + "등이 경내를 밝히는 중"
-        : "하늘에 소원 등불 " + wishCount + "개 · 사찰 제등 " + lampCount + "등";
+      statusEl.textContent = "기둥 연결선 공중 연등 " + totalHanging + "등 · 상공 소원 등불 " + skyWishCount + "개";
     }
   }
 
@@ -3816,15 +3895,15 @@ class WishPlaza3DEngine {
     if (Math.hypot(px + 10.5, pz + 23.0) < 1.5 + radius) return true;
     if (Math.hypot(px - 10.5, pz + 23.0) < 1.5 + radius) return true;
 
-    // 8. Courtyard Stone Lanterns (석등 8기)
-    const stoneLanternCoords = [
-      [-7.0, 12], [7.0, 12],
-      [-8.0, 2], [8.0, 2],
-      [-9.5, -18], [9.5, -18],
-      [-15.0, -21], [15.0, -21]
+    // 8. Courtyard Overhead Rope Pillars (연등 기둥 8기: x = ±11.0, z = 16, 3, -9, -21)
+    const ropePillarCoords = [
+      [-11.0, 16.0], [11.0, 16.0],
+      [-11.0, 3.0],  [11.0, 3.0],
+      [-11.0, -9.0], [11.0, -9.0],
+      [-11.0, -21.0],[11.0, -21.0]
     ];
-    for (const [lx, lz] of stoneLanternCoords) {
-      if (Math.hypot(px - lx, pz - lz) < 1.35 + radius) return true;
+    for (const [lx, lz] of ropePillarCoords) {
+      if (Math.hypot(px - lx, pz - lz) < 0.55 + radius) return true;
     }
 
     // 9. Pine trees (소나무 줄기)

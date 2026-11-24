@@ -12,12 +12,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpSession;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 @RestController
@@ -27,7 +30,9 @@ public class WishPlazaApiController {
 
     private final CopyOnWriteArrayList<PlazaWishDto> wishes = new CopyOnWriteArrayList<>();
     private final CopyOnWriteArrayList<PlazaFulfillmentDto> fulfillments = new CopyOnWriteArrayList<>();
+    private final ConcurrentHashMap<String, AtomicInteger> userCongratsCounter = new ConcurrentHashMap<>();
     private final AtomicLong idGenerator = new AtomicLong(2000L);
+    private static final int MAX_CONGRATS_PER_USER = 3;
 
     @Data
     @Builder
@@ -229,11 +234,23 @@ public class WishPlazaApiController {
         return ResponseEntity.ok(ApiResponseDto.ok(dto, "소원 성취 소식이 연등광장에 전해졌습니다! 도반들의 축하를 받아보세요."));
     }
 
-    @Operation(summary = "연등광장 내부에서 소원 성취한 도반에게 축하 보내기")
+    @Operation(summary = "연등광장 내부에서 소원 성취한 도반에게 축하 보내기 (1인당 최대 3회 허용)")
     @PostMapping("/fulfillments/{id}/congratulate")
-    public ResponseEntity<ApiResponseDto<PlazaFulfillmentDto>> congratulate(@PathVariable long id) {
+    public ResponseEntity<ApiResponseDto<PlazaFulfillmentDto>> congratulate(
+            @PathVariable long id,
+            @RequestHeader(value = "X-Plaza-Client", required = false) String clientId,
+            HttpSession session) {
+        String userKey = ((clientId != null && !clientId.isBlank()) ? clientId : session.getId()) + ":" + id;
+        AtomicInteger counter = userCongratsCounter.computeIfAbsent(userKey, k -> new AtomicInteger(0));
+        if (counter.get() >= MAX_CONGRATS_PER_USER) {
+            return ResponseEntity.badRequest().body(
+                    ApiResponseDto.fail("축하는 한 명당 최대 " + MAX_CONGRATS_PER_USER + "번까지만 보낼 수 있습니다. (3/3회 완료)")
+            );
+        }
+
         for (PlazaFulfillmentDto f : fulfillments) {
             if (f.getId() == id) {
+                int myCount = counter.incrementAndGet();
                 f.setCongratsCount(f.getCongratsCount() + 1);
                 for (PlazaWishDto w : wishes) {
                     if (w.getId() == f.getWishId()) {
@@ -241,7 +258,10 @@ public class WishPlazaApiController {
                         break;
                     }
                 }
-                return ResponseEntity.ok(ApiResponseDto.ok(f, f.getAuthor() + " 님에게 따뜻한 축하를 전했습니다!"));
+                return ResponseEntity.ok(ApiResponseDto.ok(
+                        f,
+                        f.getAuthor() + " 님에게 따뜻한 축하를 전했습니다! (" + myCount + "/" + MAX_CONGRATS_PER_USER + "회)"
+                ));
             }
         }
         return ResponseEntity.badRequest().body(ApiResponseDto.fail("해당 성취 소식을 찾을 수 없습니다."));

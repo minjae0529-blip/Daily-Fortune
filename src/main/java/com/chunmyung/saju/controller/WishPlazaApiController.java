@@ -31,8 +31,24 @@ public class WishPlazaApiController {
     private final CopyOnWriteArrayList<PlazaWishDto> wishes = new CopyOnWriteArrayList<>();
     private final CopyOnWriteArrayList<PlazaFulfillmentDto> fulfillments = new CopyOnWriteArrayList<>();
     private final ConcurrentHashMap<String, AtomicInteger> userCongratsCounter = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, PlazaPresenceDto> activePlayers = new ConcurrentHashMap<>();
     private final AtomicLong idGenerator = new AtomicLong(2000L);
     private static final int MAX_CONGRATS_PER_USER = 3;
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PlazaPresenceDto {
+        private String clientId;
+        private String name;
+        private double x;
+        private double y;
+        private double z;
+        private double rotationY;
+        private boolean greeting;
+        private long lastSeenMs;
+    }
 
     @Data
     @Builder
@@ -69,7 +85,7 @@ public class WishPlazaApiController {
     public void seedInitialData() {
         wishes.add(new PlazaWishDto(101L, "🌿 건강·장수", "어머니의 딸 김도반",
                 "다음 주 어머니 큰 수술 무사히 잘 마치시고, 다시 환하게 웃으시며 온 가족 모여 따뜻한 밥상 함께할 수 있기를 간절히 기도합니다.",
-                284, "2026. 11. 22.", true, "어머니 수술이 기적처럼 성공적으로 끝나 오늘 일반 병실로 옮기셨습니다! 함께 기도해주신 도반님들 덕분입니다.", 42));
+                284, "2026. 11. 22.", false, null, 0));
         wishes.add(new PlazaWishDto(102L, "🎓 시험·합격", "새벽별 임용고시생",
                 "3년 동안 준비한 중등 임용고시, 이번에는 반드시 합격하여 아이들에게 온기를 전하는 교사가 되고 싶습니다.",
                 196, "2026. 11. 21.", false, null, 0));
@@ -103,30 +119,35 @@ public class WishPlazaApiController {
         wishes.add(new PlazaWishDto(112L, "💖 애정·인연", "오랜 친구",
                 "멀어진 소중한 인연과 다시 마음이 닿아 웃으며 안부를 나눌 수 있는 날이 오기를 바랍니다.",
                 61, "2026. 11. 16.", false, null, 0));
-
-        fulfillments.add(PlazaFulfillmentDto.builder()
-                .id(1001L)
-                .wishId(101L)
-                .category("🌿 건강·장수")
-                .author("어머니의 딸 김도반")
-                .wishText("다음 주 어머니 큰 수술 무사히 잘 마치시고, 다시 환하게 웃으시며 온 가족 모여 따뜻한 밥상 함께할 수 있기를 간절히 기도합니다.")
-                .fulfillmentStory("어머니 수술이 기적처럼 성공적으로 끝나 오늘 일반 병실로 옮기셨습니다! 연등광장에서 함께 기도해주신 도반님들 진심으로 감사합니다.")
-                .congratsCount(42)
-                .date("2026. 11. 23.")
-                .build());
+        // 소원 성취 축하 목록은 실제 사용자가 성취 소식을 남기는 이벤트가 발생했을 때만 채워집니다.
     }
 
-    @Operation(summary = "연등광장 내부 실시간 상태 조회 (소원 + 성취 축하 목록)")
+    @Operation(summary = "연등광장 내부 실시간 상태 조회 (소원 + 성취 이벤트 + 접속 중인 도반)")
     @GetMapping("/state")
     public ResponseEntity<ApiResponseDto<Map<String, Object>>> getPlazaState() {
+        long now = System.currentTimeMillis();
+        activePlayers.entrySet().removeIf(e -> now - e.getValue().getLastSeenMs() > 15000L);
         return ResponseEntity.ok(ApiResponseDto.ok(
                 Map.of(
                         "wishes", wishes,
                         "fulfillments", fulfillments,
+                        "players", new ArrayList<>(activePlayers.values()),
                         "totalWishes", wishes.size()
                 ),
                 "연등광장 실시간 상태를 조회했습니다."
         ));
+    }
+
+    @Operation(summary = "연등광장 내부 접속자 위치 및 90도 인사 상태 동기화")
+    @PostMapping("/presence")
+    public ResponseEntity<ApiResponseDto<PlazaPresenceDto>> updatePresence(@RequestBody PlazaPresenceDto req) {
+        if (req.getClientId() == null || req.getClientId().isBlank()) {
+            return ResponseEntity.badRequest().body(ApiResponseDto.fail("clientId가 필요합니다."));
+        }
+        req.setName(SecurityUtils.sanitizeXss(req.getName() == null ? "천명 도반" : req.getName()));
+        req.setLastSeenMs(System.currentTimeMillis());
+        activePlayers.put(req.getClientId(), req);
+        return ResponseEntity.ok(ApiResponseDto.ok(req, "위치 동기화 완료"));
     }
 
     @Operation(summary = "타 이용자 소원함 페이지네이션 조회 (기본 limit=8, offset 단위)")

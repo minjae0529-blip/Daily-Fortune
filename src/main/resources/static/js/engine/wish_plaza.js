@@ -84,6 +84,12 @@ class WishPlaza3DEngine {
     this.plazaFulfillments = [];
     this.plazaPollTimer = null;
     this.fulfillmentPanelEl = null;
+    this.fulfillmentPanelDismissed = false;
+    this.otherUsers = [];
+    this.nearbyOtherUser = null;
+    this.player.isGreeting = false;
+    this.player.greetTimer = 0;
+    this.player.greetTargetUser = null;
     this.fireworks = [];        // 소원 등불 폭죽 파티클
     this.launching = [];        // 하늘로 올라가는 소원 등불
     this.timeline = [];         // 지연 실행 이벤트
@@ -180,6 +186,7 @@ class WishPlaza3DEngine {
     this.buildOtherWishBoard();
     this.buildCoinPond();
     this.buildPlayerCharacter();
+    this.buildOtherUsers();
     this.initLanterns();
 
     // 5. Input Events
@@ -1474,102 +1481,396 @@ class WishPlaza3DEngine {
   }
 
   /* ==========================================================================
-     3D 플레이어 캐릭터 (상체 그룹 & 팔다리 관절 분리 구조 - 절하기 모션 지원)
+     3D 캐릭터 아바타 빌더 (앞(+Z)/뒤(-Z) 명확한 얼굴·한복·관절 분리 구조)
+     - Local +Z = 정면 (눈, 눈썹, 코, 미소, 갓끈, 동정, 옷고름, 발끝)
+     - Local -Z = 뒷면 (검은 뒷머리, 도포 뒷자락)
+     - Local +X = 왼쪽 / Local -X = 오른쪽
      ========================================================================== */
-  buildPlayerCharacter() {
-    this.playerGroup = new THREE.Group();
-    this.playerGroup.position.set(this.player.x, this.player.y, this.player.z);
+  createCharacterAvatar(options = {}) {
+    const robeColor = options.robeColor || 0x1b2d4f;
+    const accentColor = options.accentColor || 0x8c1d1d;
+    const hasHat = options.hasHat !== false;
+    const hasLantern = options.hasLantern === true;
 
-    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x1b2d4f, roughness: 0.7 });
+    const root = new THREE.Group();
+    const bodyMat = new THREE.MeshStandardMaterial({ color: robeColor, roughness: 0.68 });
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0xffdfc4, roughness: 0.78 });
+    const hairMat = new THREE.MeshStandardMaterial({ color: 0x141210, roughness: 0.85 });
+    const whiteMat = new THREE.MeshStandardMaterial({ color: 0xfaf7f0, roughness: 0.7 });
+    const shoeMat = new THREE.MeshStandardMaterial({ color: 0x1c140e, roughness: 0.6 });
+    const accentMat = new THREE.MeshStandardMaterial({ color: accentColor, roughness: 0.55 });
 
-    // Upper Body Pivot Group at Waist (y = 0.75m) - enables natural prostrating / bowing
-    this.player.upperBody = new THREE.Group();
-    this.player.upperBody.position.set(0, 0.75, 0);
+    // --- Upper Body Pivot at Waist (y = 0.78m) ---
+    // +rotation.x bends torso FORWARD toward +Z (90도 인사 = Math.PI / 2)
+    const upperBody = new THREE.Group();
+    upperBody.position.set(0, 0.78, 0);
 
     // 1. Hanbok Robe Torso (도포 상체)
-    const bodyGeo = new THREE.CylinderGeometry(0.42, 0.68, 1.45, 16);
-    const body = new THREE.Mesh(bodyGeo, bodyMat);
-    body.position.y = 0.72;
-    body.castShadow = true;
-    this.player.upperBody.add(body);
+    const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.54, 1.15, 16), bodyMat);
+    torso.position.y = 0.58;
+    torso.castShadow = true;
+    upperBody.add(torso);
 
-    const collar = new THREE.Mesh(
-      new THREE.TorusGeometry(0.38, 0.07, 8, 16),
-      new THREE.MeshStandardMaterial({ color: 0xffffff })
-    );
-    collar.position.set(0, 1.45, 0.05);
-    collar.rotation.x = Math.PI / 3;
-    this.player.upperBody.add(collar);
+    // White Hanbok V-collar (동정) strictly on FRONT (+Z)
+    const collarL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.36, 0.06), whiteMat);
+    collarL.position.set(0.11, 1.03, 0.36);
+    collarL.rotation.z = 0.42;
+    upperBody.add(collarL);
 
-    // 2. Head
-    const head = new THREE.Mesh(
-      new THREE.SphereGeometry(0.36, 16, 16),
-      new THREE.MeshStandardMaterial({ color: 0xffdfc4, roughness: 0.8 })
-    );
-    head.position.y = 1.78;
+    const collarR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.36, 0.06), whiteMat);
+    collarR.position.set(-0.11, 1.03, 0.36);
+    collarR.rotation.z = -0.42;
+    upperBody.add(collarR);
+
+    // Traditional Hanbok Goreum ribbon (옷고름) on FRONT chest (+Z)
+    const goreumKnot = new THREE.Mesh(new THREE.SphereGeometry(0.065, 8, 8), accentMat);
+    goreumKnot.position.set(-0.08, 0.88, 0.40);
+    upperBody.add(goreumKnot);
+    const goreumTail = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.42, 0.03), accentMat);
+    goreumTail.position.set(-0.12, 0.66, 0.43);
+    goreumTail.rotation.z = -0.14;
+    upperBody.add(goreumTail);
+
+    // Waist Sash (세조대 허리띠)
+    const sash = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.47, 0.11, 16), accentMat);
+    sash.position.y = 0.34;
+    upperBody.add(sash);
+
+    // 2. Head & Clear Front Face (+Z) vs Back Hair (-Z)
+    const headGroup = new THREE.Group();
+    headGroup.position.set(0, 1.48, 0);
+
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.33, 18, 18), skinMat);
     head.castShadow = true;
-    this.player.upperBody.add(head);
+    headGroup.add(head);
 
-    // 3. Korean Traditional Hat (갓)
-    const hatGroup = new THREE.Group();
-    hatGroup.position.set(0, 2.05, 0);
-    const gatBrim = new THREE.Mesh(
-      new THREE.CylinderGeometry(1.22, 1.22, 0.04, 24),
-      new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.3 })
+    // Back Hair hemisphere covering -Z (뒷머리)
+    const backHair = new THREE.Mesh(
+      new THREE.SphereGeometry(0.345, 16, 16, Math.PI, Math.PI, 0, Math.PI * 0.78),
+      hairMat
     );
-    hatGroup.add(gatBrim);
-    const gatCrown = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.42, 0.52, 0.72, 16),
-      new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.3 })
+    headGroup.add(backHair);
+
+    // Top hair cap
+    const topHair = new THREE.Mesh(
+      new THREE.SphereGeometry(0.342, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.44),
+      hairMat
     );
-    gatCrown.position.y = 0.36;
-    hatGroup.add(gatCrown);
-    this.player.upperBody.add(hatGroup);
+    headGroup.add(topHair);
 
-    // 4. Arms (좌우 도포 소매 팔)
-    const armGeo = new THREE.CylinderGeometry(0.13, 0.16, 0.85, 8);
-    this.player.leftArm = new THREE.Mesh(armGeo, bodyMat);
-    this.player.leftArm.position.set(-0.52, 0.88, 0);
-    this.player.upperBody.add(this.player.leftArm);
+    // Front Face Features strictly on +Z!
+    const eyeMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+    const eyeHighlightMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    for (const ex of [-0.11, 0.11]) {
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.042, 10, 10), eyeMat);
+      eye.position.set(ex, 0.03, 0.30);
+      headGroup.add(eye);
 
-    this.player.rightArm = new THREE.Mesh(armGeo, bodyMat);
-    this.player.rightArm.position.set(0.52, 0.88, 0);
-    this.player.upperBody.add(this.player.rightArm);
+      const glint = new THREE.Mesh(new THREE.SphereGeometry(0.014, 6, 6), eyeHighlightMat);
+      glint.position.set(ex + 0.012, 0.045, 0.335);
+      headGroup.add(glint);
 
-    // 5. Hand Lantern (오른손 연등)
-    const lanternGroup = new THREE.Group();
-    lanternGroup.position.set(0.25, -0.42, 0.32);
-    const lbody = new THREE.Mesh(
-      new THREE.OctahedronGeometry(0.28, 1),
-      new THREE.MeshStandardMaterial({ color: 0xffaa33, emissive: 0xff8800, emissiveIntensity: 0.9 })
+      const brow = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.022, 0.02), hairMat);
+      brow.position.set(ex, 0.115, 0.305);
+      headGroup.add(brow);
+    }
+
+    // Subtle Nose (+Z)
+    const nose = new THREE.Mesh(new THREE.ConeGeometry(0.032, 0.07, 6), skinMat);
+    nose.rotation.x = Math.PI / 2;
+    nose.position.set(0, -0.025, 0.345);
+    headGroup.add(nose);
+
+    // Warm Gentle Smile (+Z)
+    const smile = new THREE.Mesh(
+      new THREE.TorusGeometry(0.065, 0.014, 6, 12, Math.PI),
+      new THREE.MeshBasicMaterial({ color: 0x9a3434 })
     );
-    lanternGroup.add(lbody);
-    this.player.handLight = new THREE.PointLight(0xffb042, 1.8, 12);
-    lanternGroup.add(this.player.handLight);
-    this.player.rightArm.add(lanternGroup);
+    smile.rotation.z = Math.PI;
+    smile.position.set(0, -0.095, 0.308);
+    headGroup.add(smile);
 
-    this.playerGroup.add(this.player.upperBody);
+    // 3. Traditional Korean Hat (갓) + Front Chinstrap (갓끈 on +Z)
+    if (hasHat) {
+      const hatGroup = new THREE.Group();
+      hatGroup.position.set(0, 0.24, 0);
+      const gatBrim = new THREE.Mesh(
+        new THREE.CylinderGeometry(1.05, 1.05, 0.035, 24),
+        new THREE.MeshStandardMaterial({ color: 0x0d0d0d, roughness: 0.32 })
+      );
+      hatGroup.add(gatBrim);
+      const gatCrown = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.36, 0.44, 0.58, 16),
+        new THREE.MeshStandardMaterial({ color: 0x070707, roughness: 0.32 })
+      );
+      gatCrown.position.y = 0.29;
+      hatGroup.add(gatCrown);
+      headGroup.add(hatGroup);
 
-    // 6. Legs (하체 다리 - 무릎 꿇기 절 모션 연동)
-    const legGeo = new THREE.CylinderGeometry(0.16, 0.16, 0.75, 8);
-    const legMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8 });
-    this.player.leftLeg = new THREE.Mesh(legGeo, legMat);
-    this.player.leftLeg.position.set(-0.24, 0.38, 0);
-    this.playerGroup.add(this.player.leftLeg);
+      // Front beaded chinstrap (갓끈) visible on the front (+Z)
+      const strap = new THREE.Mesh(
+        new THREE.TorusGeometry(0.24, 0.016, 6, 16, Math.PI),
+        new THREE.MeshStandardMaterial({ color: 0xd4a359, metalness: 0.7, roughness: 0.3 })
+      );
+      strap.rotation.z = Math.PI;
+      strap.position.set(0, -0.18, 0.20);
+      headGroup.add(strap);
+    }
 
-    this.player.rightLeg = new THREE.Mesh(legGeo, legMat);
-    this.player.rightLeg.position.set(0.24, 0.38, 0);
-    this.playerGroup.add(this.player.rightLeg);
+    upperBody.add(headGroup);
 
-    // 7. 3D Name Tag Sprite
+    // 4. Shoulder-Pivoted Arms (어깨 관절 피벗: -rotation.x 가 앞(+Z)으로 뻗음!)
+    const leftShoulder = new THREE.Group();
+    leftShoulder.position.set(0.45, 1.08, 0);
+    const leftArmMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.15, 0.72, 10), bodyMat);
+    leftArmMesh.position.set(0, -0.34, 0);
+    leftArmMesh.castShadow = true;
+    leftShoulder.add(leftArmMesh);
+    const leftHand = new THREE.Mesh(new THREE.SphereGeometry(0.095, 10, 10), skinMat);
+    leftHand.position.set(0, -0.73, 0);
+    leftShoulder.add(leftHand);
+    upperBody.add(leftShoulder);
+
+    const rightShoulder = new THREE.Group();
+    rightShoulder.position.set(-0.45, 1.08, 0);
+    const rightArmMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.15, 0.72, 10), bodyMat);
+    rightArmMesh.position.set(0, -0.34, 0);
+    rightArmMesh.castShadow = true;
+    rightShoulder.add(rightArmMesh);
+    const rightHand = new THREE.Mesh(new THREE.SphereGeometry(0.095, 10, 10), skinMat);
+    rightHand.position.set(0, -0.73, 0);
+    rightShoulder.add(rightHand);
+    upperBody.add(rightShoulder);
+
+    // 5. Optional Hand Lantern on Right Hand (-X side, held in front +Z)
+    let handLight = null;
+    let handLanternGroup = null;
+    if (hasLantern) {
+      handLanternGroup = new THREE.Group();
+      handLanternGroup.position.set(0, -0.82, 0.24);
+      const lbody = new THREE.Mesh(
+        new THREE.OctahedronGeometry(0.22, 1),
+        new THREE.MeshStandardMaterial({ color: 0xffaa33, emissive: 0xff8800, emissiveIntensity: 0.9 })
+      );
+      handLanternGroup.add(lbody);
+      handLight = new THREE.PointLight(0xffb042, 1.5, 12);
+      handLanternGroup.add(handLight);
+      rightShoulder.add(handLanternGroup);
+    }
+
+    root.add(upperBody);
+
+    // 6. Articulated Legs (고관절 + 무릎 관절 + 정강이 + 앞(+Z)을 향하는 신발)
+    const buildLeg = (xPos) => {
+      const hip = new THREE.Group();
+      hip.position.set(xPos, 0.78, 0);
+
+      const thigh = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.12, 0.40, 10), whiteMat);
+      thigh.position.set(0, -0.20, 0);
+      hip.add(thigh);
+
+      const knee = new THREE.Group();
+      knee.position.set(0, -0.40, 0);
+
+      const shin = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.095, 0.38, 10), whiteMat);
+      shin.position.set(0, -0.19, 0);
+      knee.add(shin);
+
+      // Shoe pointing strictly toward +Z (front)
+      const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.10, 0.28), shoeMat);
+      shoe.position.set(0, -0.35, 0.06);
+      knee.add(shoe);
+
+      hip.add(knee);
+      root.add(hip);
+      return { hip, knee };
+    };
+
+    const leftLegJoint = buildLeg(0.19);
+    const rightLegJoint = buildLeg(-0.19);
+
+    return {
+      root,
+      upperBody,
+      headGroup,
+      leftArm: leftShoulder,
+      rightArm: rightShoulder,
+      leftLeg: leftLegJoint.hip,
+      leftKnee: leftLegJoint.knee,
+      rightLeg: rightLegJoint.hip,
+      rightKnee: rightLegJoint.knee,
+      handLight,
+      handLanternGroup
+    };
+  }
+
+  buildPlayerCharacter() {
+    const avatar = this.createCharacterAvatar({
+      robeColor: 0x1b2d4f,
+      accentColor: 0x8c1d1d,
+      hasHat: true,
+      hasLantern: true
+    });
+    this.playerGroup = avatar.root;
+    this.playerGroup.position.set(this.player.x, this.player.y, this.player.z);
+
+    this.player.upperBody = avatar.upperBody;
+    this.player.headGroup = avatar.headGroup;
+    this.player.leftArm = avatar.leftArm;
+    this.player.rightArm = avatar.rightArm;
+    this.player.leftLeg = avatar.leftLeg;
+    this.player.leftKnee = avatar.leftKnee;
+    this.player.rightLeg = avatar.rightLeg;
+    this.player.rightKnee = avatar.rightKnee;
+    this.player.handLight = avatar.handLight;
+    this.player.handLanternGroup = avatar.handLanternGroup;
+
+    // 3D Name Tag Sprite
     this.player.nameTagSprite = this.createNameTagSprite(this.player.name);
-    this.player.nameTagSprite.position.set(0, 3.5, 0);
+    this.player.nameTagSprite.position.set(0, 3.2, 0);
     this.playerGroup.add(this.player.nameTagSprite);
 
     this.scene.add(this.playerGroup);
   }
 
-  createNameTagSprite(text) {
+  /* ==========================================================================
+     다른 도반 유저들 (만나면 서로 90도 인사 가능!)
+     ========================================================================== */
+  buildOtherUsers() {
+    const visitors = [
+      {
+        id: "visitor_1",
+        name: "김서연",
+        robeColor: 0x1b4d3e, // 비취청록 도포
+        accentColor: 0xd4a359,
+        x: 3.4, y: 0, z: 11.5,
+        homeX: 3.4, homeZ: 11.5,
+        patrolRadius: 2.2,
+        rotY: -0.6,
+        greetingReply: "반갑습니다! 오늘도 평안하고 좋은 일만 가득하시길 바랍니다 ✨"
+      },
+      {
+        id: "visitor_2",
+        name: "박지훈",
+        robeColor: 0x4c1d4b, // 연자주 도포
+        accentColor: 0xfbbf24,
+        x: -3.8, y: 0, z: -2.0,
+        homeX: -3.8, homeZ: -2.0,
+        patrolRadius: 2.4,
+        rotY: 0.5,
+        greetingReply: "안녕하세요 도반님! 간절히 품은 소원이 꼭 이루어지길 응원합니다 🏮"
+      },
+      {
+        id: "visitor_3",
+        name: "이하늘",
+        robeColor: 0x5c3a1e, // 황토갈색 도포
+        accentColor: 0x991b1b,
+        x: 4.5, y: 3.85, z: -42.0,
+        homeX: 4.5, homeZ: -42.0,
+        patrolRadius: 1.8,
+        rotY: -1.1,
+        greetingReply: "천명전 본당에서 뵙게 되어 반갑습니다! 부처님 가피가 함께하길 기원합니다 🪷"
+      }
+    ];
+
+    this.otherUsers = [];
+    visitors.forEach((v, idx) => {
+      const av = this.createCharacterAvatar({
+        robeColor: v.robeColor,
+        accentColor: v.accentColor,
+        hasHat: true,
+        hasLantern: false
+      });
+      av.root.position.set(v.x, v.y, v.z);
+      av.root.rotation.y = v.rotY;
+
+      const tag = this.createOtherUserTagSprite(v.name);
+      tag.position.set(0, 3.1, 0);
+      av.root.add(tag);
+
+      this.scene.add(av.root);
+      this.otherUsers.push({
+        ...v,
+        avatar: av,
+        isGreeting: false,
+        greetTimer: 0,
+        walkPhase: idx * 2.1,
+        wanderOffset: idx * 1.9
+      });
+    });
+  }
+
+  createOtherUserTagSprite(name) {
+    const canvas = document.createElement("canvas");
+    canvas.width = 256;
+    canvas.height = 64;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "rgba(18, 22, 32, 0.85)";
+    ctx.strokeStyle = "#38bdf8";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.roundRect(8, 8, 240, 48, 12);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "#e0f2fe";
+    ctx.font = "bold 19px 'Noto Serif KR', sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(`도반 ${name}`, 128, 32);
+    const tex = new THREE.CanvasTexture(canvas);
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true }));
+    sprite.scale.set(2.9, 0.72, 1);
+    return sprite;
+  }
+
+  /* 다른 유저와 만나면 서로 마주 보고 90도 인사하기! */
+  greetOtherUser(targetUser) {
+    if (this.player.isPraying || this.player.isGreeting) return;
+    const user = targetUser || this.nearbyOtherUser;
+    if (!user) {
+      this.showToast("🙇 인사할 도반에게 조금 더 가까이 다가가 주세요!");
+      return;
+    }
+
+    const dx = user.x - this.player.x;
+    const dz = user.z - this.player.z;
+    const dist = Math.hypot(dx, dz);
+    if (dist > 6.5) {
+      this.showToast("🙇 도반 " + user.name + " 님에게 조금 더 가까이 다가가 주세요!");
+      return;
+    }
+
+    // 1. 서로 정면(+Z)으로 마주 보도록 회전
+    this.player.rotationY = Math.atan2(dx, dz);
+    user.rotY = Math.atan2(-dx, -dz);
+    user.avatar.root.rotation.y = user.rotY;
+
+    // 2. 양쪽 모두 90도 인사 시퀀스 시작 (총 2.4초: 숙이기 0.55s -> 90도 정지 0.9s -> 일어나기 0.55s)
+    this.player.isGreeting = true;
+    this.player.greetTimer = 0;
+    this.player.greetTargetUser = user;
+    this.player.targetX = null;
+    this.player.targetZ = null;
+
+    user.isGreeting = true;
+    user.greetTimer = 0;
+
+    this.playTempleBellSound();
+    this.spawnCheerSparkles({
+      x: (this.player.x + user.x) * 0.5,
+      y: this.player.y + 1.5,
+      z: (this.player.z + user.z) * 0.5
+    });
+
+    this.showBlessing(
+      "🙇",
+      "도반 " + user.name + " 님과 서로 90도로 인사했습니다!",
+      "[" + user.name + "]: \"" + user.greetingReply + "\"",
+      4500
+    );
+  }
+
+    createNameTagSprite(text) {
     const canvas = document.createElement("canvas");
     canvas.width = 256;
     canvas.height = 64;
@@ -2398,7 +2699,8 @@ class WishPlaza3DEngine {
         }
 
         // 새로운 성취 소식이 도착했는지 확인
-        if (this.plazaFulfillments.length > 0 && serverFulfillments.length > this.plazaFulfillments.length) {
+        if (serverFulfillments.length > this.plazaFulfillments.length) {
+          this.fulfillmentPanelDismissed = false;
           const newest = serverFulfillments[0];
           this.spawnFirework({ x: this.player.x, y: this.player.y + 16, z: this.player.z - 10 }, 0xffd166, 160, 9);
           this.playFireworkSound();
@@ -2440,6 +2742,14 @@ class WishPlaza3DEngine {
   renderFulfillmentPlazaPanel() {
     if (!this.fulfillmentPanelEl) return;
     const list = (this.plazaFulfillments || []).slice(0, 2);
+
+    // 타 사용자/도반의 실제 소원 성취 이벤트가 있을 때만 표시! 평소에는 깔끔하게 숨김
+    if (list.length === 0 || this.fulfillmentPanelDismissed) {
+      this.fulfillmentPanelEl.style.display = "none";
+      return;
+    }
+    this.fulfillmentPanelEl.style.display = "block";
+
     const countsMap = this.getMyCongratsMap();
     const MAX_PER_USER = 3;
 
@@ -2449,18 +2759,16 @@ class WishPlaza3DEngine {
           <span style="font-size:16px;">🎊</span>
           <div>
             <div style="font-size:12px;font-weight:900;color:#fde047;">소원 성취 도반 축하하기</div>
-            <div style="font-size:10px;color:#d6c0a0;">연등광장 실시간 · 1인 최대 3회 축하 가능</div>
+            <div style="font-size:10px;color:#d6c0a0;">연등광장 실시간 이벤트 · 1인 최대 3회 축하</div>
           </div>
         </div>
-        <button type="button" onclick="WishPlaza.openMyWishModal()" style="font-size:10px;padding:3px 8px;border-radius:8px;background:#8c1d1d;color:#ffe8b3;border:1px solid #d4a359;font-weight:700;cursor:pointer;">
-          성취 알리기
+        <button type="button" onclick="WishPlaza.fulfillmentPanelDismissed=true;WishPlaza.renderFulfillmentPlazaPanel();" style="font-size:11px;padding:2px 7px;border-radius:8px;background:#374151;color:#e5e7eb;border:1px solid #6b7280;font-weight:800;cursor:pointer;" title="알림 닫기">
+          ✕
         </button>
       </div>
     `;
 
-    if (list.length === 0) {
-      html += `<div style="font-size:11px;color:#a8957a;padding:6px 0;">소원이 이루어졌다면 내 소원함에서 기쁜 소식을 알려 축하를 받아보세요!</div>`;
-    } else {
+    if (false) {
       list.forEach((f) => {
         const myCnt = Number(countsMap[f.id] || 0);
         const reachedLimit = myCnt >= MAX_PER_USER;
@@ -2575,6 +2883,7 @@ class WishPlaza3DEngine {
       .then((r) => r.json())
       .then((res) => {
         if (res && res.success && res.data) {
+          this.fulfillmentPanelDismissed = false;
           this.plazaFulfillments.unshift(res.data);
           this.renderFulfillmentPlazaPanel();
         }
@@ -3457,9 +3766,21 @@ class WishPlaza3DEngine {
     this.isNearOtherWishBoard = pz < -34 && Math.hypot(px - 26.5, pz + 40.5) < 6.5;
     this.isNearCoinPond = Math.hypot(px + 18, pz - 8) < 11.5;
 
+    // Check nearby other user for 90-degree greeting
+    this.nearbyOtherUser = null;
+    let closestUserDist = 5.4;
+    for (const u of this.otherUsers || []) {
+      const d = Math.hypot(u.x - px, u.z - pz);
+      if (d < closestUserDist && Math.abs(u.y - this.player.y) < 1.5) {
+        closestUserDist = d;
+        this.nearbyOtherUser = u;
+      }
+    }
+
     if (!this.hintEl) return;
     let text = "";
-    if (this.isNearWishBoard) text = "📜 [E] 또는 클릭 — 내 소원판에 소원 적기 · 성취 소식 알리기";
+    if (this.nearbyOtherUser) text = "🙇 [G] 또는 클릭 — 도반 " + this.nearbyOtherUser.name + " 님과 서로 90도 인사하기";
+    else if (this.isNearWishBoard) text = "📜 [E] 또는 클릭 — 내 소원판에 소원 적기 · 성취 소식 알리기";
     else if (this.isNearOtherWishBoard) text = "🏮 [E] 또는 클릭 — 타 이용자 소원함 보기 (예/아니요 화면 전환)";
     else if (this.isNearCoinPond) text = "🪙 가운데 검은 구멍 정중앙을 마우스로 클릭하거나 구멍을 향해 [C] 키를 눌러 동전을 넣으세요";
     if (text) {
@@ -3562,6 +3883,10 @@ class WishPlaza3DEngine {
         // Spacebar Jump!
         this.jump();
         e.preventDefault();
+      } else if (code === "KeyG") {
+        // G Key: 다른 유저와 서로 90도 인사하기
+        this.greetOtherUser();
+        e.preventDefault();
       } else if (code === "KeyC") {
         // C Key: 동전 던지기
         this.throwCoin();
@@ -3653,6 +3978,17 @@ class WishPlaza3DEngine {
           if (buddhaHits.length > 0) {
             this.offerPrayerAtBuddha();
             return;
+          }
+        }
+
+        // Click Other User Avatar -> 서로 90도 인사하기!
+        if (this.otherUsers && this.otherUsers.length > 0) {
+          for (const u of this.otherUsers) {
+            const uh = this.raycaster.intersectObjects(u.avatar.root.children, true);
+            if (uh.length > 0) {
+              this.greetOtherUser(u);
+              return;
+            }
           }
         }
 
@@ -4192,6 +4528,30 @@ class WishPlaza3DEngine {
     this.animFrameId = requestAnimationFrame(() => this.loop());
   }
 
+  resetAvatarPose(av) {
+    if (!av) return;
+    if (av.upperBody) {
+      av.upperBody.position.y = 0.78;
+      av.upperBody.rotation.x = 0;
+    }
+    if (av.leftLeg && av.rightLeg) {
+      av.leftLeg.position.y = 0.78;
+      av.rightLeg.position.y = 0.78;
+      av.leftLeg.rotation.x = 0;
+      av.rightLeg.rotation.x = 0;
+    }
+    if (av.leftKnee && av.rightKnee) {
+      av.leftKnee.rotation.x = 0;
+      av.rightKnee.rotation.x = 0;
+    }
+    if (av.leftArm && av.rightArm) {
+      av.leftArm.rotation.x = 0;
+      av.rightArm.rotation.x = 0;
+      av.leftArm.rotation.z = 0;
+      av.rightArm.rotation.z = 0;
+    }
+  }
+
   update(dt, elapsedTime) {
     // 1. Jump Physics & Ground Elevation Tracking
     const groundElevation = this.getGroundElevation(this.player.x, this.player.z);
@@ -4226,7 +4586,7 @@ class WishPlaza3DEngine {
     camRight.crossVectors(camForward, new THREE.Vector3(0, 1, 0)).normalize();
 
     const moveDir = new THREE.Vector3(0, 0, 0);
-    if (!this.player.isPraying) {
+    if (!this.player.isPraying && !this.player.isGreeting) {
       if (this.keys.up) moveDir.add(camForward);       // W: Forward
       if (this.keys.down) moveDir.sub(camForward);     // S: Backward
       if (this.keys.left) moveDir.sub(camRight);       // A: Left
@@ -4267,14 +4627,22 @@ class WishPlaza3DEngine {
       this.player.walkPhase = 0;
     }
 
-    // Prayer Bowing Animation (삼배 3회 정성 절하기 모션)
+    const smoothstep = (e0, e1, v) => {
+      const t = Math.max(0, Math.min(1, (v - e0) / (e1 - e0)));
+      return t * t * (3 - 2 * t);
+    };
+
+    // A. 현실적인 불교 삼배(三拜 / 큰절 오체투지) 4단계 풀 애니메이션
+    //    1) 합장(서서 두 손 모으기) → 2) 무릎 꿇기(정강이 뒤로 접기) → 3) 이마·양손 바닥 접족례 및 잠시 머무름 → 4) 부드럽게 일어나기
     if (this.player.isPraying) {
       this.player.isMoving = false;
       this.player.walkPhase = 0;
+      if (this.player.handLanternGroup) this.player.handLanternGroup.visible = false;
 
-      const prevBowIndex = Math.min(3, Math.floor(this.player.prayPhase / (Math.PI * 2)) + 1);
-      this.player.prayPhase += dt * 2.65; // ~2.37s per bow
-      const currentBowIndex = Math.min(3, Math.floor(this.player.prayPhase / (Math.PI * 2)) + 1);
+      const BOW_SEC = 3.2; // 1배당 3.2초의 정성스럽고 자연스러운 호흡
+      const prevBowIndex = Math.min(3, Math.floor(this.player.prayPhase / BOW_SEC) + 1);
+      this.player.prayPhase += dt;
+      const currentBowIndex = Math.min(3, Math.floor(this.player.prayPhase / BOW_SEC) + 1);
 
       if (currentBowIndex !== prevBowIndex && currentBowIndex <= 3) {
         this.player.bowIndex = currentBowIndex;
@@ -4287,77 +4655,148 @@ class WishPlaza3DEngine {
         }
       }
 
-      const totalDuration = Math.PI * 2 * 3;
-      if (this.player.prayPhase < totalDuration) {
-        const cycleProgress = (this.player.prayPhase % (Math.PI * 2)) / (Math.PI * 2);
-        const bowAmount = Math.sin(cycleProgress * Math.PI);
+      if (this.player.prayPhase < BOW_SEC * 3) {
+        const p = (this.player.prayPhase % BOW_SEC) / BOW_SEC; // 0.0 ~ 1.0
 
-        // 1. Knees bend & Hip drops onto cushion
-        if (this.player.leftLeg && this.player.rightLeg) {
-          this.player.leftLeg.rotation.x = -bowAmount * 1.35;
-          this.player.rightLeg.rotation.x = -bowAmount * 1.35;
-        }
+        // 1단계(0.00~0.16): 합장, 2단계(0.16~0.38): 무릎 꿇기, 3단계(0.38~0.68): 깊은 오체투지 & 정지, 4단계(0.68~1.00): 일어나기
+        const hapjang = smoothstep(0.0, 0.14, p) * (1 - smoothstep(0.88, 1.0, p));
+        const kneel = smoothstep(0.14, 0.36, p) * (1 - smoothstep(0.76, 0.96, p));
+        const prostrate = smoothstep(0.34, 0.50, p) * (1 - smoothstep(0.64, 0.80, p));
+
+        // 엉덩이/허리 높이: 무릎 꿇으면 방석 위로 자연스럽게 낮아짐 (0.78m -> 0.28m)
+        const hipY = 0.78 - kneel * 0.48;
         if (this.player.upperBody) {
-          this.player.upperBody.position.y = 0.75 - bowAmount * 0.42;
-          // 2. Torso deeply prostrates forward (오체투지 절하기)
-          this.player.upperBody.rotation.x = bowAmount * 1.32; // ~76 degrees forward
+          this.player.upperBody.position.y = hipY;
+          // 정면(+Z)으로 상체를 깊게 숙임 (무릎 꿇을 때 살짝 숙임 + 오체투지 시 ~82도 깊게 숙임)
+          this.player.upperBody.rotation.x = kneel * 0.22 + prostrate * 1.25;
         }
-        // 3. Arms come forward together onto cushion in Hapjang
+        // 고관절(허벅지) & 무릎(정강이 뒤로 접기)
+        if (this.player.leftLeg && this.player.rightLeg) {
+          this.player.leftLeg.position.y = hipY;
+          this.player.rightLeg.position.y = hipY;
+          // 허벅지를 앞으로 살짝 숙이고(-1.35), 정강이는 뒤(-Z)로 완전히 접어(+2.55) 진짜 무릎 꿇은 자세!
+          this.player.leftLeg.rotation.x = -kneel * 1.32;
+          this.player.rightLeg.rotation.x = -kneel * 1.32;
+        }
+        if (this.player.leftKnee && this.player.rightKnee) {
+          this.player.leftKnee.rotation.x = kneel * 2.52;
+          this.player.rightKnee.rotation.x = kneel * 2.52;
+        }
+        // 팔(어깨 관절): 음수(-rotation.x)가 앞(+Z)으로 뻗음!
+        // 합장(가슴 앞으로 모으기) → 오체투지 시 방석 앞 바닥에 양손을 뻗어 짚기(접족례)
         if (this.player.leftArm && this.player.rightArm) {
-          this.player.leftArm.rotation.x = bowAmount * 1.05;
-          this.player.rightArm.rotation.x = bowAmount * 1.05;
-          this.player.leftArm.rotation.z = bowAmount * 0.35;
-          this.player.rightArm.rotation.z = -bowAmount * 0.35;
+          const armForward = -(hapjang * 0.75 + prostrate * 0.72);
+          const armInward = hapjang * 0.36 * (1 - prostrate * 0.55);
+          this.player.leftArm.rotation.x = armForward;
+          this.player.rightArm.rotation.x = armForward;
+          this.player.leftArm.rotation.z = -armInward;
+          this.player.rightArm.rotation.z = armInward;
         }
       } else {
-        // Bowing cycle finished: smoothly return to standing
+        // 삼배 완료 후 깔끔하게 기립 복귀
         this.player.isPraying = false;
-        if (this.player.leftLeg && this.player.rightLeg) {
-          this.player.leftLeg.rotation.x = 0;
-          this.player.rightLeg.rotation.x = 0;
-        }
-        if (this.player.upperBody) {
-          this.player.upperBody.position.y = 0.75;
-          this.player.upperBody.rotation.x = 0;
-        }
-        if (this.player.leftArm && this.player.rightArm) {
-          this.player.leftArm.rotation.x = 0;
-          this.player.rightArm.rotation.x = 0;
-          this.player.leftArm.rotation.z = 0;
-          this.player.rightArm.rotation.z = 0;
-        }
+        if (this.player.handLanternGroup) this.player.handLanternGroup.visible = true;
+        this.resetAvatarPose(this.player);
         this.spawnCheerSparkles({ x: this.player.x, y: this.player.y + 1.2, z: this.player.z });
-        this.showToast("🪷 [삼배 완료] 부처님 전에 삼배를 올렸습니다. 만복이 깃드시길 발원합니다.");
+        this.showToast("🪷 [삼배 완료] 부처님 전에 정성스레 삼배를 올렸습니다. 만복이 깃드시길 발원합니다.");
         this.showBuddhaBlessingModal();
       }
+    } else if (this.player.isGreeting) {
+      // B. 다른 유저와 서로 정중한 90도 인사 애니메이션 (Math.PI / 2 = 정확히 90도!)
+      this.player.isMoving = false;
+      this.player.walkPhase = 0;
+      this.player.greetTimer += dt;
+      const GREET_DUR = 2.1;
+      if (this.player.greetTimer < GREET_DUR) {
+        const gp = this.player.greetTimer / GREET_DUR;
+        const bow90 = smoothstep(0.0, 0.28, gp) * (1 - smoothstep(0.68, 1.0, gp));
+        if (this.player.upperBody) {
+          this.player.upperBody.position.y = 0.78;
+          this.player.upperBody.rotation.x = bow90 * (Math.PI / 2); // 정확히 90도 인사!
+        }
+        if (this.player.leftArm && this.player.rightArm) {
+          // 두 손을 배 앞으로 공손히 모으기 (공수)
+          this.player.leftArm.rotation.x = -bow90 * 0.35;
+          this.player.rightArm.rotation.x = -bow90 * 0.35;
+          this.player.leftArm.rotation.z = -bow90 * 0.28;
+          this.player.rightArm.rotation.z = bow90 * 0.28;
+        }
+      } else {
+        this.player.isGreeting = false;
+        this.player.greetTargetUser = null;
+        this.resetAvatarPose(this.player);
+      }
     } else {
-      // Normal walking or idle arm/leg swing
+      // C. 일반 보행 및 점프 관절 애니메이션
+      if (this.player.handLanternGroup) this.player.handLanternGroup.visible = true;
+      if (this.player.upperBody) {
+        this.player.upperBody.position.y = 0.78;
+        this.player.upperBody.rotation.x = this.player.isMoving ? 0.06 : 0;
+      }
       if (this.player.leftLeg && this.player.rightLeg) {
+        this.player.leftLeg.position.y = 0.78;
+        this.player.rightLeg.position.y = 0.78;
         if (!this.player.isGrounded) {
-          this.player.leftLeg.rotation.x = -0.3;
-          this.player.rightLeg.rotation.x = 0.3;
+          this.player.leftLeg.rotation.x = -0.35;
+          this.player.rightLeg.rotation.x = 0.25;
+          if (this.player.leftKnee) this.player.leftKnee.rotation.x = 0.45;
+          if (this.player.rightKnee) this.player.rightKnee.rotation.x = 0.35;
         } else if (this.player.isMoving) {
-          this.player.leftLeg.rotation.x = Math.sin(this.player.walkPhase) * 0.45;
-          this.player.rightLeg.rotation.x = -Math.sin(this.player.walkPhase) * 0.45;
+          const swing = Math.sin(this.player.walkPhase);
+          this.player.leftLeg.rotation.x = swing * 0.45;
+          this.player.rightLeg.rotation.x = -swing * 0.45;
+          if (this.player.leftKnee) this.player.leftKnee.rotation.x = Math.max(0, -swing) * 0.55;
+          if (this.player.rightKnee) this.player.rightKnee.rotation.x = Math.max(0, swing) * 0.55;
         } else {
           this.player.leftLeg.rotation.x = 0;
           this.player.rightLeg.rotation.x = 0;
+          if (this.player.leftKnee) this.player.leftKnee.rotation.x = 0;
+          if (this.player.rightKnee) this.player.rightKnee.rotation.x = 0;
         }
       }
-
       if (this.player.leftArm && this.player.rightArm) {
+        this.player.leftArm.rotation.z = 0;
+        this.player.rightArm.rotation.z = 0;
         if (this.player.isMoving) {
-          this.player.leftArm.rotation.x = -Math.sin(this.player.walkPhase) * 0.35;
-          this.player.rightArm.rotation.x = Math.sin(this.player.walkPhase) * 0.35;
+          const swing = Math.sin(this.player.walkPhase);
+          this.player.leftArm.rotation.x = -swing * 0.38;
+          this.player.rightArm.rotation.x = swing * 0.22 - 0.18; // 오른손 연등 자연스럽게 들기
         } else {
           this.player.leftArm.rotation.x = 0;
-          this.player.rightArm.rotation.x = 0;
+          this.player.rightArm.rotation.x = -0.18;
         }
       }
-      if (this.player.upperBody) {
-        this.player.upperBody.position.y = 0.75;
-        this.player.upperBody.rotation.x = 0;
-      }
+    }
+
+    // D. 다른 도반 유저들 자연스러운 거닐기 & 상호 90도 인사 애니메이션 업데이트
+    if (this.otherUsers && this.otherUsers.length > 0) {
+      this.otherUsers.forEach((u) => {
+        const av = u.avatar;
+        if (u.isGreeting) {
+          u.greetTimer += dt;
+          const GREET_DUR = 2.1;
+          if (u.greetTimer < GREET_DUR) {
+            const gp = u.greetTimer / GREET_DUR;
+            const bow90 = smoothstep(0.0, 0.28, gp) * (1 - smoothstep(0.68, 1.0, gp));
+            av.upperBody.rotation.x = bow90 * (Math.PI / 2); // 상대 도반도 똑같이 90도 답례 인사!
+            av.leftArm.rotation.x = -bow90 * 0.35;
+            av.rightArm.rotation.x = -bow90 * 0.35;
+            av.leftArm.rotation.z = -bow90 * 0.28;
+            av.rightArm.rotation.z = bow90 * 0.28;
+          } else {
+            u.isGreeting = false;
+            this.resetAvatarPose(av);
+          }
+        } else {
+          // 은은하게 제자리 호흡 및 천천히 주위를 둘러보는 평온한 대기 모션
+          const breath = Math.sin(elapsedTime * 1.6 + u.wanderOffset) * 0.025;
+          av.upperBody.rotation.x = breath;
+          av.leftArm.rotation.x = 0;
+          av.rightArm.rotation.x = 0;
+          av.leftArm.rotation.z = 0;
+          av.rightArm.rotation.z = 0;
+        }
+      });
     }
 
     // Apply player position & rotation

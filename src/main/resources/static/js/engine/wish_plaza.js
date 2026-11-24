@@ -2813,7 +2813,7 @@ class WishPlaza3DEngine {
     grp.add(sign);
   }
 
-  /* 타 이용자 소원함 클릭/상호작용 시: "타 이용자의 소원을 보시겠습니까 ?" 예 / 아니요 */
+  /* 타 이용자 소원함 클릭/상호작용 시: "타 이용자의 소원을 보시겠습니까 ?" 예 / 아니요 (나가기 시 사주화면이 아닌 연등광장으로 복귀!) */
   promptViewOtherWishes() {
     let dialog = document.getElementById("otherWishConfirmModal");
     if (!dialog) {
@@ -2830,7 +2830,7 @@ class WishPlaza3DEngine {
         타 이용자의 소원을 보시겠습니까 ?
       </h3>
       <p style="font-size:12px;color:#d6c0a0;line-height:1.6;margin-bottom:18px;">
-        <strong>[예]</strong>를 선택하시면 홈페이지 첫 화면 하단 타 이용자 소원함으로 이동하여 한 페이지에 8개씩(offset 단위) 도반들의 소원을 열람합니다.
+        <strong>[예]</strong>를 선택하시면 타 이용자들의 소원을 한 페이지에 8개씩(offset 단위) 열람하며, 나가기를 누르면 연등광장으로 바로 돌아옵니다.
       </p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         <button type="button" id="otherWishNoBtn"
@@ -2849,15 +2849,168 @@ class WishPlaza3DEngine {
     };
     dialog.querySelector("#otherWishYesBtn").onclick = () => {
       dialog.close();
-      if (window.App && typeof window.App.navigateToHomeOtherWishes === "function") {
-        window.App.navigateToHomeOtherWishes();
-      } else {
-        this.close();
-      }
+      this.openOtherWishesListModal(0);
     };
 
     if (typeof dialog.showModal === "function") dialog.showModal();
     else dialog.setAttribute("open", "");
+  }
+
+  /* 연등광장 내부에서 타 이용자 소원함 열람 (한 페이지에 8개 offset 출력 · 나가기 시 사주화면이 아니라 연등광장으로 즉시 복귀!) */
+  openOtherWishesListModal(offset = 0) {
+    const allWishes = this.loadOtherWishes();
+    const limit = 8;
+    const total = allWishes.length;
+    const maxOffset = Math.max(0, Math.floor(Math.max(0, total - 1) / limit) * limit);
+    const safeOffset = Math.max(0, Math.min(offset, maxOffset));
+    this.otherWishOffset = safeOffset;
+    const slice = allWishes.slice(safeOffset, safeOffset + limit);
+
+    let cheeredIds = [];
+    try {
+      cheeredIds = JSON.parse(localStorage.getItem("chunmyung_cheered_wish_ids") || "[]");
+    } catch (e) {}
+
+    let dialog = document.getElementById("otherWishesListModal");
+    if (!dialog) {
+      dialog = document.createElement("dialog");
+      dialog.id = "otherWishesListModal";
+      dialog.style.cssText =
+        "background:#1c120b;color:#f7eedc;border:2px solid #f59e0b;border-radius:18px;padding:22px;" +
+        "max-width:760px;width:95%;max-height:88vh;overflow:auto;font-family:'Noto Serif KR',serif;box-shadow:0 0 40px rgba(0,0,0,0.85);";
+      document.body.appendChild(dialog);
+    }
+
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+    const currentPage = Math.floor(safeOffset / limit) + 1;
+    const prevOffset = Math.max(0, safeOffset - limit);
+    const nextOffset = Math.min(maxOffset, safeOffset + limit);
+
+    let cardsHtml = "";
+    if (slice.length === 0) {
+      cardsHtml = `<div style="grid-column:span 2;padding:24px;text-align:center;color:#a8957a;">등록된 소원이 없습니다.</div>`;
+    } else {
+      cardsHtml = slice.map((w, idx) => {
+        const isCheered = cheeredIds.includes(w.id);
+        const itemNo = safeOffset + idx + 1;
+        return `
+          <div style="padding:14px;border-radius:12px;background:#26180f;border:1px solid ${w.fulfilled ? "#f59e0b" : "#5b3a1c"};display:flex;flex-direction:column;justify-content:space-between;gap:10px;">
+            <div>
+              <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-bottom:6px;">
+                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                  <span style="padding:2px 6px;border-radius:6px;background:#18100b;color:#fbbf24;font-family:monospace;font-size:10px;border:1px solid #78350f;">#${itemNo}</span>
+                  <span style="padding:2px 8px;border-radius:6px;background:#362419;color:#fde68a;font-weight:700;font-size:10px;">${w.category || "소원"}</span>
+                  <strong style="color:#f7eedc;">${w.author || "익명의 도반"}</strong>
+                </div>
+                <span style="color:#a8957a;font-size:10px;font-family:monospace;">${w.date || ""}</span>
+              </div>
+              <div style="font-size:12.5px;color:#fff6df;line-height:1.55;margin-bottom:4px;">"${w.text || ""}"</div>
+              ${
+                w.fulfilled
+                  ? `<div style="margin-top:6px;padding:6px 8px;border-radius:8px;background:rgba(245,158,11,0.16);border:1px solid #f59e0b;font-size:11px;color:#fde68a;">
+                       🎊 <strong>[소원 성취]</strong> "${w.fulfillmentStory || "소원이 이루어졌습니다!"}"
+                     </div>`
+                  : ""
+              }
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid rgba(120,53,15,0.4);">
+              <span style="font-size:10px;color:#a8957a;">${w.fulfilled ? "🌟 성취된 소원" : "🏮 간절한 소원"}</span>
+              <button type="button" onclick="WishPlaza.cheerOtherWishFromPlaza(${w.id})"
+                style="padding:5px 12px;border-radius:999px;font-size:11px;font-weight:800;cursor:pointer;border:1px solid ${isCheered ? "#fbbf24" : "#78350f"};${isCheered ? "background:#991b1b;color:#fef08a;" : "background:#362419;color:#f7eedc;"}">
+                ${isCheered ? "❤️ 응원 완료 (" + (w.cheers || 1) + ")" : "🙏 응원하기 (" + (w.cheers || 1) + ")"}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    let pageBtns = "";
+    for (let p = 1; p <= totalPages; p++) {
+      const pOff = (p - 1) * limit;
+      const active = p === currentPage;
+      pageBtns += `
+        <button type="button" onclick="WishPlaza.openOtherWishesListModal(${pOff})"
+          style="padding:6px 11px;border-radius:8px;font-family:monospace;font-size:12px;font-weight:800;cursor:pointer;border:1px solid ${active ? "#f59e0b" : "#5b3a1c"};${active ? "background:#8c1d1d;color:#ffe8b3;" : "background:#26180f;color:#d6c0a0;"}">
+          ${p}
+        </button>
+      `;
+    }
+
+    dialog.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(212,163,89,0.4);padding-bottom:12px;margin-bottom:14px;gap:8px;flex-wrap:wrap;">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:22px;">🏮</span>
+            <h3 style="font-size:18px;font-weight:900;color:#fde68a;margin:0;">타 이용자 소원함 (도반들의 소원판)</h3>
+            <span style="padding:2px 10px;border-radius:999px;background:#8c1d1d;color:#ffe8b3;font-size:11px;font-weight:800;border:1px solid #d4a359;font-family:monospace;">
+              offset: ${safeOffset} · ${slice.length}개 출력
+            </span>
+          </div>
+          <p style="font-size:11.5px;color:#d6c0a0;margin:4px 0 0 0;">
+            한 페이지당 8개씩(offset 단위) 도반들의 소원이 출력됩니다. 나가기를 누르면 연등광장으로 바로 돌아갑니다.
+          </p>
+        </div>
+        <button type="button" onclick="WishPlaza.closeSubModal('otherWishesListModal')"
+          style="padding:7px 14px;border-radius:10px;background:#8c1d1d;color:#ffe8b3;border:1px solid #f59e0b;font-size:12px;font-weight:800;cursor:pointer;">
+          ✕ 나가기 (연등광장으로)
+        </button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px;margin-bottom:14px;">
+        ${cardsHtml}
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding-top:10px;border-top:1px solid #3b2416;margin-bottom:12px;">
+        <div style="font-size:11px;color:#d6c0a0;font-family:monospace;">
+          페이지 <strong>${currentPage} / ${totalPages}</strong> (offset: <strong>${safeOffset}</strong> · limit: <strong>8</strong> · 표시: ${total === 0 ? 0 : safeOffset + 1}~${safeOffset + slice.length} / 총 ${total}개)
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <button type="button" onclick="WishPlaza.openOtherWishesListModal(${prevOffset})" ${safeOffset === 0 ? "disabled" : ""}
+            style="padding:6px 11px;border-radius:8px;background:#26180f;color:#f7eedc;border:1px solid #5b3a1c;font-size:11px;font-weight:800;${safeOffset === 0 ? "opacity:0.4;cursor:not-allowed;" : "cursor:pointer;"}">
+            ◀ 이전 8개
+          </button>
+          ${pageBtns}
+          <button type="button" onclick="WishPlaza.openOtherWishesListModal(${nextOffset})" ${safeOffset >= maxOffset ? "disabled" : ""}
+            style="padding:6px 11px;border-radius:8px;background:#26180f;color:#f7eedc;border:1px solid #5b3a1c;font-size:11px;font-weight:800;${safeOffset >= maxOffset ? "opacity:0.4;cursor:not-allowed;" : "cursor:pointer;"}">
+            다음 8개 ▶
+          </button>
+        </div>
+      </div>
+
+      <button type="button" onclick="WishPlaza.closeSubModal('otherWishesListModal')"
+        style="width:100%;padding:11px;border-radius:12px;background:#374151;color:#f3f4f6;border:1px solid #6b7280;font-weight:800;font-size:13px;cursor:pointer;">
+        🏮 나가기 (연등광장으로 돌아가기)
+      </button>
+    `;
+
+    if (typeof dialog.showModal === "function") {
+      if (!dialog.open) dialog.showModal();
+    } else {
+      dialog.setAttribute("open", "");
+    }
+  }
+
+  cheerOtherWishFromPlaza(wishId) {
+    if (window.App && typeof window.App.cheerWish === "function") {
+      window.App.cheerWish(wishId);
+    } else {
+      this.cheerLantern(wishId);
+    }
+    this.openOtherWishesListModal(this.otherWishOffset || 0);
+  }
+
+  closeSubModal(modalId) {
+    const el = document.getElementById(modalId);
+    if (el) {
+      if (typeof el.close === "function") el.close();
+      else el.removeAttribute("open");
+    }
+    // 연등광장이 항상 활성화된 상태로 유지되도록 보장 (사주화면으로 넘어가지 않음!)
+    if (this.container && this.container.classList.contains("hidden")) {
+      this.container.classList.remove("hidden");
+    }
+    if (this.canvas) this.canvas.focus();
   }
 
   /* 내 소원함에서 소원을 적고 걸면: 내 소원함 + 타 이용자 소원함에 동시 추가 & 안내 멘트 출력 */
@@ -2940,7 +3093,7 @@ class WishPlaza3DEngine {
     let html = `
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
         <div style="font-size:18px;font-weight:900;color:#fde68a;">📜 사찰 내부 내 소원판 (絵馬掛所)</div>
-        <button type="button" onclick="document.getElementById('myWishBoardModal').close()" style="color:#d6c0a0;font-size:18px;font-weight:800;background:none;border:none;cursor:pointer;">✕</button>
+        <button type="button" onclick="WishPlaza.closeSubModal('myWishBoardModal')" style="padding:5px 11px;border-radius:8px;background:#8c1d1d;color:#ffe8b3;border:1px solid #f59e0b;font-size:11px;font-weight:800;cursor:pointer;">✕ 나가기 (연등광장으로)</button>
       </div>
       <div style="font-size:12px;color:#d6c0a0;margin-bottom:12px;">
         갈망하는 소원을 적어 걸어두시면 <strong>내 소원함 + 타 이용자 소원함</strong>에 함께 등재됩니다.
@@ -3016,9 +3169,9 @@ class WishPlaza3DEngine {
     }
 
     html += `
-      <button type="button" onclick="document.getElementById('myWishBoardModal').close()"
-        style="margin-top:6px;width:100%;padding:10px;border-radius:12px;background:#374151;color:#f3f4f6;border:1px solid #6b7280;font-weight:800;cursor:pointer;">
-        닫기
+      <button type="button" onclick="WishPlaza.closeSubModal('myWishBoardModal')"
+        style="margin-top:6px;width:100%;padding:11px;border-radius:12px;background:#374151;color:#f3f4f6;border:1px solid #6b7280;font-weight:800;cursor:pointer;">
+        🏮 나가기 (연등광장으로 돌아가기)
       </button>
     `;
 
@@ -3360,6 +3513,28 @@ class WishPlaza3DEngine {
     window.addEventListener("keydown", (e) => {
       if (!this.isRunning) return;
 
+      // 서브 모달(내 소원함, 타 이용자 소원함, 소원 상세 등)이 열려 있을 때 ESC를 누르면 서브 모달만 닫고 연등광장에 그대로 머무름!
+      if (e.code === "Escape") {
+        const subModalIds = [
+          "myWishBoardModal",
+          "otherWishConfirmModal",
+          "otherWishesListModal",
+          "wishCardDetailModal",
+          "wishWeeklyTopModal",
+          "buddhaBlessingModal",
+          "plazaLaunchModal"
+        ];
+        for (const id of subModalIds) {
+          const el = document.getElementById(id);
+          if (el && (el.open || el.hasAttribute("open"))) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.closeSubModal(id);
+            return;
+          }
+        }
+      }
+
       // 소원 입력창/모달에서 글을 쓸 때 E, Space, WASD가 가로채이지 않도록 보호
       const tag = (e.target && e.target.tagName) || "";
       if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
@@ -3404,7 +3579,7 @@ class WishPlaza3DEngine {
         }
         e.preventDefault();
       }
-    });
+    }, true);
 
     window.addEventListener("keyup", (e) => {
       if (!this.isRunning) return;
@@ -3698,7 +3873,8 @@ class WishPlaza3DEngine {
       "buddhaBlessingModal",
       "plazaLaunchModal",
       "myWishBoardModal",
-      "otherWishConfirmModal"
+      "otherWishConfirmModal",
+      "otherWishesListModal"
     ];
     for (const id of otherModals) {
       const el = document.getElementById(id);

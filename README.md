@@ -10,6 +10,10 @@
 ![Security](https://img.shields.io/badge/Security-PBKDF2%20%7C%20SQLi%20Guard%20%7C%20SMS%20Auth-991B1B?style=for-the-badge&logo=springsecurity&logoColor=white)
 ![AI Counselor](https://img.shields.io/badge/Built--in%20AI-사주%20%C2%B7%20꿈해몽%20도사%20챗봇-D97706?style=for-the-badge)
 ![Swagger](https://img.shields.io/badge/Swagger-OpenAPI%203.0-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)
+[![Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-천명%20실시간%20체험하기-8C1D1D?style=for-the-badge)](https://chunmyung-saju-demo.onrender.com)
+
+> **🌐 실시간 라이브 데모 체험하기**: **[https://chunmyung-saju-demo.onrender.com](https://chunmyung-saju-demo.onrender.com)**  
+> *(공개 데모 버전은 회원가입·로그인 및 500원 결제 단계 없이 바로 사주·타로·AI 도사·3D 연등광장을 체험할 수 있습니다. Render 무료 플랜 특성상 첫 접속 시 서버 기동에 20~30초가 소요될 수 있습니다.)*
 
 ---
 

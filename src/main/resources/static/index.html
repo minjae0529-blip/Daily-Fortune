@@ -60,15 +60,17 @@
         </div>
 
         <!-- 🏮 은하수 소원 연등 광장 탐험 버튼 (WASD / 방향키) -->
-        <button type="button" onclick="App.openWishPlaza()" class="text-xs font-extrabold px-2.5 py-1.5 rounded-md bg-gradient-to-b from-[#8c1d1d] to-[#6b1515] text-[#ffe8b3] hover:from-[#991b1b] hover:to-[#7f1d1d] transition flex items-center space-x-1 shadow-sm border border-[#d4a359] font-serif-kr shrink-0 cursor-pointer" title="은하수 연등 광장 입장 (WASD / 방향키 탐험)">
+        <button type="button" onclick="App.openWishPlaza()" class="text-[11px] sm:text-xs font-extrabold px-2 sm:px-2.5 py-1.5 rounded-md bg-gradient-to-b from-[#8c1d1d] to-[#6b1515] text-[#ffe8b3] hover:from-[#991b1b] hover:to-[#7f1d1d] transition flex items-center space-x-1 shadow-sm border border-[#d4a359] font-serif-kr shrink-0 whitespace-nowrap cursor-pointer" title="은하수 연등 광장 입장 (WASD / 방향키 탐험)">
           <span>🏮</span>
           <span class="hidden sm:inline">연등 광장 (탐험)</span>
+          <span class="sm:hidden">연등광장</span>
         </button>
 
-        <!-- 상단 AI 도사 챗봇 호출 버튼 (로그인 후 노출) -->
-        <button type="button" id="headerAiChatBtn" onclick="App.toggleAiChatbot()" class="hidden text-xs font-extrabold px-2.5 py-1.5 rounded-md bg-gradient-to-b from-[#d97706] to-[#b45309] text-[#1e1510] hover:from-[#f59e0b] hover:to-[#d97706] transition items-center space-x-1 shadow-sm border border-[#fde68a] font-serif-kr shrink-0">
+        <!-- 상단 AI 도사 챗봇 호출 버튼 -->
+        <button type="button" id="headerAiChatBtn" onclick="App.toggleAiChatbot()" class="hidden text-[11px] sm:text-xs font-extrabold px-2 sm:px-2.5 py-1.5 rounded-md bg-gradient-to-b from-[#d97706] to-[#b45309] text-[#1e1510] hover:from-[#f59e0b] hover:to-[#d97706] transition items-center space-x-1 shadow-sm border border-[#fde68a] font-serif-kr shrink-0 whitespace-nowrap">
           <span>🧙‍♂️</span>
-          <span>AI 도사·꿈해몽</span>
+          <span class="hidden sm:inline">AI 도사·꿈해몽</span>
+          <span class="sm:hidden">AI 도사</span>
         </button>
 
         <!-- 로그인된 회원 표시 배지 -->
@@ -80,14 +82,15 @@
         </div>
 
         <!-- 👑 최고관리자 전용 대시보드 버튼 (ROLE_ADMIN 로그인 시 노출) -->
-        <button type="button" id="headerAdminBtn" onclick="App.openAdminModal()" class="hidden text-xs font-extrabold px-2.5 py-1.5 rounded-md bg-gradient-to-b from-[#854d0e] to-[#713f12] text-[#fef08a] hover:from-[#a16207] hover:to-[#854d0e] transition items-center space-x-1 shadow-sm border border-[#fde047] font-serif-kr">
+        <button type="button" id="headerAdminBtn" onclick="App.openAdminModal()" class="hidden text-xs font-extrabold px-2.5 py-1.5 rounded-md bg-gradient-to-b from-[#854d0e] to-[#713f12] text-[#fef08a] hover:from-[#a16207] hover:to-[#854d0e] transition items-center space-x-1 shadow-sm border border-[#fde047] font-serif-kr shrink-0 whitespace-nowrap">
           <span>👑</span>
           <span>관리자 패널</span>
         </button>
 
-        <button type="button" id="headerVaultBtn" onclick="App.openHistoryModal()" class="hidden text-xs font-extrabold px-3 py-1.5 rounded-md bg-gradient-to-b from-[#991b1b] to-[#7f1d1d] text-[#fff6df] hover:from-[#b91c1c] hover:to-[#8c1d1d] transition items-center space-x-1.5 shadow-sm border border-[#d4a359] font-serif-kr">
+        <button type="button" id="headerVaultBtn" onclick="App.openHistoryModal()" class="hidden text-[11px] sm:text-xs font-extrabold px-2 sm:px-3 py-1.5 rounded-md bg-gradient-to-b from-[#991b1b] to-[#7f1d1d] text-[#fff6df] hover:from-[#b91c1c] hover:to-[#8c1d1d] transition items-center space-x-1 shadow-sm border border-[#d4a359] font-serif-kr shrink-0 whitespace-nowrap">
           <span>📜</span>
-          <span>내 결제·서책 보관함</span>
+          <span class="hidden sm:inline">내 서책 보관함</span>
+          <span class="sm:hidden">보관함</span>
         </button>
       </div>
     </div>
@@ -2011,19 +2014,20 @@
   <!-- ======================================================================
        🧙‍♂️ 내장 AI 명리 도사 챗봇 플로팅 버튼 & 동적 대화창 위젯 (로그인 완료 후에만 노출)
        ====================================================================== -->
-  <div id="aiChatbotFloatingContainer" class="hidden fixed bottom-5 right-5 z-50 flex-col items-end space-y-2 no-print">
-    <!-- 말풍선 툴팁 -->
-    <div id="aiChatbotHintBubble" onclick="App.toggleAiChatbot()" class="cursor-pointer px-3.5 py-1.5 rounded-full bg-[#1e1510] text-[#f9e5b4] border border-[#d4a359] text-xs font-serif-kr font-extrabold shadow-lg flex items-center space-x-1.5 animate-bounce">
+  <div id="aiChatbotFloatingContainer" class="hidden fixed bottom-3 right-3 sm:bottom-5 sm:right-5 z-50 flex-col items-end space-y-2 no-print">
+    <!-- 말풍선 툴팁 (모바일에서는 입력 폼 가림 방지를 위해 숨김) -->
+    <div id="aiChatbotHintBubble" onclick="App.toggleAiChatbot()" class="hidden sm:flex cursor-pointer px-3.5 py-1.5 rounded-full bg-[#1e1510] text-[#f9e5b4] border border-[#d4a359] text-xs font-serif-kr font-extrabold shadow-lg items-center space-x-1.5 animate-bounce">
       <span class="text-[#facc15] animate-spin-slow">☯</span>
       <span>AI 도사에게 사주·꿈해몽 물어보기</span>
     </div>
 
     <!-- 플로팅 런처 버튼 -->
-    <button type="button" id="aiChatbotFab" onclick="App.toggleAiChatbot()" class="ai-fab-pulse px-4 py-3 rounded-2xl bg-gradient-to-r from-[#8c1d1d] via-[#a31d1d] to-[#7f1d1d] text-[#fff6df] border-2 border-[#d4a359] font-serif-kr font-black text-xs sm:text-sm flex items-center space-x-2 cursor-pointer">
-      <span class="text-xl">🧙‍♂️</span>
+    <button type="button" id="aiChatbotFab" onclick="App.toggleAiChatbot()" class="ai-fab-pulse px-3 py-2 sm:px-4 sm:py-3 rounded-full sm:rounded-2xl bg-gradient-to-r from-[#8c1d1d] via-[#a31d1d] to-[#7f1d1d] text-[#fff6df] border-2 border-[#d4a359] font-serif-kr font-black text-xs sm:text-sm flex items-center space-x-1.5 sm:space-x-2 cursor-pointer">
+      <span class="text-lg sm:text-xl">🧙‍♂️</span>
       <div class="text-left leading-tight">
-        <span class="block text-[10px] text-[#facc15] font-bold">규장각 사주·해몽 AI</span>
-        <span>천명 AI 도사 챗봇</span>
+        <span class="hidden sm:block text-[10px] text-[#facc15] font-bold">규장각 사주·해몽 AI</span>
+        <span class="hidden sm:inline">천명 AI 도사 챗봇</span>
+        <span class="sm:hidden text-[11px]">AI 도사</span>
       </div>
     </button>
   </div>
@@ -2094,40 +2098,44 @@
     <canvas id="wishPlazaCanvas" class="absolute inset-0 w-full h-full cursor-crosshair z-0"></canvas>
 
     <!-- Plaza Top HUD Header -->
-    <header class="relative z-10 bg-gradient-to-b from-[#18100b]/95 via-[#18100b]/80 to-transparent px-4 sm:px-6 py-3 flex items-center justify-between border-b border-[#b48a4e]/40 backdrop-blur-xs">
-      <div class="flex items-center space-x-3">
-        <span class="text-2xl filter drop-shadow-[0_0_10px_rgba(251,191,36,0.9)] animate-pulse">🏮</span>
-        <div>
+    <header class="relative z-10 bg-gradient-to-b from-[#18100b]/95 via-[#18100b]/80 to-transparent px-3 sm:px-6 py-2 sm:py-3 flex items-center justify-between gap-2 border-b border-[#b48a4e]/40 backdrop-blur-xs">
+      <div class="flex items-center space-x-2 sm:space-x-3 min-w-0">
+        <span class="text-xl sm:text-2xl filter drop-shadow-[0_0_10px_rgba(251,191,36,0.9)] animate-pulse shrink-0">🏮</span>
+        <div class="min-w-0">
           <div class="flex items-center space-x-2">
-            <h2 class="text-sm sm:text-base font-black text-[#fce8bd] tracking-wide">천명(天命) 3D 산사(절) 은하수 연등 광장</h2>
+            <h2 class="text-xs sm:text-base font-black text-[#fce8bd] tracking-wide truncate">
+              <span class="hidden sm:inline">천명(天命) 3D 산사(절) 은하수 연등 광장</span>
+              <span class="sm:hidden">천명 3D 연등 광장</span>
+            </h2>
           </div>
-          <p class="text-[11px] text-[#d6c0a0]">
+          <p class="hidden sm:block text-[11px] text-[#d6c0a0]">
             밤하늘에 떠 있는 <strong class="text-amber-300 font-bold" id="wishPlazaTotalCount">0</strong>개의 소원 연등 · <span id="wishPlazaLightingStatus" class="text-amber-200">일본식 사찰 제등(奉納 提灯) 가동 중</span> · 다가가서 [E] 또는 클릭하여 소원/제등과 상호작용해보세요 ✨
           </p>
         </div>
       </div>
 
-      <div class="flex items-center space-x-2">
+      <div class="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
         <!-- My Wish Board Shortcut -->
-        <button type="button" onclick="WishPlaza.openMyWishModal()" class="px-3 py-1.5 rounded-xl bg-[#2a170e]/90 hover:bg-[#3d1f11] text-[#fde68a] border border-[#d4a359] text-xs font-bold shadow flex items-center space-x-1.5 transition cursor-pointer">
+        <button type="button" onclick="WishPlaza.openMyWishModal()" class="px-2 sm:px-3 py-1.5 rounded-xl bg-[#2a170e]/90 hover:bg-[#3d1f11] text-[#fde68a] border border-[#d4a359] text-xs font-bold shadow flex items-center space-x-1 transition cursor-pointer whitespace-nowrap" title="내 소원함">
           <span>📜</span>
           <span class="hidden sm:inline">내 소원함 (본당 에마패)</span>
         </button>
 
         <!-- Weekly Top Shrine Shortcut -->
-        <button type="button" onclick="WishPlaza.showWeeklyTopModal()" class="px-3 py-1.5 rounded-xl bg-[#2a170e]/90 hover:bg-[#3d1f11] text-[#fde047] border border-[#f59e0b] text-xs font-bold shadow flex items-center space-x-1.5 transition cursor-pointer">
+        <button type="button" onclick="WishPlaza.showWeeklyTopModal()" class="px-2 sm:px-3 py-1.5 rounded-xl bg-[#2a170e]/90 hover:bg-[#3d1f11] text-[#fde047] border border-[#f59e0b] text-xs font-bold shadow flex items-center space-x-1 transition cursor-pointer whitespace-nowrap" title="주간 1위 소원">
           <span>👑</span>
           <span class="hidden sm:inline">주간 1위 소원 헌사</span>
         </button>
 
         <!-- Launch Wish in Plaza -->
-        <button type="button" onclick="App.openPlazaLaunchModal()" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#d97706] to-[#b45309] hover:from-[#f59e0b] hover:to-[#d97706] text-white border border-[#fde68a] text-xs font-black shadow flex items-center space-x-1.5 transition cursor-pointer">
+        <button type="button" onclick="App.openPlazaLaunchModal()" class="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#d97706] to-[#b45309] hover:from-[#f59e0b] hover:to-[#d97706] text-white border border-[#fde68a] text-xs font-black shadow flex items-center space-x-1 transition cursor-pointer whitespace-nowrap">
           <span>🏮</span>
-          <span>내 소원 띄우기</span>
+          <span class="hidden sm:inline">내 소원 띄우기</span>
+          <span class="sm:hidden">소원</span>
         </button>
 
         <!-- Exit Button -->
-        <button type="button" onclick="WishPlaza.promptExit()" class="px-3 py-1.5 rounded-xl bg-[#374151]/80 hover:bg-[#4b5563] text-stone-200 text-xs font-bold border border-stone-600 transition flex items-center space-x-1 cursor-pointer">
+        <button type="button" onclick="WishPlaza.promptExit()" class="px-2 sm:px-3 py-1.5 rounded-xl bg-[#374151]/80 hover:bg-[#4b5563] text-stone-200 text-xs font-bold border border-stone-600 transition flex items-center space-x-1 cursor-pointer whitespace-nowrap" title="메인으로">
           <span>✕</span>
           <span class="hidden sm:inline">메인으로</span>
         </button>
@@ -2135,9 +2143,9 @@
     </header>
 
     <!-- Plaza Bottom HUD Controls & Instructions -->
-    <footer class="relative z-10 mt-auto bg-gradient-to-t from-[#120a06]/95 via-[#120a06]/75 to-transparent px-4 py-3 flex items-center justify-between pointer-events-none text-xs">
-      <!-- Movement key badges -->
-      <div class="flex items-center space-x-2 text-[11px] text-stone-300 font-sans pointer-events-auto bg-[#1e140d]/85 px-3.5 py-1.5 rounded-xl border border-stone-700/80 backdrop-blur-xs flex-wrap gap-y-1">
+    <footer class="relative z-10 mt-auto bg-gradient-to-t from-[#120a06]/95 via-[#120a06]/75 to-transparent px-3 sm:px-4 py-2.5 sm:py-3 flex items-end justify-between pointer-events-none text-xs">
+      <!-- Desktop Movement key badges (hidden on mobile so it never blocks 3D view) -->
+      <div class="hidden sm:flex items-center space-x-2 text-[11px] text-stone-300 font-sans pointer-events-auto bg-[#1e140d]/85 px-3.5 py-1.5 rounded-xl border border-stone-700/80 backdrop-blur-xs flex-wrap gap-y-1">
         <span class="text-amber-400 font-bold">⌨️ 이동:</span>
         <span class="font-mono bg-[#2a1b14] px-1.5 py-0.5 rounded border border-stone-600 text-[10px] text-amber-200">W(앞) S(뒤) A(좌) D(우) / 방향키</span>
         <span>|</span>
@@ -2157,16 +2165,25 @@
         <span class="font-mono bg-[#2a1b14] px-1.5 py-0.5 rounded border border-stone-600 text-[10px] text-stone-300">ESC</span>
       </div>
 
-      <!-- Mobile On-Screen D-Pad & Jump Button (Touch / Clickable) -->
-      <div class="pointer-events-auto flex items-center space-x-2 sm:hidden">
-        <button type="button" onmousedown="WishPlaza.keys.left=true" onmouseup="WishPlaza.keys.left=false" ontouchstart="WishPlaza.keys.left=true" ontouchend="WishPlaza.keys.left=false" class="w-9 h-9 rounded-lg bg-[#2a1b14] text-white border border-stone-600 font-bold flex items-center justify-center active:bg-amber-800">◀</button>
-        <div class="flex flex-col space-y-1">
-          <button type="button" onmousedown="WishPlaza.keys.up=true" onmouseup="WishPlaza.keys.up=false" ontouchstart="WishPlaza.keys.up=true" ontouchend="WishPlaza.keys.up=false" class="w-9 h-9 rounded-lg bg-[#2a1b14] text-white border border-stone-600 font-bold flex items-center justify-center active:bg-amber-800">▲</button>
-          <button type="button" onmousedown="WishPlaza.keys.down=true" onmouseup="WishPlaza.keys.down=false" ontouchstart="WishPlaza.keys.down=true" ontouchend="WishPlaza.keys.down=false" class="w-9 h-9 rounded-lg bg-[#2a1b14] text-white border border-stone-600 font-bold flex items-center justify-center active:bg-amber-800">▼</button>
+      <!-- Mobile On-Screen D-Pad & Action Buttons (Touch / Clickable) -->
+      <div class="pointer-events-auto flex items-end justify-between w-full sm:hidden touch-none">
+        <!-- Left: Touch D-Pad -->
+        <div class="flex items-center space-x-1.5 bg-[#1a110b]/75 p-1.5 rounded-2xl border border-[#b48a4e]/40 backdrop-blur-xs">
+          <button type="button" onmousedown="WishPlaza.keys.left=true" onmouseup="WishPlaza.keys.left=false" onmouseleave="WishPlaza.keys.left=false" ontouchstart="event.preventDefault();WishPlaza.keys.left=true" ontouchend="WishPlaza.keys.left=false" ontouchcancel="WishPlaza.keys.left=false" class="w-10 h-10 rounded-xl bg-[#2a1b14]/90 text-white border border-stone-600 font-bold flex items-center justify-center active:bg-amber-800">◀</button>
+          <div class="flex flex-col space-y-1.5">
+            <button type="button" onmousedown="WishPlaza.keys.up=true" onmouseup="WishPlaza.keys.up=false" onmouseleave="WishPlaza.keys.up=false" ontouchstart="event.preventDefault();WishPlaza.keys.up=true" ontouchend="WishPlaza.keys.up=false" ontouchcancel="WishPlaza.keys.up=false" class="w-10 h-10 rounded-xl bg-[#2a1b14]/90 text-white border border-stone-600 font-bold flex items-center justify-center active:bg-amber-800">▲</button>
+            <button type="button" onmousedown="WishPlaza.keys.down=true" onmouseup="WishPlaza.keys.down=false" onmouseleave="WishPlaza.keys.down=false" ontouchstart="event.preventDefault();WishPlaza.keys.down=true" ontouchend="WishPlaza.keys.down=false" ontouchcancel="WishPlaza.keys.down=false" class="w-10 h-10 rounded-xl bg-[#2a1b14]/90 text-white border border-stone-600 font-bold flex items-center justify-center active:bg-amber-800">▼</button>
+          </div>
+          <button type="button" onmousedown="WishPlaza.keys.right=true" onmouseup="WishPlaza.keys.right=false" onmouseleave="WishPlaza.keys.right=false" ontouchstart="event.preventDefault();WishPlaza.keys.right=true" ontouchend="WishPlaza.keys.right=false" ontouchcancel="WishPlaza.keys.right=false" class="w-10 h-10 rounded-xl bg-[#2a1b14]/90 text-white border border-stone-600 font-bold flex items-center justify-center active:bg-amber-800">▶</button>
         </div>
-        <button type="button" onmousedown="WishPlaza.keys.right=true" onmouseup="WishPlaza.keys.right=false" ontouchstart="WishPlaza.keys.right=true" ontouchend="WishPlaza.keys.right=false" class="w-9 h-9 rounded-lg bg-[#2a1b14] text-white border border-stone-600 font-bold flex items-center justify-center active:bg-amber-800">▶</button>
-        <button type="button" onclick="WishPlaza.jump()" class="w-10 h-10 rounded-lg bg-gradient-to-b from-[#b45309] to-[#78350f] text-[#fef08a] border border-[#f59e0b] font-bold text-xs flex items-center justify-center active:scale-95 shadow">점프</button>
-        <button id="mobilePrayerBtn" type="button" onclick="WishPlaza.offerPrayerAtBuddha()" class="hidden px-2.5 h-10 rounded-lg bg-gradient-to-r from-amber-600 to-amber-700 text-amber-100 border border-amber-300 font-bold text-xs flex items-center justify-center active:scale-95 shadow">🪷 삼배</button>
+
+        <!-- Right: Touch Action Buttons (인사 · 동전 · 점프 · 삼배) -->
+        <div class="grid grid-cols-2 gap-1.5 bg-[#1a110b]/75 p-1.5 rounded-2xl border border-[#b48a4e]/40 backdrop-blur-xs">
+          <button type="button" onclick="WishPlaza.greetOtherUser()" class="px-2.5 h-10 rounded-xl bg-[#1e3a5f]/90 text-sky-100 border border-sky-400/70 font-bold text-[11px] flex items-center justify-center active:scale-95 shadow whitespace-nowrap">🙇 인사</button>
+          <button type="button" onclick="WishPlaza.throwCoin()" class="px-2.5 h-10 rounded-xl bg-[#3b260c]/90 text-amber-200 border border-amber-400/70 font-bold text-[11px] flex items-center justify-center active:scale-95 shadow whitespace-nowrap">🪙 동전</button>
+          <button type="button" onclick="WishPlaza.jump()" class="px-2.5 h-10 rounded-xl bg-gradient-to-b from-[#b45309] to-[#78350f] text-[#fef08a] border border-[#f59e0b] font-bold text-[11px] flex items-center justify-center active:scale-95 shadow whitespace-nowrap">🚀 점프</button>
+          <button id="mobilePrayerBtn" type="button" onclick="WishPlaza.offerPrayerAtBuddha()" class="hidden px-2.5 h-10 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 text-amber-100 border border-amber-300 font-bold text-[11px] flex items-center justify-center active:scale-95 shadow whitespace-nowrap">🪷 삼배</button>
+        </div>
       </div>
     </footer>
 

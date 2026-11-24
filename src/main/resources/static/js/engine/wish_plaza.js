@@ -4773,23 +4773,12 @@ class WishPlaza3DEngine {
         return;
       }
 
-      // 절하기 쿨타임 만료 시: 본당 NPC는 불단 방석으로 걸어가서 절, 마당 NPC는 제자리에서 법당/석탑 향해 절
-      if (u.bowCooldown <= 0 && (u.state === "wander" || u.state === "idle")) {
-        if (u.zone === "temple") {
-          u.targetX = u.bowCushionX;
-          u.targetZ = -57.5;
-          u.state = "goto_bow";
-          u.stateTimer = 0;
-        } else {
-          u.rotY = Math.PI; // 북쪽 대웅전 & 삼층석탑 방향
-          av.root.rotation.y = u.rotY;
-          u.state = "bowing";
-          u.isBowing = true;
-          u.bowPhase = 0;
-          u.bowCount = 1;
-          this.setNpcTagStatus(u, "🪷 합장 절하는 중");
-          return;
-        }
+      // 절하기 쿨타임 만료 시: 오직 대웅전 실내(사찰 내부) NPC만 불단 앞 연화문 방석으로 이동해 절하기!
+      if (u.zone === "temple" && u.bowCooldown <= 0 && (u.state === "wander" || u.state === "idle")) {
+        u.targetX = u.bowCushionX;
+        u.targetZ = -57.5;
+        u.state = "goto_bow";
+        u.stateTimer = 0;
       }
 
       if (u.state === "wander" || u.state === "goto_bow") {

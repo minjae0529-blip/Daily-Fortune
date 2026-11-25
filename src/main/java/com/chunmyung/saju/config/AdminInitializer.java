@@ -67,7 +67,7 @@ public class AdminInitializer implements ApplicationRunner {
                     .loginId(targetAdminId)
                     .passwordHash(passwordHash)
                     .passwordSalt(salt)
-                    .name("천명 최고관리자")
+                    .name("소원재 최고관리자")
                     .phoneNumber("010-0000-0000")
                     .gender("M")
                     .birthYear(1990)
@@ -81,7 +81,7 @@ public class AdminInitializer implements ApplicationRunner {
 
             accountRepository.save(admin);
             log.info("==================================================================");
-            log.info("👑 [천명(天命) 시스템 최고 관리자 계정 초기화 완료]");
+            log.info("👑 [소원재(所願齋) 시스템 최고 관리자 계정 초기화 완료]");
             log.info("👉 관리자 아이디   : {}", targetAdminId);
             log.info("👉 관리자 비밀번호 : [보안 처리됨 - 환경변수 ADMIN_PASSWORD로 안전하게 변경 가능]");
             log.info("👉 관리자 권한     : ROLE_ADMIN");

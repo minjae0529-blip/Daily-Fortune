@@ -17,7 +17,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
-@Tag(name = "천명 사주 & 운세 DB API", description = "사주, 일일 운세, 궁합, 타로 데이터베이스 저장 및 조회 API")
+@Tag(name = "소원재 사주 & 운세 DB API", description = "사주, 일일 운세, 궁합, 타로 데이터베이스 저장 및 조회 API")
 public class SajuApiController {
 
     private final SajuService sajuService;

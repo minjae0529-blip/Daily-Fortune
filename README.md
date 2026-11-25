@@ -1,4 +1,4 @@
-# 🌟 천명(天命) : 3D 가상 사찰 메타버스 & 한국 정통 사주 만세력 · 오늘의 운세 · AI 도사 풀스택 웹 플랫폼
+# 🌟 소원재(所願齋) : 3D 가상 사찰 메타버스 & 한국 정통 사주 만세력 · 오늘의 운세 · AI 도사 풀스택 웹 플랫폼
 
 > **한국천문연구원(KASI) 24절기 역법 만세력 엔진 + Three.js 기반 3D 대형 산사(절) 은하수 연등 광장 메타버스 + 내장형 AI 명리·꿈해몽 도사 챗봇 + 3중 보안 게이트(PBKDF2·SQLi Guard·SMS) + 500원 간편결제(토스·카카오·네이버페이) + Spring Boot 4.1.2 & MySQL 8.x (JPA / JDBC) 엔터프라이즈 프로젝트**
 
@@ -10,9 +10,9 @@
 ![Security](https://img.shields.io/badge/Security-PBKDF2%20%7C%20SQLi%20Guard%20%7C%20SMS%20Auth-991B1B?style=for-the-badge&logo=springsecurity&logoColor=white)
 ![AI Counselor](https://img.shields.io/badge/Built--in%20AI-사주%20%C2%B7%20꿈해몽%20도사%20챗봇-D97706?style=for-the-badge)
 ![Swagger](https://img.shields.io/badge/Swagger-OpenAPI%203.0-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)
-[![Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-천명%20실시간%20체험하기-8C1D1D?style=for-the-badge)](https://chunmyung-saju-demo.onrender.com)
+[![Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-소원재%20실시간%20체험하기-8C1D1D?style=for-the-badge)](https://sowonjae.onrender.com)
 
-> **🌐 실시간 라이브 데모 체험하기**: **[https://chunmyung-saju-demo.onrender.com](https://chunmyung-saju-demo.onrender.com)**  
+> **🌐 실시간 라이브 데모 체험하기**: **[https://sowonjae.onrender.com](https://sowonjae.onrender.com)**  
 > *(공개 데모 버전은 회원가입·로그인 및 500원 결제 단계 없이 바로 사주·타로·AI 도사·3D 연등광장을 체험할 수 있습니다. Render 무료 플랜 특성상 첫 접속 시 서버 기동에 20~30초가 소요될 수 있습니다.)*
 
 ---
@@ -21,7 +21,7 @@
 
 1. [📌 프로젝트 개요 및 기획 배경 (Project Overview)](#1-📌-프로젝트-개요-및-기획-배경-project-overview)
 2. [🎬 서비스 시연 데모 영상 및 12대 핵심 워크플로우 (Live Demo & 12-Step Walkthrough)](#2-🎬-서비스-시연-데모-영상-및-12대-핵심-워크플로우-live-demo--12-step-walkthrough)
-3. [🏮 천명 3D 산사(절) 은하수 소원 연등 광장 메타버스 (Three.js WebGL 3D Virtual Temple)](#3-🏮-천명-3d-산사절-은하수-소원-연등-광장-메타버스-threejs-webgl-3d-virtual-temple)
+3. [🏮 소원재 3D 산사(절) 은하수 소원 연등 광장 메타버스 (Three.js WebGL 3D Virtual Temple)](#3-🏮-소원재-3d-산사절-은하수-소원-연등-광장-메타버스-threejs-webgl-3d-virtual-temple)
 4. [👑 시스템 최고 관리자 계정 및 보안 관제실 (System Security & Administration)](#4-👑-시스템-최고-관리자-계정-및-보안-관제실-system-security--administration)
 5. [📥 카테고리별 인터랙티브 서책 자료 내보내기 (PDF 대체 독립형 뷰어)](#5-📥-카테고리별-인터랙티브-서책-자료-내보내기-pdf-대체-독립형-뷰어)
 6. [🔮 마음 치유 & 앞날 설계 부가 서비스 (동양 정통 꿈해몽 · 오늘의 마음 날씨)](#6-🔮-마음-치유--앞날-설계-부가-서비스-daily-wellness--guidance)
@@ -38,13 +38,13 @@
 
 ## 1. 📌 프로젝트 개요 및 기획 배경 (Project Overview)
 
-**천명(天命) 欽定萬歲曆**은 조선 왕실 규장각 만세력 고서(古書)와 궁중 단청(丹靑)·오방색(五方色) 전통 미학을 현대 웹 기술로 재해석한 **풀스택 3D 가상 사찰 메타버스 & 정통 사주명리 힐링 플랫폼**입니다.
+**소원재(所願齋) 欽定萬歲曆**은 조선 왕실 규장각 만세력 고서(古書)와 궁중 단청(丹靑)·오방색(五方色) 전통 미학을 현대 웹 기술로 재해석한 **풀스택 3D 가상 사찰 메타버스 & 정통 사주명리 힐링 플랫폼**입니다.
 
-사용자의 생년월일시를 기반으로 인생의 앞날을 분석하는 데 그치지 않고, 하루의 마음을 위로하고 지친 일상에 평온과 서원을 품을 수 있는 **입체적 가상 사찰 메타버스 공간(천명전 연등 광장)**을 결합하여 전통 명리학과 현대 웹 기술(Three.js WebGL)의 시너지를 극대화하였습니다.
+사용자의 생년월일시를 기반으로 인생의 앞날을 분석하는 데 그치지 않고, 하루의 마음을 위로하고 지친 일상에 평온과 서원을 품을 수 있는 **입체적 가상 사찰 메타버스 공간(소원재전 연등 광장)**을 결합하여 전통 명리학과 현대 웹 기술(Three.js WebGL)의 시너지를 극대화하였습니다.
 
 ```mermaid
 flowchart TD
-    subgraph Core ["🌟 천명(天命) 4대 핵심 서비스 축"]
+    subgraph Core ["🌟 소원재(所願齋) 4대 핵심 서비스 축"]
         M1["📜 한국 정통 사주 만세력 & 일진<br/>• KASI 24절기 역법 만세력 계산<br/>• 4주 8자 · 오행 밸런스 · 8대 신살<br/>• 오늘의 운세(무료) / 정통 사주(500원)"]
         M2["🏮 3D 대형 산사 은하수 연등 광장<br/>• Three.js WebGL 3D 가상 사찰 메타버스<br/>• 대웅전 실내 진입 & 황금 불상 참배<br/>• 합장 삼배(三拜) 절하기 & 싱잉볼 타종<br/>• 실시간 연등 소원 띄우기 & 주간 1위 제단"]
         M3["🧙‍♂️ 내장형 AI 명리 · 꿈해몽 도사<br/>• 22대 고전 주공해몽 백과 실시간 검색<br/>• 사주·일주·용신 결합 1:1 맞춤형 상담<br/>• 실시간 타이핑 스트리밍 문답"]
@@ -66,7 +66,7 @@ flowchart TD
 > **자동 순환 재생 데모 영상 (`assets/demo.gif`, 12단계 풀 플로우)** 및 **[🎥 고화질 H.264 MP4 데모 영상 원본 (`assets/demo.mp4`)](assets/demo.mp4)**
 
 <p align="center">
-  <img src="assets/demo.gif" alt="천명(天命) 12대 핵심 워크플로우 전체 시연 데모 영상" width="780" />
+  <img src="assets/demo.gif" alt="소원재(所願齋) 12대 핵심 워크플로우 전체 시연 데모 영상" width="780" />
 </p>
 
 ### 🖼️ 12대 단계별 핵심 플로우 및 기능 명세
@@ -83,9 +83,9 @@ flowchart TD
 
 ---
 
-## 3. 🏮 천명 3D 산사(절) 은하수 소원 연등 광장 메타버스 (Three.js WebGL 3D Virtual Temple)
+## 3. 🏮 소원재 3D 산사(절) 은하수 소원 연등 광장 메타버스 (Three.js WebGL 3D Virtual Temple)
 
-천명(天命) 서비스의 핵심 차별화 기능 중 하나인 **3D 대형 산사 은하수 소원 연등 광장**은 Three.js(WebGL) 엔진을 기반으로 구축된 독립형 가상 사찰 메타버스 공간입니다. 브라우저에서 별도의 플러그인 설치 없이 60fps 이상의 부드러운 3D 그래픽을 렌더링하며, 사용자가 직접 도반 아바타를 조작하여 사찰 경내를 거닐고 부처님께 삼배를 올리며 소원 등불을 밤하늘로 띄울 수 있습니다.
+소원재(所願齋) 서비스의 핵심 차별화 기능 중 하나인 **3D 대형 산사 은하수 소원 연등 광장**은 Three.js(WebGL) 엔진을 기반으로 구축된 독립형 가상 사찰 메타버스 공간입니다. 브라우저에서 별도의 플러그인 설치 없이 60fps 이상의 부드러운 3D 그래픽을 렌더링하며, 사용자가 직접 도반 아바타를 조작하여 사찰 경내를 거닐고 부처님께 삼배를 올리며 소원 등불을 밤하늘로 띄울 수 있습니다.
 
 ```mermaid
 graph TB
@@ -98,7 +98,7 @@ graph TB
 
     subgraph TempleSpace ["🏯 일본 선사(禪寺) & 한국 전통 조화 가상 사찰 공간"]
         OutCourtyard["경외 및 경내 마당<br/>• 8기 대형 목조 연등 기둥(提灯柱, 9.5m) & 기둥-기둥 공중 연결선(로프) 연등<br/>• 동전 던지기 연못(投銭池 · 구멍 반경 0.25m 정밀 골인 판정)<br/>• 연화지(연못) & 20분할 아치 홍예교 & 중앙 삼층석탑"]
-        Daeungjeon["대웅보전 (천명전) 실내 공간 (폭 60m · 깊이 40m)<br/>• 본당 내부 불단 좌우 2기 츠리도로(釣燈籠) 미니멀 조명<br/>• 서쪽 벽: 📜 내 소원판(絵馬掛所 · 소원 작성 & 성취 소식 등록)<br/>• 동쪽 벽: 🏮 타 이용자 소원함(동일 에마걸이 형태 · 8개 offset 열람)<br/>• 3단 수미단 & 삼존불(황금 석가모니불 + 문수·보현보살) & 향연기 파티클"]
+        Daeungjeon["대웅보전 (소원재전) 실내 공간 (폭 60m · 깊이 40m)<br/>• 본당 내부 불단 좌우 2기 츠리도로(釣燈籠) 미니멀 조명<br/>• 서쪽 벽: 📜 내 소원판(絵馬掛所 · 소원 작성 & 성취 소식 등록)<br/>• 동쪽 벽: 🏮 타 이용자 소원함(동일 에마걸이 형태 · 8개 offset 열람)<br/>• 3단 수미단 & 삼존불(황금 석가모니불 + 문수·보현보살) & 향연기 파티클"]
     end
 
     subgraph UserActions ["🧘 사용자 · 자율 NPC 인터랙션 & 예법"]
@@ -166,7 +166,7 @@ graph TB
 
 ## 4. 👑 시스템 최고 관리자 계정 및 보안 관제실 (System Security & Administration)
 
-천명(天命) 서비스는 엔터프라이즈급 시스템 보안 관제 및 실시간 운영을 위해 **최고 관리자(ROLE_ADMIN) 계정과 전용 통합 관제실 모달**을 기본 탑재하고 있습니다. 서버 구동 시 `AdminInitializer`(`ApplicationRunner`)가 실행되어 데이터베이스 내 관리자 계정 유무를 자동 감지하고 최신 보안 규격으로 안전하게 생성·유지합니다.
+소원재(所願齋) 서비스는 엔터프라이즈급 시스템 보안 관제 및 실시간 운영을 위해 **최고 관리자(ROLE_ADMIN) 계정과 전용 통합 관제실 모달**을 기본 탑재하고 있습니다. 서버 구동 시 `AdminInitializer`(`ApplicationRunner`)가 실행되어 데이터베이스 내 관리자 계정 유무를 자동 감지하고 최신 보안 규격으로 안전하게 생성·유지합니다.
 
 > [!IMPORTANT]
 > **🔐 Git 시크릿 유출 방지 및 보안 환경변수 분리 적용**
@@ -178,7 +178,7 @@ graph TB
 | :---: | :---: | :--- |
 | **관리자 아이디 (ID)** | `${ADMIN_ID:admin}` | 환경변수 `ADMIN_ID` 주입 (기본값: `admin`) |
 | **관리자 비밀번호 (PW)** | `${ADMIN_PASSWORD}` | 환경변수 `ADMIN_PASSWORD` 주입 (단방향 PBKDF2 해싱 저장, 소스코드 평문 제거) |
-| **관리자 명칭** | `천명 최고관리자` | 헤더 및 관제실 내 👑 황금 최고관리자 배지 표시 |
+| **관리자 명칭** | `소원재 최고관리자` | 헤더 및 관제실 내 👑 황금 최고관리자 배지 표시 |
 | **시스템 권한** | `ROLE_ADMIN` | 일반 회원(`ROLE_USER`)과 분리된 통합 관제 권한 |
 | **암호화 알고리즘** | `PBKDF2WithHmacSHA256` | 16바이트 암호학적 랜덤 Salt + 65,536회 반복 해싱 (복호화 불가능한 안전한 단방향 저장) |
 | **빠른 계정 입력** | `[관리자 ID 입력]` 지원 | 운영 편의를 위해 아이디 자동 완성 지원 (비밀번호는 수동 입력) |
@@ -202,7 +202,7 @@ graph TB
 정적이고 딱딱한 PDF 인쇄 방식의 한계를 극복하고, 사용자가 브라우저에서 **각 카테고리별 탭을 직접 클릭하여 자유롭게 열람할 수 있는 독립형 인터랙티브 디지털 서책(`.html`) 내보내기** 기능을 제공합니다.
 
 ### 🌟 핵심 특장점
-- **무설치 오프라인 독립 실행**: 다운로드된 단일 HTML 파일(`천명_사주운세_인터랙티브_서책_[이름]_[날짜].html`)을 더블클릭하면 PC·태블릿·스마트폰 브라우저에서 인터넷 연결 없이도 즉시 실행됩니다.
+- **무설치 오프라인 독립 실행**: 다운로드된 단일 HTML 파일(`소원재_사주운세_인터랙티브_서책_[이름]_[날짜].html`)을 더블클릭하면 PC·태블릿·스마트폰 브라우저에서 인터넷 연결 없이도 즉시 실행됩니다.
 - **7대 카테고리별 탭 탐색기**:
   1. `🌟 오늘의 천기 & 일진 운세`: 종합 운세 점수, 4대 세부 지수(재물·애정·건강·직업), 12시진 시간대별 길흉 테이블, 행운 아이템
   2. `📜 사주 원국 (4주 8자 & 10년 대운)`: 시주·일주·월주·년주 천간/지지/십신 만세력 표, 60갑자 일주론, 사주가 좋은 이유 3가지
@@ -224,7 +224,7 @@ graph TB
 
 ```mermaid
 flowchart LR
-    subgraph Wellness ["🌿 천명(天命) 마음 치유 & 미래 설계 부가 서비스"]
+    subgraph Wellness ["🌿 소원재(所願齋) 마음 치유 & 미래 설계 부가 서비스"]
         Dream["🌙 동양 정통 꿈해몽 백과 & 검색기<br/>• 6대 길흉 카테고리 & 22대 고전 해몽<br/>• 초성/키워드 실시간 필터 & AI 도사 연계"]
         Mood["🧘 오늘의 마음 날씨 & 오행 힐링 처방소<br/>• 5대 감정 기상도(맑음·구름·비·번개·안개)<br/>• 오행 심리 진단 · 힐링 한방차 · 긍정 확언"]
     end
@@ -593,7 +593,7 @@ erDiagram
 ```json
 {
   "success": true,
-  "message": "홍길동 님, 천명(天命) 회원가입이 완료되었습니다!",
+  "message": "홍길동 님, 소원재(所願齋) 회원가입이 완료되었습니다!",
   "data": {
     "authenticated": true,
     "accountId": 1,
@@ -663,7 +663,7 @@ erDiagram
     "failedAttempts": 5,
     "accountStatus": "WARNING_SMS_SENT",
     "smsSent": true,
-    "smsPreviewMessage": "[천명(天命) 보안경고] 비밀번호 5회 연속 오류 감지! 본인확인 인증번호는 [482915] 입니다. (10회 오류 시 계정 휴면화)",
+    "smsPreviewMessage": "[소원재(所願齋) 보안경고] 비밀번호 5회 연속 오류 감지! 본인확인 인증번호는 [482915] 입니다. (10회 오류 시 계정 휴면화)",
     "demoSmsCode": "482915"
   }
 }
@@ -683,7 +683,7 @@ erDiagram
     "failedAttempts": 10,
     "accountStatus": "DORMANT_LOCKED",
     "smsSent": true,
-    "smsPreviewMessage": "[천명(天命) 긴급보안] 비밀번호 10회 연속 오류로 계정이 휴면화(잠금) 처리되었습니다. 해제 인증번호는 [739104] 입니다.",
+    "smsPreviewMessage": "[소원재(所願齋) 긴급보안] 비밀번호 10회 연속 오류로 계정이 휴면화(잠금) 처리되었습니다. 해제 인증번호는 [739104] 입니다.",
     "demoSmsCode": "739104"
   }
 }
@@ -747,7 +747,7 @@ erDiagram
   "birthDay": 15,
   "sajuRecordId": 1,
   "productType": "SAJU_FULL_REPORT",
-  "productName": "천명(天命) 정통 사주팔자 · 대운 · 심층 리포트 열람권",
+  "productName": "소원재(所願齋) 정통 사주팔자 · 대운 · 심층 리포트 열람권",
   "paymentMethod": "TOSS_PAY",
   "amount": 500
 }
@@ -764,7 +764,7 @@ erDiagram
     "userName": "홍길동",
     "merchantUid": "ORD-20261120-841920",
     "productType": "SAJU_FULL_REPORT",
-    "productName": "천명(天命) 정통 사주팔자 · 대운 · 심층 리포트 열람권",
+    "productName": "소원재(所願齋) 정통 사주팔자 · 대운 · 심층 리포트 열람권",
     "paymentMethod": "TOSS_PAY",
     "paymentMethodKr": "토스페이",
     "amount": 500,
@@ -975,7 +975,7 @@ mysql -u root -p chunmyung_saju < src/main/resources/schema.sql
 
 | 서비스 항목 | 접속 주소 (URL) | 비고 |
 | :--- | :--- | :--- |
-| **천명(天命) 메인 웹 서비스 & 3D 연등 광장** | `http://localhost:8085/` | 최초 접속 시 로그인 게이트 노출, 로그인 후 상단 탭에서 3D 광장 진입 |
+| **소원재(所願齋) 메인 웹 서비스 & 3D 연등 광장** | `http://localhost:8085/` | 최초 접속 시 로그인 게이트 노출, 로그인 후 상단 탭에서 3D 광장 진입 |
 | **Swagger OpenAPI 문서** | `http://localhost:8085/swagger-ui.html` | 전체 API 명세 시각화 및 즉시 호출 테스트 |
 | **최고 관리자 전용 관제실** | `http://localhost:8085/` (관리자 로그인 시) | 최고관리자(`admin`) 로그인 시 상단 👑 관제실 버튼 활성화 |
 | **JDBC 연결 진단 API** | `http://localhost:8085/api/jdbc/check` | MySQL JDBC 커넥션 상태 확인 |

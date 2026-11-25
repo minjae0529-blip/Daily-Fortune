@@ -1,5 +1,5 @@
 /**
- * Main Application Controller (천명 - 오늘의 운세 · 사주 · 타로)
+ * Main Application Controller (소원재 - 오늘의 운세 · 사주 · 타로)
  * High-Contrast Comfortable Light Theme (2026 Trend)
  * 12지신 수호동물 상호작용 & KASI 정통 만세력 & 3-Card 대화형 타로 시스템
  */
@@ -159,7 +159,7 @@ const App = {
     this.enterAuthenticatedService({
       id: 0,
       loginId: "demo",
-      name: "천명 도반",
+      name: "소원재 도반",
       role: "ROLE_USER",
       authenticated: true
     });
@@ -650,7 +650,7 @@ const App = {
       if (partnerFields) partnerFields.classList.remove("expanded");
       if (heroTitle) heroTitle.textContent = "하늘의 기운과 오늘의 천기(天氣)";
       if (heroSubtitle) heroSubtitle.textContent = "오늘 하루의 일진(日辰) 바이오리듬과 시간대별 길흉, 행운의 색상과 방위를 짚어드립니다.";
-      if (formBadgeText) formBadgeText.textContent = "☀️ 오늘의 운세 모드 (무료 FREE)";
+      if (formBadgeText) formBadgeText.textContent = "☀️ 오늘의 운세 (무료)";
       if (formTitleText) formTitleText.textContent = "오늘의 운세를 위한 생년월일시(四柱) 입력";
       if (submitBtnText) submitBtnText.textContent = "오늘의 일진 & 운세 무료 풀이 보기 ☀️";
     } else {
@@ -659,7 +659,7 @@ const App = {
       if (partnerFields) partnerFields.classList.add("expanded");
       if (heroTitle) heroTitle.textContent = "정통 만세력 사주팔자(四柱八字)";
       if (heroSubtitle) heroSubtitle.textContent = "KASI 정본 역법으로 사주 4주 8자(무료 프리뷰)와 60갑자 일주론·신살·대운·재물 심층 리포트(500원)를 분석합니다.";
-      if (formBadgeText) formBadgeText.textContent = "📜 정통 사주팔자 모드 (원국 무료 · 심층 500원)";
+      if (formBadgeText) formBadgeText.textContent = "📜 정통 사주팔자 (무료 체험)";
       if (formTitleText) formTitleText.textContent = "사주 원국 도출을 위한 생년월일시(四柱) 입력";
       if (submitBtnText) submitBtnText.textContent = "사주 4주 8자 원국 & 심층 리포트 조회하기 📜";
     }
@@ -846,7 +846,7 @@ const App = {
       const result = await res.json();
       if (result.success) {
         this.lastSavedSajuId = result.data;
-        console.log("💾 [천명 DB] 사주 정보가 MySQL에 성공적으로 저장되었습니다 (ID: " + result.data + ")");
+        console.log("💾 [소원재 DB] 사주 정보가 MySQL에 성공적으로 저장되었습니다 (ID: " + result.data + ")");
       }
 
       if (f) {
@@ -1396,7 +1396,11 @@ const App = {
       if (document.getElementById(tenGodGanId)) document.getElementById(tenGodGanId).textContent = tenGodGan || "-";
       if (document.getElementById(tenGodJiId)) document.getElementById(tenGodJiId).textContent = tenGodJi || "-";
       if (document.getElementById(jijangganId) && jiChar) {
-        document.getElementById(jijangganId).textContent = `${window.SajuEngine.formatJijanggan(jiChar)}`;
+        const jjgRaw = window.SajuEngine.formatJijanggan(jiChar);
+        const jjgTokens = jjgRaw.split(/\s*·\s*/).filter(Boolean);
+        document.getElementById(jijangganId).innerHTML = jjgTokens
+          .map((tok) => `<span class="inline-block whitespace-nowrap">${tok}</span>`)
+          .join(" · ");
       }
     };
 
@@ -1615,7 +1619,7 @@ const App = {
         birthDay: s ? s.userInfo.birthDay : 15,
         sajuRecordId: this.lastSavedSajuId,
         productType: "SAJU_FULL_REPORT",
-        productName: "천명(天命) 정통 사주팔자 · 대운 · 심층 리포트 열람권",
+        productName: "소원재(所願齋) 정통 사주팔자 · 대운 · 심층 리포트 열람권",
         paymentMethod: this.selectedPayMethod,
         amount: 500
       };
@@ -1749,7 +1753,7 @@ const App = {
   },
 
   // ==========================================================================
-  // 👑 천명(天命) 최고 관리자 전용 대시보드 및 관제실 컨트롤러
+  // 👑 소원재(所願齋) 최고 관리자 전용 대시보드 및 관제실 컨트롤러
   // ==========================================================================
   openAdminModal() {
     const dialog = document.getElementById("adminDialog");
@@ -3118,7 +3122,7 @@ const App = {
     };
 
     lines.push(`=======================================================`);
-    lines.push(`  천명(天命) 프리미엄 사주 & 오늘의 운세 리포트`);
+    lines.push(`  소원재(所願齋) 프리미엄 사주 & 오늘의 운세 리포트`);
     lines.push(`=======================================================`);
     if (s) {
       lines.push(`• 이름: ${s.userInfo.name} (${s.userInfo.genderKr})`);
@@ -3259,7 +3263,7 @@ const App = {
     }
 
     lines.push(`=======================================================`);
-    lines.push(`  자료 제공: 천명(天命) AI 운세 & 명리 포털`);
+    lines.push(`  자료 제공: 소원재(所願齋) AI 운세 & 명리 포털`);
     lines.push(`=======================================================`);
 
     const fullText = lines.join("\n");
@@ -3355,7 +3359,7 @@ const App = {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>천명(天命) 인터랙티브 명리 서책 - ${safeStr(name)}</title>
+  <title>소원재(所願齋) 인터랙티브 명리 서책 - ${safeStr(name)}</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700;900&family=Pretendard:wght@300;400;500;600;700;800&display=swap');
 
@@ -3595,7 +3599,7 @@ const App = {
 <body>
 
   <header class="header-banner">
-    <h1 class="header-title">천명(天命) 정통 사주 & 인터랙티브 디지털 서책</h1>
+    <h1 class="header-title">소원재(所願齋) 정통 사주 & 인터랙티브 디지털 서책</h1>
     <p class="header-sub">PDF의 한계를 뛰어넘어, 브라우저에서 카테고리별로 자유롭게 열람하는 독립형 운세 비결서</p>
     <div class="user-pill">
       <span>👤 <strong>${safeStr(name)}</strong> 도반</span>
@@ -4073,7 +4077,7 @@ const App = {
     ${incAi && aiLogs.length > 0 ? `
     <section id="panel-ai" class="category-section ${firstCatId === 'ai' ? 'active-panel' : ''}">
       <div class="cat-title">
-        <span>🧙‍♂️ 천명 AI 명리·해몽 도사 1:1 상담 대화록</span>
+        <span>🧙‍♂️ 소원재 AI 명리·해몽 도사 1:1 상담 대화록</span>
         <span class="badge" style="background:#ecfdf5; color:#065f46;">AI 도사 대화록</span>
       </div>
       <div style="padding: 10px 0;">
@@ -4123,7 +4127,7 @@ const App = {
   </div>
 
   <footer class="footer">
-    <p>천명(天命) AI 운세 포털 · 한국천문연구원(KASI) 정통 역법 알고리즘 탑재</p>
+    <p>소원재(所願齋) AI 운세 포털 · 한국천문연구원(KASI) 정통 역법 알고리즘 탑재</p>
     <p style="margin-top: 4px; font-size: 11px; color: #a8a29e;">본 문서는 사용자 본인만을 위해 생성된 독립형 인터랙티브 디지털 서책입니다.</p>
   </footer>
 
@@ -4178,7 +4182,7 @@ const App = {
     const a = document.createElement("a");
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
     a.href = url;
-    a.download = `천명_사주운세_인터랙티브_서책_${name}_${dateStr}.html`;
+    a.download = `소원재_사주운세_인터랙티브_서책_${name}_${dateStr}.html`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -4192,7 +4196,7 @@ const App = {
     const s = this.userSaju;
     const f = this.dailyFortune;
 
-    const text = `[천명(天命) 사주 분석 & 오늘의 운세]
+    const text = `[소원재(所願齋) 사주 분석 & 오늘의 운세]
 • 이름: ${s.userInfo.name} (${s.userInfo.genderKr})
 • 생년월일: ${s.userInfo.solarDateString}
 • 일주: ${s.iljuDetail.name} (${s.iljuDetail.symbol})
@@ -4218,7 +4222,7 @@ https://minjae0529-blip.github.io/Daily-Fortune/`;
   shareLink() {
     if (navigator.share) {
       navigator.share({
-        title: "천명(天命) - 오늘의 운세 · 사주 · 타로",
+        title: "소원재(所願齋) - 오늘의 운세 · 사주 · 타로",
         text: "한국천문연구원 역법 기반 고정밀 사주 만세력과 오늘의 운세, 타로 카드를 확인해보세요!",
         url: window.location.href
       }).catch(() => {});
@@ -4857,7 +4861,7 @@ https://minjae0529-blip.github.io/Daily-Fortune/`;
         <div class="flex items-center justify-between text-xs font-bold text-[#fde047] mb-2 flex-wrap gap-1">
           <div class="flex items-center space-x-1.5">
             <span class="text-base animate-bounce">👑</span>
-            <span class="font-serif-kr tracking-wide">천명(天命) 주간 최다 응원 1위 연등 · 명예의 전당</span>
+            <span class="font-serif-kr tracking-wide">소원재(所願齋) 주간 최다 응원 1위 연등 · 명예의 전당</span>
           </div>
           <span class="px-2.5 py-0.5 rounded-full bg-[#8c1d1d] text-[#ffe8b3] text-[10px] border border-[#d4a359] font-mono shadow-xs">
             🙏 도반 ${topWish.cheers}명의 응원
@@ -4884,7 +4888,7 @@ https://minjae0529-blip.github.io/Daily-Fortune/`;
               소원연등 1위 소원은 [${topWish.author}] 님의 소원입니다!
             </p>
             <p class="text-amber-100/90 text-[10.5px]">
-              천명 도반들의 따뜻한 마음과 간절한 기도가 모여 은하수 하늘을 가장 환하게 밝혔습니다. 소원이 기적처럼 이루어지시길 천명이 온 마음을 다해 간절히 응원합니다! 🏮✨
+              소원재 도반들의 따뜻한 마음과 간절한 기도가 모여 은하수 하늘을 가장 환하게 밝혔습니다. 소원이 기적처럼 이루어지시길 소원재이 온 마음을 다해 간절히 응원합니다! 🏮✨
             </p>
           </div>
         </div>

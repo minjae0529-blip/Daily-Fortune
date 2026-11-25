@@ -271,7 +271,7 @@ public class SajuService {
 
         int amount = (req.getAmount() != null && req.getAmount() > 0) ? req.getAmount() : 500;
         String productType = req.getProductType() != null ? req.getProductType() : "SAJU_FULL_REPORT";
-        String productName = req.getProductName() != null ? req.getProductName() : "천명(天命) 정통 사주팔자 · 대운 · 심층 리포트 열람권";
+        String productName = req.getProductName() != null ? req.getProductName() : "소원재(所願齋) 정통 사주팔자 · 대운 · 심층 리포트 열람권";
 
         PaymentEntity payment = PaymentEntity.builder()
                 .user(user)

@@ -11,7 +11,7 @@ public class PaymentRequestDto {
     private Integer birthDay;
     private Long sajuRecordId;
     private String productType;   // 'SAJU_FULL_REPORT'
-    private String productName;   // '천명(天命) 정통 사주팔자 · 대운 · 심층 리포트'
+    private String productName;   // '소원재(所願齋) 정통 사주팔자 · 대운 · 심층 리포트'
     private String paymentMethod; // 'TOSS_PAY', 'KAKAO_PAY', 'NAVER_PAY'
     private Integer amount;       // 500
 }

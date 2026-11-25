@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: chunmyung-saju-demo
+    name: sowonjae
     runtime: docker
     plan: free
     region: singapore

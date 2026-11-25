@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * 천명(天命) 3D 산사(절) 은하수 소원 연등 광장 엔진 (Three.js 3D Grand Virtual Temple)
+ * 소원재(所願齋) 3D 산사(절) 은하수 소원 연등 광장 엔진 (Three.js 3D Grand Virtual Temple)
  * ============================================================================
  * - 웅장한 대형 한국 전통 사찰 대웅보전(중층 전각), 동편 범종각, 서편 명부전, 회랑
  * - 스페이스바 점프(Jump Physics: 중력, 점프속도, 착지)
@@ -65,7 +65,7 @@ class WishPlaza3DEngine {
       rightLeg: null,
       leftArm: null,
       rightArm: null,
-      name: "천명 도반"
+      name: "소원재 도반"
     };
 
     // World collections
@@ -208,7 +208,7 @@ class WishPlaza3DEngine {
     if (window.App && window.App.currentAccount && window.App.currentAccount.name) {
       this.player.name = window.App.currentAccount.name;
     } else {
-      this.player.name = "천명 도반";
+      this.player.name = "소원재 도반";
     }
     this.updatePlayerNameTag();
 
@@ -575,7 +575,7 @@ class WishPlaza3DEngine {
   }
 
   /* ==========================================================================
-     대형 한국 전통 사찰 대웅전 (중층 전각 天命殿) - 내부 진입 가능 & 대형화 및 실재감 극대화
+     대형 한국 전통 사찰 대웅전 (중층 전각 所願齋) - 내부 진입 가능 & 대형화 및 실재감 극대화
      ========================================================================== */
   buildGrandTempleHall() {
     const hallGroup = new THREE.Group();
@@ -1776,7 +1776,7 @@ class WishPlaza3DEngine {
         speed: 2.15,
         bowCushionX: 3.2,
         initialBowCooldown: 3.5,
-        greetingReply: "천명전 본당에서 뵙게 되어 반갑습니다! 부처님 가피가 함께하길 기원합니다 🪷"
+        greetingReply: "소원재전 본당에서 뵙게 되어 반갑습니다! 부처님 가피가 함께하길 기원합니다 🪷"
       },
       {
         id: "visitor_4",
@@ -2220,7 +2220,7 @@ class WishPlaza3DEngine {
         const defaultWish = {
           id: 9000 + idx,
           category: "🕊️ 사찰 공중 제등 (奉納)",
-          author: "천명 사찰 수호 도반",
+          author: "소원재 사찰 수호 도반",
           text: "기둥과 기둥을 연결한 공중 선에 매달려 경내를 은은하게 밝히는 봉납 제등(奉納 提灯)입니다. [내 소원 띄우기]로 소원을 쓰면 열기구 등불이 하늘 높이 올라가 폭죽처럼 터지며 축복을 전합니다.",
           cheers: 0,
           date: "사찰 공중 연등선",
@@ -3055,7 +3055,7 @@ class WishPlaza3DEngine {
   reportWishFulfilled(wishId, storyText) {
     const myWishes = this.loadMyWishes();
     const target = myWishes.find((w) => w.id === wishId);
-    const author = (target && target.author) || this.player.name || "천명 도반";
+    const author = (target && target.author) || this.player.name || "소원재 도반";
     const category = (target && target.category) || "🌟 소원 성취";
     const wishText = (target && target.text) || "간절히 빌었던 소원";
 
@@ -3546,7 +3546,7 @@ class WishPlaza3DEngine {
     const noticeEl = document.getElementById("myBoardGuidanceNotice");
 
     const category = (catEl && catEl.value) || "🌿 건강·장수";
-    const author = ((authorEl && authorEl.value) || "").trim() || this.player.name || "천명 도반";
+    const author = ((authorEl && authorEl.value) || "").trim() || this.player.name || "소원재 도반";
     const text = ((textEl && textEl.value) || "").trim();
 
     if (!text) {
@@ -3613,7 +3613,7 @@ class WishPlaza3DEngine {
       document.body.appendChild(dialog);
     }
 
-    const defaultAuthor = (window.App && window.App.currentAccount && window.App.currentAccount.name) || this.player.name || "천명 도반";
+    const defaultAuthor = (window.App && window.App.currentAccount && window.App.currentAccount.name) || this.player.name || "소원재 도반";
 
     let html = `
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
@@ -3628,7 +3628,7 @@ class WishPlaza3DEngine {
     // 안내 멘트 배너 ("소원이 이루어졌다면, 다시 와서 알려주세요")
     html += `
       <div id="myBoardGuidanceNotice" style="margin-bottom:14px;padding:12px 14px;border-radius:12px;background:linear-gradient(to right,#3b1d0a,#4a2410);border:2px solid #fbbf24;text-align:center;box-shadow:0 0 18px rgba(251,191,36,0.3);">
-        <div style="font-size:11px;color:#fcd34d;font-weight:700;margin-bottom:2px;">🙏 천명전 소원판 안내</div>
+        <div style="font-size:11px;color:#fcd34d;font-weight:700;margin-bottom:2px;">🙏 소원재전 소원판 안내</div>
         <div style="font-size:14px;font-weight:900;color:#fffbeb;">
           "${guidanceMessage || "소원이 이루어졌다면, 다시 와서 알려주세요"}"
         </div>

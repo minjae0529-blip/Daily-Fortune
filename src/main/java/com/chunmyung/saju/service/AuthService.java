@@ -91,7 +91,7 @@ public class AuthService {
         log.info("==> [회원가입 완료] loginId={}, name={}, phone={}", saved.getLoginId(), saved.getName(), maskPhone(saved.getPhoneNumber()));
 
         return ApiResponseDto.ok(toStatusResponse(saved, true, false, null, null),
-                saved.getName() + " 님, 천명(天命) 회원가입이 완료되었습니다!");
+                saved.getName() + " 님, 소원재(所願齋) 회원가입이 완료되었습니다!");
     }
 
     /**
@@ -119,7 +119,7 @@ public class AuthService {
         if ("DORMANT_LOCKED".equals(account.getAccountStatus()) || account.getFailedAttempts() >= 10) {
             account.setAccountStatus("DORMANT_LOCKED");
             SmsVerificationEntity sms = createAndSendSms(account, "DORMANT_UNLOCK",
-                    String.format("[천명(天命) 휴면계정 해제] 비밀번호 10회 이상 오류로 계정이 휴면 잠금 상태입니다. 본인확인 인증번호 [%s]를 입력해 휴면을 해제하세요.", "%s"));
+                    String.format("[소원재(所願齋) 휴면계정 해제] 비밀번호 10회 이상 오류로 계정이 휴면 잠금 상태입니다. 본인확인 인증번호 [%s]를 입력해 휴면을 해제하세요.", "%s"));
 
             AuthStatusResponse status = toStatusResponse(account, false, true, sms.getMessageContent(), sms.getVerificationCode());
             return ApiResponseDto.<AuthStatusResponse>builder()
@@ -152,7 +152,7 @@ public class AuthService {
         if (attempts >= 10) {
             account.setAccountStatus("DORMANT_LOCKED");
             SmsVerificationEntity sms = createAndSendSms(account, "DORMANT_UNLOCK",
-                    "[천명(天命) 긴급보안] 비밀번호 10회 연속 오류로 계정이 휴면화(잠금) 처리되었습니다. 해제 인증번호는 [%s] 입니다.");
+                    "[소원재(所願齋) 긴급보안] 비밀번호 10회 연속 오류로 계정이 휴면화(잠금) 처리되었습니다. 해제 인증번호는 [%s] 입니다.");
 
             AuthStatusResponse status = toStatusResponse(account, false, true, sms.getMessageContent(), sms.getVerificationCode());
             return ApiResponseDto.<AuthStatusResponse>builder()
@@ -166,7 +166,7 @@ public class AuthService {
         if (attempts >= 5) {
             account.setAccountStatus("WARNING_SMS_SENT");
             SmsVerificationEntity sms = createAndSendSms(account, "FAILED_5_ALERT",
-                    "[천명(天命) 보안경고] 비밀번호 " + attempts + "회 연속 오류 감지! 본인확인 인증번호는 [%s] 입니다. (10회 오류 시 계정 휴면화)");
+                    "[소원재(所願齋) 보안경고] 비밀번호 " + attempts + "회 연속 오류 감지! 본인확인 인증번호는 [%s] 입니다. (10회 오류 시 계정 휴면화)");
 
             AuthStatusResponse status = toStatusResponse(account, false, true, sms.getMessageContent(), sms.getVerificationCode());
             return ApiResponseDto.<AuthStatusResponse>builder()
@@ -206,7 +206,7 @@ public class AuthService {
         }
 
         SmsVerificationEntity sms = createAndSendSms(account, "DORMANT_UNLOCK",
-                "[천명(天命) 본인확인] 계정 휴면·잠금 해제 인증번호는 [%s] 입니다. 5분 이내에 입력해주세요.");
+                "[소원재(所願齋) 본인확인] 계정 휴면·잠금 해제 인증번호는 [%s] 입니다. 5분 이내에 입력해주세요.");
 
         AuthStatusResponse status = toStatusResponse(account, false, true, sms.getMessageContent(), sms.getVerificationCode());
         return ApiResponseDto.ok(status, "📱 휴대폰(" + maskPhone(account.getPhoneNumber()) + ")으로 6자리 인증번호 문자를 발송했습니다.");

@@ -10,7 +10,7 @@ chunmyung:
 
 spring:
   application:
-    name: chunmyung-saju
+    name: sowonjae
   config:
     import: optional:file:.env[.properties]
 

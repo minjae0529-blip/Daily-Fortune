@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 @RestController
 @RequestMapping("/api/plaza")
-@Tag(name = "소원재 3D 연등광장 소원 & 성취 축하 API", description = "연등광장 내부 소원판 동기화, 타 이용자 소원 8개 단위(offset) 조회 및 소원 성취 실시간 축하 API")
+@Tag(name = "월등재 3D 연등광장 소원 & 성취 축하 API", description = "연등광장 내부 소원판 동기화, 타 이용자 소원 8개 단위(offset) 조회 및 소원 성취 실시간 축하 API")
 public class WishPlazaApiController {
 
     private final CopyOnWriteArrayList<PlazaWishDto> wishes = new CopyOnWriteArrayList<>();
@@ -144,7 +144,7 @@ public class WishPlazaApiController {
         if (req.getClientId() == null || req.getClientId().isBlank()) {
             return ResponseEntity.badRequest().body(ApiResponseDto.fail("clientId가 필요합니다."));
         }
-        req.setName(SecurityUtils.sanitizeXss(req.getName() == null ? "소원재 도반" : req.getName()));
+        req.setName(SecurityUtils.sanitizeXss(req.getName() == null ? "월등재 도반" : req.getName()));
         req.setLastSeenMs(System.currentTimeMillis());
         activePlayers.put(req.getClientId(), req);
         return ResponseEntity.ok(ApiResponseDto.ok(req, "위치 동기화 완료"));
@@ -235,7 +235,7 @@ public class WishPlazaApiController {
     public ResponseEntity<ApiResponseDto<PlazaFulfillmentDto>> reportFulfillment(@RequestBody Map<String, Object> body) {
         long wishId = body.get("wishId") instanceof Number ? ((Number) body.get("wishId")).longValue() : 0L;
         String category = SecurityUtils.sanitizeXss(String.valueOf(body.getOrDefault("category", "🌟 소원 성취")));
-        String author = SecurityUtils.sanitizeXss(String.valueOf(body.getOrDefault("author", "소원재 도반")));
+        String author = SecurityUtils.sanitizeXss(String.valueOf(body.getOrDefault("author", "월등재 도반")));
         String wishText = SecurityUtils.sanitizeXss(String.valueOf(body.getOrDefault("wishText", "")));
         String story = SecurityUtils.sanitizeXss(String.valueOf(body.getOrDefault("fulfillmentStory", "")));
 

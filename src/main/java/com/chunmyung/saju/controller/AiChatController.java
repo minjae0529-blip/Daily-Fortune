@@ -15,7 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/ai")
 @RequiredArgsConstructor
-@Tag(name = "소원재 AI 명리 도사 챗봇 API", description = "사용자 사주 원국 및 일진 컨텍스트 연동 내장형 AI 상담 챗봇 API")
+@Tag(name = "월등재 AI 명리 도사 챗봇 API", description = "사용자 사주 원국 및 일진 컨텍스트 연동 내장형 AI 상담 챗봇 API")
 public class AiChatController {
 
     private final AiCounselorService aiCounselorService;

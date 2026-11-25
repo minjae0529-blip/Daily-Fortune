@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: sowonjae
+    name: woldeungjae
     runtime: docker
     plan: free
     region: singapore

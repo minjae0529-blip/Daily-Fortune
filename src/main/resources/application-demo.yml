@@ -3,6 +3,10 @@
 
 server:
   port: ${PORT:8085}
+  tomcat:
+    threads:
+      max: 20
+      min-spare: 4
   error:
     include-stacktrace: never
     include-message: never

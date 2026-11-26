@@ -14,7 +14,7 @@ COPY --from=build /app/target/*.jar app.jar
 
 ENV PORT=8085
 ENV SPRING_PROFILES_ACTIVE=demo
-ENV JAVA_OPTS="-Xmx320m -Xms128m -XX:+UseSerialGC -Djava.security.egd=file:/dev/./urandom"
+ENV JAVA_OPTS="-Xmx192m -Xms64m -XX:MaxMetaspaceSize=96m -XX:ReservedCodeCacheSize=48m -XX:MaxDirectMemorySize=32m -Xss256k -XX:+UseSerialGC -Djava.security.egd=file:/dev/./urandom"
 
 EXPOSE 8085
 
